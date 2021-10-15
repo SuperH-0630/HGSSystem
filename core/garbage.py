@@ -1,6 +1,6 @@
+from tool.type_ import *
 from tool.time_ import HGSTime, hgs_time_t
 from tool.location import HGSLocation, hgs_location_t
-from tool.type_ import *
 from enum import Enum
 
 
@@ -41,9 +41,9 @@ class GarbageBag:
         if not isinstance(location, HGSLocation):
             location = HGSLocation(location)
         self._type: enum = garbage_type
-        self._use_time: enum = use_time
-        self._user: enum = user
-        self._loc: enum = location
+        self._use_time: HGSTime = use_time
+        self._user: uid_t = user
+        self._loc: HGSLocation = location
 
     def is_out_of_date(self) -> bool:
         return self.last_time.is_out_of_date()

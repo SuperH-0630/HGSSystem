@@ -1,4 +1,4 @@
-from .type_ import *
+from type_ import *
 import hashlib
 
 

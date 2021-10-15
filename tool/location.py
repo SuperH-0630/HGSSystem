@@ -9,4 +9,4 @@ class HGSLocation:
         return self.loc
 
 
-hgs_location_t: TypeAlias = Union[HGSLocation, location_t]
+hgs_location_t = NewType("hgs_location_t", Union[HGSLocation, location_t])

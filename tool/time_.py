@@ -1,4 +1,4 @@
-from type_ import *
+from .type_ import *
 import time
 
 
@@ -10,8 +10,11 @@ class HGSTime:
             self._time: time_t = second
         self._time_local: time.struct_time = time.localtime(self._time)
 
+    def get_time(self) -> time_t:
+        return self._time
+
     def is_out_of_date(self):
         return time.time() > self._time
 
 
-hgs_time_t = NewType("hgs_time_t", Union[HGSTime, time_t])
+hgs_time_t = Union[HGSTime, time_t]

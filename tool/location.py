@@ -1,12 +1,12 @@
-from type_ import *
+from .type_ import *
 
 
 class HGSLocation:
     def __init__(self, location: location_t):
-        self.loc: location_t = location
+        self._loc: location_t = location
 
     def get_location(self) -> location_t:
-        return self.loc
+        return self._loc
 
 
-hgs_location_t = NewType("hgs_location_t", Union[HGSLocation, location_t])
+hgs_location_t = "hgs_location_t", Union[HGSLocation, location_t]

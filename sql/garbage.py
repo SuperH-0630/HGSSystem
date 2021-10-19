@@ -100,10 +100,10 @@ def update_garbage(garbage: GarbageBag, db: DB) -> bool:
     if re is None:
         return False
 
-    if re.is_use() and not garbage.is_use() or re.is_check() and not garbage.is_check():
+    if re.is_use() and not garbage.is_use() or re.is_check()[0] and not garbage.is_check():
         return False
 
-    if not garbage.is_use() and not garbage.is_check():
+    if not garbage.is_use() and not garbage.is_check()[0]:
         return True  # 不做任何修改
 
     gid = garbage.get_gid()

@@ -63,14 +63,15 @@ class Control:
         self._user_last_time: time_t = 0
 
     def check_user(self):
-        if time.time() - self._user_last_time > 20:
-            self._user = None
         if self._user is None:
+            return False
+        if not self._user.is_manager() and time.time() - self._user_last_time > 20:
+            self._user = None
             return False
         return True
 
     def __check_user(self):
-        if self.check_user():
+        if not self.check_user():
             raise ControlNotLogin
         self._user_last_time = time.time()
 
@@ -129,7 +130,7 @@ class Control:
         """
         if self._user is not None and self._user.get_uid() == user.get_uid() and self.check_user():  # 正在登陆期
             self._user = None  # 退出登录
-            self._user_last_time = None
+            self._user_last_time = 0
             return False
         self._user = user
         self._user_last_time = time.time()

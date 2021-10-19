@@ -47,11 +47,7 @@ class User(metaclass=abc.ABCMeta):
         return self._type
 
     def get_info(self) -> Dict[str, str]:
-        return {
-            "name": str(self._name),
-            "uid": str(self._uid),
-            "manager": self._type == UserType.manager if '1' else '0'
-        }
+        raise UserNotSupportError
 
     def __repr__(self):
         tmp = UserType.UserTypeStrList
@@ -92,7 +88,7 @@ class NormalUser(User):
         return {
             "name": str(self._name),
             "uid": str(self._uid),
-            "manager": self._type == UserType.manager if '1' else '0',
+            "manager": '0',
             "reputation": str(self._reputation),
             "rubbish": str(self._rubbish),
             "score": str(self._score)
@@ -172,7 +168,7 @@ class NormalUser(User):
         elif self._rubbish > conf.limit_rubbish_week:
             raise UserRubbishException
 
-        if garbage.is_use() or not garbage.is_check():
+        if garbage.is_use() or garbage.is_check()[0]:
             return False
         garbage.config_use(garbage_type, HGSTime(), self._uid, loc)
 
@@ -188,8 +184,9 @@ class ManagerUser(User):
         super(ManagerUser, self).__init__(name, uid, UserType.manager)
 
     def check_rubbish(self, garbage: GarbageBag, right: bool, user: User) -> bool:
-        if not garbage.is_use() or garbage.is_check() or user.get_uid() != garbage.get_user():
+        if (not garbage.is_use()) or garbage.is_check()[0] or user.get_uid() != garbage.get_user():
             return False
+
         garbage.config_check(right, self._uid)
         user.evaluate(right)
 
@@ -207,3 +204,10 @@ class ManagerUser(User):
             ...
 
         return True
+
+    def get_info(self) -> Dict[str, str]:
+        return {
+            "name": str(self._name),
+            "uid": str(self._uid),
+            "manager": '1'
+        }

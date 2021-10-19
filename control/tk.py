@@ -525,8 +525,8 @@ class GarbageStation:
     def show_msg(self, title, info, msg_type='info'):
         self._msg_table[2].set(f'{msg_type}: {title}')
         self._msg_table[3].set(f'{info}')
-        self._msg_frame.place(relx=0.45, rely=0.20, relwidth=0.49, relheight=0.50)
-        frame_width = self._win_width * 0.49
+        self._msg_frame.place(relx=0.45, rely=0.20, relwidth=0.53, relheight=0.50)
+        frame_width = self._win_width * 0.53
         self._msg_table[1]['wraplength'] = frame_width * 0.85 - 5  # 设定自动换行的像素
         self._throw_ctrl_frame.place_forget()
         self._msg_time = time.time()

@@ -11,6 +11,7 @@ from PIL import Image, ImageTk
 from control import Control, global_control, ControlScanType, ControlNotLogin, ThrowGarbageError, CheckGarbageError
 from core.user import User, UserNotSupportError
 from core.garbage import GarbageBag, GarbageType, GarbageBagNotUse
+import random
 
 
 class GarbageStationException(Exception):
@@ -27,6 +28,7 @@ class GarbageStationStatus:
         self._ctrl = ctrl
         self._garbage: Optional[GarbageBag] = None
         self._flat = GarbageStationStatus.status_normal
+        self._have_easter_eggs = False
 
     def to_get_garbage_type(self, garbage: GarbageBag):
         self._flat = GarbageStationStatus.status_get_garbage_type
@@ -131,6 +133,7 @@ HGSSystem:
     def show_about_info(self):
         self._win.show_msg("About", f'''
 HGSSystem (c) SuperHuan
+From github
 HGSSystem is Garbage Sorting System
 Author: SongZihuan[SuperHuan]
 Run on python {sys.version}
@@ -144,6 +147,24 @@ Run on python {sys.version}
 
     def is_manager(self):
         return self._ctrl.is_manager()
+
+    def easter_eggs(self):
+        if (not self._have_easter_eggs) and random.randint(0, 10) != 1:  # 10% 概率触发
+            return
+        self._have_easter_eggs = True
+        self._win.show_msg("Easter Agg", f'''
+恭喜触发彩蛋[中文]
+尝试一下新的编程语言: aFunlang.
+来自: github
+[斯人若彩虹, 遇上方知有]
+[期待再次与你相遇]
+                '''.strip())
+
+    def show_search_info(self):
+        self._win.show_msg("Search", f'''
+He will get the camera content and feedback the garbage type.
+The function has not yet been implemented.
+                '''.strip())
 
 
 class GarbageStation:
@@ -264,6 +285,7 @@ class GarbageStation:
         self._window.bind("<Alt-Control-KeyPress-s>", lambda _: self.__set_windows_overrideredirect(True))  # 锁定窗口
         self._window.bind("<Alt-Control-KeyPress-e>", unlock_windows)
         self._window.bind("<F11>", full_screen_windows)
+        self._window.bind("<F5>", lambda _: self._status.easter_eggs())
 
     def __full_screen(self, full: bool = True):
         self._window.attributes("-fullscreen", full)
@@ -463,6 +485,9 @@ class GarbageStation:
             btn['bg'] = info[1]
             btn.place(relx=0.0, rely=height, relwidth=1.00, relheight=height_label)
             height += height_label + h_label_s / height_count
+
+        self._user_btn[0]['state'] = 'disable'
+        self._user_btn[2]['command'] = lambda: self._status.show_search_info()
 
     def __conf_cap_label(self):
         self._cap_label['bg'] = "#000000"

@@ -62,6 +62,11 @@ class Control:
         self._user: Optional[User] = None  # 操作者
         self._user_last_time: time_t = 0
 
+    def is_manager(self):
+        if not self.check_user():
+            return False
+        return self._user.is_manager()
+
     def check_user(self):
         if self._user is None:
             return False

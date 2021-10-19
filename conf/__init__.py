@@ -35,3 +35,5 @@ pic_d = {
 
 capture_num = 0  # 摄像头号
 capture_arg = []
+
+tk_refresh_delay = 50  # 延时任务的时间

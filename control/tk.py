@@ -1,4 +1,3 @@
-import PIL.Image
 import time
 import conf
 import cv2
@@ -10,7 +9,6 @@ from PIL import Image, ImageTk
 from control import Control, global_control, ControlScanType, ControlNotLogin, ThrowGarbageError, CheckGarbageError
 from core.user import User, UserNotSupportError
 from core.garbage import GarbageBag, GarbageType, GarbageBagNotUse
-import tkinter.messagebox as msg
 
 
 class GarbageStationException(Exception):
@@ -58,13 +56,13 @@ class GarbageStationStatus:
 
     def throw_garbage(self, garbage_type: enum):
         if self._flat != GarbageStationStatus.status_get_garbage_type or self._garbage is None:
-            msg.showwarning("Operation Fail", "You should login first and scan the QR code of the trash bag")
+            self._win.show_warning("Operation Fail", "You should login first and scan the QR code of the trash bag")
             return
 
         try:
             self._ctrl.throw_garbage(self._garbage, garbage_type)
         except (ThrowGarbageError, UserNotSupportError, ControlNotLogin):
-            msg.showwarning("Operation Fail", "The garbage bags have been used.")
+            self._win.show_warning("Operation Fail", "The garbage bags have been used.")
             raise
         finally:
             self._flat = GarbageStationStatus.status_normal
@@ -72,36 +70,37 @@ class GarbageStationStatus:
 
     def check_garbage(self, check: bool):
         if self._flat != GarbageStationStatus.status_get_garbage_check or self._garbage is None:
-            msg.showwarning("Operation Fail", "You should login first and scan the QR code of the trash bag")
+            self._win.show_warning("Operation Fail", "You should login first and scan the QR code of the trash bag")
             return
 
         try:
             self._ctrl.check_garbage(self._garbage, check)
         except (ThrowGarbageError, UserNotSupportError, CheckGarbageError, GarbageBagNotUse):
-            msg.showwarning("Operation Fail", "The garbage bag has been checked")
+            self._win.show_warning("Operation Fail", "The garbage bag has been checked")
         finally:
             self._flat = GarbageStationStatus.status_normal
             self._garbage = None
 
     def show_garbage_info(self):
         if self._flat != GarbageStationStatus.status_get_garbage_check or self._garbage is None:
-            msg.showwarning("Operation Fail", "You should login first and scan the QR code of the trash bag")
+            self._win.show_warning("Operation Fail", "You should login first and scan the QR code of the trash bag")
             return
 
         if not self._garbage.is_use():
-            msg.showwarning("Operation Fail", "The garbage bag has not been used")
+            self._win.show_warning("Operation Fail", "The garbage bag has not been used")
             return
 
         info = self._garbage.get_info()
         garbage_type = GarbageType.GarbageTypeStrList[int(info['type'])]
         time_str = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(float(info['use_time'])))
-        msg.showwarning("Garbage Info", f"type = {garbage_type}\n"
-                                        f"location = {info['loc']}\n"
-                                        f"use-time = {time_str}")
+        self._win.show_msg("Garbage Info", f"Type is {garbage_type}\n"
+                                           f"Location:\n  {info['loc']}\n"
+                                           f"Date:\n  {time_str}")
 
 
 class GarbageStation:
-    def __init__(self, ctrl: Control = global_control):
+    def __init__(self, ctrl: Control = global_control, refresh_delay: int = conf.tk_refresh_delay):
+        self.refresh_delay = refresh_delay
         self._status = GarbageStationStatus(self, ctrl)
         self._window = tk.Tk()
         self._sys_height = self._window.winfo_screenheight()
@@ -164,6 +163,13 @@ class GarbageStation:
         self._user_btn: List[tk.Button] = [tk.Button(self._user_btn_frame), tk.Button(self._user_btn_frame),
                                            tk.Button(self._user_btn_frame)]
         self.__conf_user_btn()
+
+        self.__msg_font_size = 20
+        self._msg_frame = tk.Frame(self._window)
+        self._msg_table = tk.Label(self._msg_frame), tk.Label(self._msg_frame), tk.StringVar(), tk.StringVar()
+        self._msg_hide = tk.Button(self._msg_frame)
+        self.__conf_msg()
+
         self.__conf_after()
         self.all_user_disable()
 
@@ -359,19 +365,63 @@ class GarbageStation:
         self._cap_label['bg'] = "#000000"
         self._cap_label.place(relx=0.22, rely=0.66, relwidth=0.2, relheight=0.32)
 
+    def __conf_msg(self):
+        title_font = self.__make_font(size=self.__msg_font_size + 1, weight="bold")
+        info_font = self.__make_font(size=self.__msg_font_size - 1)
+
+        self._msg_frame['bg'] = "#F5FFFA"
+        self._msg_frame['bd'] = 5
+        self._msg_frame['relief'] = "ridge"
+        # frame 不会立即显示
+
+        self._msg_table[0]['font'] = title_font
+        self._msg_table[0]['bg'] = "#F5FFFA"
+        self._msg_table[0]['anchor'] = 'w'
+        self._msg_table[0]['textvariable'] = self._msg_table[2]
+
+        self._msg_table[1]['font'] = info_font
+        self._msg_table[1]['bg'] = "#F5FFFA"
+        self._msg_table[1]['anchor'] = 'nw'
+        self._msg_table[1]['justify'] = 'left'
+        self._msg_table[1]['textvariable'] = self._msg_table[3]
+
+        self._msg_table[0].place(relx=0.05, rely=0.05, relwidth=0.9, relheight=0.1)
+        self._msg_table[1].place(relx=0.1, rely=0.2, relwidth=0.80, relheight=0.80)
+
+        self._msg_hide['font'] = info_font
+        self._msg_hide['bg'] = "#00CED1"
+        self._msg_hide['text'] = 'Hide-Msg'
+        self._msg_hide['command'] = lambda: self.hide_msg()
+        self._msg_hide.place(relx=0.375, rely=0.85, relwidth=0.25, relheight=0.1)
+
+    def show_msg(self, title, info, msg_type='info'):
+        self._msg_table[2].set(f'{msg_type}: {title}')
+        self._msg_table[3].set(f'{info}')
+        self._msg_frame.place(relx=0.50, rely=0.20, relwidth=0.39, relheight=0.50)
+        self._throw_ctrl_frame.place_forget()
+
+    def show_warning(self, title, info):
+        self.show_msg(title, info, msg_type='Warning')
+
+    def hide_msg(self):
+        self._msg_table[2].set('')
+        self._msg_table[3].set('')
+        self._throw_ctrl_frame.place(relx=0.45, rely=0.1, relwidth=0.53, relheight=0.70)
+        self._msg_frame.place_forget()
+
     def __define_after(self, ms, func, *args):
         self._window.after(ms, func, *args)
 
     def __conf_after(self):
-        self.__define_after(10, self.update_time)
-        self.__define_after(10, self.update_control)
-        self.__define_after(10, self.update_scan)
+        self.__define_after(self.refresh_delay, self.update_time)
+        self.__define_after(self.refresh_delay, self.update_control)
+        self.__define_after(self.refresh_delay, self.update_scan)
 
     def update_time(self):
         var: tk.Variable = self._sys_date[2]
         t = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         var.set(f"{t}")
-        self.__define_after(10, self.update_time)
+        self.__define_after(self.refresh_delay, self.update_time)
 
     def update_control(self, update: bool = True):
         name: tk.Variable = self._user_name[2]
@@ -423,14 +473,14 @@ class GarbageStation:
             self._garbage_id[2].set(gid)
 
         if update:
-            self.__define_after(10, self.update_control)
+            self.__define_after(self.refresh_delay, self.update_control)
 
     def update_scan(self):
         res: Tuple[enum, any] = ControlScanType.no_to_done, None
         try:
             res = self._status.scan()
         except ControlNotLogin:
-            msg.showwarning("Scan Fail", "You should login first.")
+            self.show_warning("Scan Fail", "You should login first")
 
         # 需要存储一些数据 谨防被gc释放
         _cap_img_info = (Image.fromarray(cv2.cvtColor(self._status.get_cap_img(), cv2.COLOR_BGR2RGB)).
@@ -446,9 +496,10 @@ class GarbageStation:
             self.update_control(False)
         elif res[0] == ControlScanType.check_garbage:
             self._status.to_get_garbage_check(res[1])
+            self._status.show_garbage_info()  # 显示信息
             self.update_control(False)
 
-        self.__define_after(10, self.update_scan)
+        self.__define_after(self.refresh_delay, self.update_scan)
 
     def normal_user_disable(self):
         for btn in self._check_ctrl_btn:

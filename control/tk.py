@@ -133,7 +133,7 @@ HGSSystem:
 HGSSystem (c) SuperHuan
 HGSSystem is Garbage Sorting System
 Author: SongZihuan[SuperHuan]
-Run on python {sys.version_info}
+Run on python {sys.version}
                 '''.strip())
 
     def show_exit(self):
@@ -163,6 +163,8 @@ class GarbageStation:
 
         self._cap_img = None  # 存储 PIL.image 的变量 防止gc释放
         self._user_im = None
+
+        self._msg_time = None  # msg 显示时间累计
 
         self.__creat_tk()
         self.__conf_tk()
@@ -227,22 +229,15 @@ class GarbageStation:
 
     def __conf_tk(self):
         self.__conf_title_label()
-
         self.__conf_win_ctrl_button()
-
         self.__conf_user_info_label()
-
         self.__conf_throw_btn()
-
         self.__conf_check_btn()
-
         self.__conf_sys_info_label()
-
         self.__conf_cap_label()
-
         self.__conf_user_btn()
-
         self.__conf_msg()
+        self.hide_msg()  # 隐藏消息
 
     def __conf_windows(self):
         self._window.title('HGSSystem: Garbage Station')
@@ -494,7 +489,7 @@ class GarbageStation:
         self._msg_table[1]['textvariable'] = self._msg_table[3]
 
         self._msg_table[0].place(relx=0.05, rely=0.05, relwidth=0.9, relheight=0.1)
-        self._msg_table[1].place(relx=0.1, rely=0.2, relwidth=0.80, relheight=0.80)
+        self._msg_table[1].place(relx=0.075, rely=0.2, relwidth=0.85, relheight=0.64)
 
         self._msg_hide['font'] = info_font
         self._msg_hide['bg'] = "#00CED1"
@@ -506,7 +501,10 @@ class GarbageStation:
         self._msg_table[2].set(f'{msg_type}: {title}')
         self._msg_table[3].set(f'{info}')
         self._msg_frame.place(relx=0.45, rely=0.20, relwidth=0.49, relheight=0.50)
+        frame_width = self._win_width * 0.49
+        self._msg_table[1]['wraplength'] = frame_width * 0.85 - 5  # 设定自动换行的像素
         self._throw_ctrl_frame.place_forget()
+        self._msg_time = time.time()
 
     def show_warning(self, title, info):
         self.show_msg(title, info, msg_type='Warning')
@@ -516,6 +514,7 @@ class GarbageStation:
         self._msg_table[3].set('')
         self._throw_ctrl_frame.place(relx=0.45, rely=0.1, relwidth=0.53, relheight=0.70)
         self._msg_frame.place_forget()
+        self._msg_time = None
 
     def __define_after(self, ms, func, *args):
         self._window.after(ms, self.__after_func_maker(func), *args)
@@ -524,6 +523,7 @@ class GarbageStation:
         self.__define_after(self.refresh_delay, self.update_time)
         self.__define_after(self.refresh_delay, self.update_control)
         self.__define_after(self.refresh_delay, self.update_scan)
+        self.__define_after(self.refresh_delay, self.update_msg)
 
     def __after_func_maker(self, func):
         def new_func(*args, **kwargs):
@@ -613,6 +613,13 @@ class GarbageStation:
             self._status.to_get_garbage_check(res[1])
             self._status.show_garbage_info()  # 显示信息
             self.update_control()
+
+    def update_msg(self):
+        if self._msg_time is None:
+            return
+
+        if time.time() - self._msg_time > 10:  # 10s 自动关闭消息
+            self.hide_msg()
 
     def __switch_to_normal_user(self):
         self.normal_user_disable()

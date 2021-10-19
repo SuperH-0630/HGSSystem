@@ -44,7 +44,7 @@ def make_gid_image(gid: gid_t, path: str):
     return True
 
 
-def write_uid_qr(gid: gid_t, path: str, db: DB) -> Tuple[str, Optional[GarbageBag]]:
+def write_gid_qr(gid: gid_t, path: str, db: DB) -> Tuple[str, Optional[GarbageBag]]:
     user = find_garbage(gid, db)
     if user is None:
         return "", None

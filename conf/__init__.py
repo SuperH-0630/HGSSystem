@@ -6,6 +6,7 @@
 import sys
 import warnings
 from font.noto import noto_font
+from picture import *
 
 if len(sys.argv) != 4:
     warnings.warn(f"参数不足: {len(sys.argv)}")
@@ -24,8 +25,12 @@ limit_rubbish_week = 50
 
 base_location = "Guangdong-Guangzhou"
 
-font_dict = {
+font_d = {
     "noto": noto_font
+}
+
+pic_d = {
+    "head": head_pic
 }
 
 capture_num = 0  # 摄像头号

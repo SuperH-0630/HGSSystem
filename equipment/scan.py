@@ -76,7 +76,12 @@ class HGSQRCoder:
         frame = self._cap.get_frame()
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         coder = cv2.QRCodeDetector()
-        data, points, straight_qrcode = coder.detectAndDecode(gray)
+
+        try:
+            data, points, straight_qrcode = coder.detectAndDecode(gray)
+        except cv2.error:
+            return False
+
         old_qr: Optional[QRCode] = self._last_qr
 
         if len(data) > 0:

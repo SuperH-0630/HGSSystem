@@ -37,3 +37,7 @@ capture_num = 0  # 摄像头号
 capture_arg = []
 
 tk_refresh_delay = 50  # 延时任务的时间
+
+qr_show_uid_len = 12  # qr 码上展示uid的长度
+tk_show_uid_len = qr_show_uid_len  # tk 界面上展示uid的长度
+ranking_tk_show_uid_len = tk_show_uid_len  # tk ranking 界面上展示uid的长度

@@ -29,6 +29,8 @@ class GarbageStationStatus:
         self._garbage: Optional[GarbageBag] = None
         self._flat = GarbageStationStatus.status_normal
         self._have_easter_eggs = False
+        self.rank = None
+        self.rank_index = 0
 
     def to_get_garbage_type(self, garbage: GarbageBag):
         self._flat = GarbageStationStatus.status_get_garbage_type
@@ -59,6 +61,7 @@ class GarbageStationStatus:
         return self._ctrl.switch_user(user)
 
     def throw_garbage(self, garbage_type: enum):
+        self.update_user_time()
         if self._flat != GarbageStationStatus.status_get_garbage_type or self._garbage is None:
             self._win.show_warning("Operation Fail", "You should login first and scan the QR code of the trash bag")
             return
@@ -73,6 +76,7 @@ class GarbageStationStatus:
             self._garbage = None
 
     def check_garbage(self, check: bool):
+        self.update_user_time()
         if self._flat != GarbageStationStatus.status_get_garbage_check or self._garbage is None:
             self._win.show_warning("Operation Fail", "You should login first and scan the QR code of the trash bag")
             return
@@ -86,6 +90,7 @@ class GarbageStationStatus:
             self._garbage = None
 
     def show_garbage_info(self):
+        self.update_user_time()
         if self._flat != GarbageStationStatus.status_get_garbage_check or self._garbage is None:
             self._win.show_warning("Operation Fail", "You should login first and scan the QR code of the trash bag")
             return
@@ -102,6 +107,7 @@ class GarbageStationStatus:
                                             f"Date:\n  {time_str}"))
 
     def show_user_info(self):
+        self.update_user_time()
         if not self._ctrl.check_user():
             self._win.show_warning("Operation Fail", "You should login first")
             return
@@ -120,6 +126,7 @@ class GarbageStationStatus:
                                               f"Rubbish: {info['rubbish']}"))
 
     def show_help_info(self):
+        self.update_user_time()
         self._win.show_msg("Help", f'''
 HGSSystem:
   1) Scan User QR code
@@ -131,6 +138,7 @@ HGSSystem:
         '''.strip())
 
     def show_about_info(self):
+        self.update_user_time()
         self._win.show_msg("About", f'''
 HGSSystem (c) SuperHuan
 From github
@@ -140,6 +148,7 @@ Run on python {sys.version}
                 '''.strip())
 
     def show_exit(self):
+        self.update_user_time()
         if self._ctrl.is_manager():
             self._win.exit_win()
             return
@@ -149,6 +158,7 @@ Run on python {sys.version}
         return self._ctrl.is_manager()
 
     def easter_eggs(self):
+        self.update_user_time()
         if (not self._have_easter_eggs) and random.randint(0, 10) != 1:  # 10% 概率触发
             return
         self._have_easter_eggs = True
@@ -161,10 +171,51 @@ Run on python {sys.version}
                 '''.strip())
 
     def show_search_info(self):
+        self.update_user_time()
         self._win.show_msg("Search", f'''
 He will get the camera content and feedback the garbage type.
 The function has not yet been implemented.
                 '''.strip())
+
+    def get_show_rank(self):
+        self.update_user_time()
+        rank_list = self._ctrl.ranking(limit=20)
+        self.rank = [[]]
+        for i, r in enumerate(rank_list):
+            if len(self.rank[-1]) == 5:
+                self.rank.append([])
+            color = None
+            if i == 0:
+                color = "#eaff56"
+            elif i == 1:
+                color = "#ffa631"
+            elif i == 2:
+                color = "#ff7500"
+            elif r[0] == self._ctrl.get_uid_no_update():
+                color = "#b0a4e3"
+            self.rank[-1].append((i + 1, r[1], r[0], r[2], r[3], color))
+        if len(self.rank[0]) == 0:
+            self.rank = None
+            self._win.show_warning("RankError", f'Unable to get leaderboard data')
+            return
+        self.rank_index = 0
+        self.show_rank(0)
+
+    def show_rank(self, n: int):
+        self.update_user_time()
+        self.rank_index += n
+
+        if self.rank_index < 0 or self.rank_index >= len(self.rank):
+            self._win.show_msg("RankError", f'Unable to get leaderboard data')
+            return
+
+        self._win.show_rank(self.rank_index + 1, len(self.rank),
+                            lambda: self.show_rank(-1),
+                            lambda: self.show_rank(+1),
+                            self.rank[self.rank_index])
+
+    def update_user_time(self):
+        self._ctrl.update_user_time()
 
 
 class GarbageStation:
@@ -212,7 +263,7 @@ class GarbageStation:
         self._user_rubbish: win_info_type = (tk.Label(self._user_frame), tk.Label(self._user_frame),
                                              tk.StringVar(), "Garbage")
         self._user_eval: win_info_type = (tk.Label(self._user_frame), tk.Label(self._user_frame),
-                                          tk.StringVar(), "Evaluation")
+                                          tk.StringVar(), "Reputation")
         self._user_img = tk.Label(self._user_frame)
 
         self._throw_ctrl_frame = tk.Frame(self._window)
@@ -235,18 +286,35 @@ class GarbageStation:
                                            tk.Button(self._user_btn_frame)]
 
         self._msg_frame = tk.Frame(self._window)
-        self._msg_table = tk.Label(self._msg_frame), tk.Label(self._msg_frame), tk.StringVar(), tk.StringVar()
+        self._msg_label = tk.Label(self._msg_frame), tk.Label(self._msg_frame), tk.StringVar(), tk.StringVar()
         self._msg_hide = tk.Button(self._msg_frame)
 
+        self._rank_frame = tk.Frame(self._window)
+        self._rank_label = [tk.Label(self._rank_frame),
+                            tk.Label(self._rank_frame),
+                            tk.Label(self._rank_frame),
+                            tk.Label(self._rank_frame),
+                            tk.Label(self._rank_frame),
+                            tk.Label(self._rank_frame)]
+        self._rank_var = [tk.StringVar(),
+                          tk.StringVar(),
+                          tk.StringVar(),
+                          tk.StringVar(),
+                          tk.StringVar(),
+                          tk.StringVar()]
+        self._rank_btn = [tk.Button(self._rank_frame), tk.Button(self._rank_frame), tk.Button(self._rank_frame)]
+
     def __conf_font_size(self, n: Union[int, float] = 1):
-        self._title_font_size = int(25 * n)
+        self._title_font_size = int(27 * n)
         self._win_ctrl_font_size = int(15 * n)
         self._win_info_font_size = int(18 * n)
         self._throw_ctrl_btn_font_size = int(20 * n)
-        self.__check_ctrl_btn_font_size = int(20 * n)
+        self._check_ctrl_btn_font_size = int(20 * n)
         self._sys_info_font_size = int(18 * n)
         self._user_btn_font_size = int(20 * n)
-        self.__msg_font_size = int(20 * n)
+        self._msg_font_size = int(20 * n)
+        self._rank_font_title_size = int(24 * n)
+        self._rank_font_size = int(16 * n)
 
     def __conf_tk(self):
         self.__conf_title_label()
@@ -258,7 +326,8 @@ class GarbageStation:
         self.__conf_cap_label()
         self.__conf_user_btn()
         self.__conf_msg()
-        self.hide_msg()  # 隐藏消息
+        self.__conf_rank()
+        self.hide_msg_rank()  # 隐藏消息
 
     def __conf_windows(self):
         self._window.title('HGSSystem: Garbage Station')
@@ -320,16 +389,19 @@ class GarbageStation:
 
         bt_help: tk.Button = self._win_ctrl_button[0]
         bt_help['text'] = 'Help'
+        bt_help['bg'] = '#A9A9A9'
         bt_help['command'] = lambda: self._status.show_help_info()
         bt_help.place(relx=0.81, rely=0.01, relwidth=0.05, relheight=0.05)
 
         bt_about: tk.Button = self._win_ctrl_button[1]
         bt_about['text'] = 'About'
+        bt_about['bg'] = '#A9A9A9'
         bt_about['command'] = lambda: self._status.show_about_info()
         bt_about.place(relx=0.87, rely=0.01, relwidth=0.05, relheight=0.05)
 
         bt_exit: tk.Button = self._win_ctrl_button[2]
         bt_exit['text'] = 'Exit'
+        bt_exit['bg'] = '#A9A9A9'
         bt_exit['command'] = lambda: self._status.show_exit()
         bt_exit.place(relx=0.93, rely=0.01, relwidth=0.05, relheight=0.05)
 
@@ -395,7 +467,7 @@ class GarbageStation:
                                            ("Hazardous", "#DC143C"),
                                            ("Kitchen", "#32CD32")]
 
-        self._throw_ctrl_frame.place(relx=0.45, rely=0.1, relwidth=0.53, relheight=0.70)
+        self.__show_throw_frame()
 
         for btn, info in zip(self._throw_ctrl_btn, btn_info):
             btn['font'] = btn_font
@@ -413,11 +485,11 @@ class GarbageStation:
         self._throw_ctrl_btn[3].place(relx=0.505, rely=0.505, relwidth=0.495, relheight=0.495)
 
     def __conf_check_btn(self):
-        btn_font = self.__make_font(size=self.__check_ctrl_btn_font_size, weight="bold")
+        btn_font = self.__make_font(size=self._check_ctrl_btn_font_size, weight="bold")
         btn_info: List[Tuple[str, str]] = [("Fail", "#ef7a82"),
                                            ("Pass", "#70f3ff")]
 
-        self._check_ctrl_frame.place(relx=0.45, rely=0.82, relwidth=0.53, relheight=0.16)
+        self.__show_check_frame()
 
         for btn, info in zip(self._check_ctrl_btn, btn_info):
             btn['font'] = btn_font
@@ -487,6 +559,7 @@ class GarbageStation:
             height += height_label + h_label_s / height_count
 
         self._user_btn[0]['state'] = 'disable'
+        self._user_btn[1]['command'] = lambda: self._status.get_show_rank()
         self._user_btn[2]['command'] = lambda: self._status.show_search_info()
 
     def __conf_cap_label(self):
@@ -494,52 +567,145 @@ class GarbageStation:
         self._cap_label.place(relx=0.22, rely=0.66, relwidth=0.2, relheight=0.32)
 
     def __conf_msg(self):
-        title_font = self.__make_font(size=self.__msg_font_size + 1, weight="bold")
-        info_font = self.__make_font(size=self.__msg_font_size - 1)
+        title_font = self.__make_font(size=self._msg_font_size + 1, weight="bold")
+        info_font = self.__make_font(size=self._msg_font_size - 1)
 
         self._msg_frame['bg'] = "#F5FFFA"
         self._msg_frame['bd'] = 5
         self._msg_frame['relief'] = "ridge"
         # frame 不会立即显示
 
-        self._msg_table[0]['font'] = title_font
-        self._msg_table[0]['bg'] = "#F5FFFA"
-        self._msg_table[0]['anchor'] = 'w'
-        self._msg_table[0]['textvariable'] = self._msg_table[2]
+        self._msg_label[0]['font'] = title_font
+        self._msg_label[0]['bg'] = "#F5FFFA"
+        self._msg_label[0]['anchor'] = 'w'
+        self._msg_label[0]['textvariable'] = self._msg_label[2]
 
-        self._msg_table[1]['font'] = info_font
-        self._msg_table[1]['bg'] = "#F5FFFA"
-        self._msg_table[1]['anchor'] = 'nw'
-        self._msg_table[1]['justify'] = 'left'
-        self._msg_table[1]['textvariable'] = self._msg_table[3]
+        self._msg_label[1]['font'] = info_font
+        self._msg_label[1]['bg'] = "#F5FFFA"
+        self._msg_label[1]['anchor'] = 'nw'
+        self._msg_label[1]['justify'] = 'left'
+        self._msg_label[1]['textvariable'] = self._msg_label[3]
 
-        self._msg_table[0].place(relx=0.05, rely=0.05, relwidth=0.9, relheight=0.1)
-        self._msg_table[1].place(relx=0.075, rely=0.2, relwidth=0.85, relheight=0.64)
+        self._msg_label[0].place(relx=0.05, rely=0.05, relwidth=0.9, relheight=0.1)
+        self._msg_label[1].place(relx=0.075, rely=0.2, relwidth=0.85, relheight=0.64)
 
         self._msg_hide['font'] = info_font
         self._msg_hide['bg'] = "#00CED1"
-        self._msg_hide['text'] = 'Hide-Msg'
-        self._msg_hide['command'] = lambda: self.hide_msg()
+        self._msg_hide['text'] = 'close'
+        self._msg_hide['command'] = lambda: self.hide_msg_rank(True)
         self._msg_hide.place(relx=0.375, rely=0.85, relwidth=0.25, relheight=0.1)
 
     def show_msg(self, title, info, msg_type='info'):
-        self._msg_table[2].set(f'{msg_type}: {title}')
-        self._msg_table[3].set(f'{info}')
+        self._msg_label[2].set(f'{msg_type}: {title}')
+        self._msg_label[3].set(f'{info}')
+
+        self.__show_check_frame()
         self._msg_frame.place(relx=0.45, rely=0.20, relwidth=0.53, relheight=0.50)
         frame_width = self._win_width * 0.53
-        self._msg_table[1]['wraplength'] = frame_width * 0.85 - 5  # 设定自动换行的像素
+        self._msg_label[1]['wraplength'] = frame_width * 0.85 - 5  # 设定自动换行的像素
+
         self._throw_ctrl_frame.place_forget()
+        self._rank_frame.place_forget()
+
         self._msg_time = time.time()
 
     def show_warning(self, title, info):
         self.show_msg(title, info, msg_type='Warning')
 
-    def hide_msg(self):
-        self._msg_table[2].set('')
-        self._msg_table[3].set('')
-        self._throw_ctrl_frame.place(relx=0.45, rely=0.1, relwidth=0.53, relheight=0.70)
+    def __conf_rank(self):
+        title_font = self.__make_font(size=self._rank_font_title_size, weight="bold")
+        info_font = self.__make_font(size=self._rank_font_size)
+        btn_font = self.__make_font(size=self._msg_font_size - 1)
+
+        self._rank_frame['bg'] = "#F5F5DC"
+        self._rank_frame['relief'] = "ridge"
+        self._rank_frame['bd'] = 5
+        # frame 不会立即显示
+
+        self._rank_label[0]['font'] = title_font
+        self._rank_label[0]['bg'] = "#F5F5DC"
+        self._rank_label[0]['textvariable'] = self._rank_var[0]
+        self._rank_label[0].place(relx=0.02, rely=0.00, relwidth=0.96, relheight=0.1)
+
+        for lb, v in zip(self._rank_label[1:], self._rank_var[1:]):
+            lb['font'] = info_font
+            lb['bg'] = "#F5FFFA"
+            lb['textvariable'] = v
+            lb['relief'] = "ridge"
+            lb['bd'] = 2
+
+        # 标签结束的高度为 0.12 + 0.15 * 5 = 0.87
+        for btn, text in zip(self._rank_btn, ("prev", "close", "next")):
+            btn['font'] = btn_font
+            btn['bg'] = "#00CED1"
+            btn['text'] = text
+
+        self._rank_btn[0].place(relx=0.050, rely=0.88, relwidth=0.25, relheight=0.1)
+        self._rank_btn[1].place(relx=0.375, rely=0.88, relwidth=0.25, relheight=0.1)
+        self._rank_btn[2].place(relx=0.700, rely=0.88, relwidth=0.25, relheight=0.1)
+
+    def set_rank_info(self, page, page_c, prev_func: Callable, next_func: Callable,
+                      rank_info: List[Tuple[int, uname_t, uid_t, score_t, score_t, Optional[str]]]):
+        if len(rank_info) > 5:
+            rank_info = rank_info[:5]
+
+        for lb in self._rank_label[1:]:  # 隐藏全部标签
+            lb.place_forget()
+
+        height = 0.12
+        for i, info in enumerate(rank_info):
+            no, name, uid, score, eval_, color = info
+            self._rank_var[i + 1].set(f"NO.{no}  {name}\nUID: {uid[0:conf.ranking_tk_show_uid_len]}\n"
+                                      f"Score: {score} Reputation: {eval_}")
+            if color is None:
+                self._rank_label[i + 1]['bg'] = "#F5FFFA"
+            else:
+                self._rank_label[i + 1]['bg'] = color
+
+            self._rank_label[i + 1].place(relx=0.04, rely=height, relwidth=0.92, relheight=0.13)
+            height += 0.15
+
+        self._rank_btn[0]['command'] = prev_func
+        self._rank_btn[0]['state'] = 'normal'
+        self._rank_btn[1]['command'] = lambda: self.hide_msg_rank(True)
+        self._rank_btn[2]['command'] = next_func
+        self._rank_btn[2]['state'] = 'normal'
+
+        if page == 1:
+            self._rank_btn[0]['state'] = 'disable'
+        if page == page_c:
+            self._rank_btn[2]['state'] = 'disable'
+
+    def show_rank(self, page: int, page_c: int, prev_func: Callable, next_func: Callable,
+                  rank_info: List[Tuple[int, uname_t, uid_t, score_t, score_t, Optional[str]]],
+                  title: str = 'Ranking'):
+        self._rank_var[0].set(f'{title} ({page}/{page_c})')
+        self._rank_frame.place(relx=0.47, rely=0.15, relwidth=0.47, relheight=0.80)
+        frame_width = self._win_width * 0.53
+
+        for lb in self._rank_label[1:]:
+            lb['wraplength'] = frame_width * 0.85 - 5  # 设定自动换行的像素
+
+        self.set_rank_info(page, page_c, prev_func, next_func, rank_info)
+        self._throw_ctrl_frame.place_forget()
+        self._check_ctrl_frame.place_forget()
         self._msg_frame.place_forget()
         self._msg_time = None
+
+    def hide_msg_rank(self, update: bool = False):
+        self.__show_check_frame()  # rank会令此消失
+        self.__show_throw_frame()  # rank和msg令此消失
+        self._msg_frame.place_forget()
+        self._rank_frame.place_forget()
+        self._msg_time = None
+        if update:
+            self._status.update_user_time()
+
+    def __show_check_frame(self):
+        self._check_ctrl_frame.place(relx=0.45, rely=0.82, relwidth=0.53, relheight=0.16)
+
+    def __show_throw_frame(self):
+        self._throw_ctrl_frame.place(relx=0.45, rely=0.1, relwidth=0.53, relheight=0.70)
 
     def __define_after(self, ms, func, *args):
         self._window.after(ms, self.__after_func_maker(func), *args)
@@ -589,9 +755,9 @@ class GarbageStation:
                 uid.set('error')
             else:
                 uid.set(uid_get[0:21])
-            eval_.set('Manager-User')
-            rubbish.set('Manager-User')
-            score.set('Manager-User')
+            eval_.set('Manager')
+            rubbish.set('Manager')
+            score.set('Manager')
             self.__switch_to_manager_user()
         else:
             name.set(user_info.get('name'))
@@ -599,7 +765,7 @@ class GarbageStation:
             if uid_get is None or len(uid_get) < 32:
                 uid.set('error')
             else:
-                uid.set(uid_get[0:21])
+                uid.set(uid_get[0:conf.tk_show_uid_len])
             eval_.set(user_info.get('reputation'))
             rubbish.set(user_info.get('rubbish'))
             score.set(user_info.get('score'))
@@ -632,7 +798,7 @@ class GarbageStation:
             self.update_control()
         elif res[0] == ControlScanType.throw_garbage:
             self._status.to_get_garbage_type(res[1])
-            self.hide_msg()  # 如果有msg也马上隐藏
+            self.hide_msg_rank()  # 如果有msg也马上隐藏
             self.update_control()
         elif res[0] == ControlScanType.check_garbage:
             self._status.to_get_garbage_check(res[1])
@@ -644,7 +810,7 @@ class GarbageStation:
             return
 
         if time.time() - self._msg_time > 10:  # 10s 自动关闭消息
-            self.hide_msg()
+            self.hide_msg_rank()
 
     def __switch_to_normal_user(self):
         self.normal_user_disable()
@@ -690,5 +856,6 @@ class GarbageStation:
         self._window.destroy()
 
 
-station = GarbageStation()
-station.mainloop()
+if __name__ == '__main__':
+    station = GarbageStation()
+    station.mainloop()

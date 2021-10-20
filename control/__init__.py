@@ -5,7 +5,7 @@ from sql.db import DB, mysql_db
 from sql.user import update_user, find_user_by_id, creat_new_user
 from sql.garbage import update_garbage, creat_new_garbage
 from equipment.scan import HGSCapture, HGSQRCoder, QRCode, capture, qr_capture
-from equipment.scan_user import scan_user
+from equipment.scan_user import scan_user, write_uid_qr, write_all_uid_qr
 from equipment.scan_garbage import scan_garbage, write_gid_qr
 from core.user import User, UserNotSupportError
 from core.garbage import GarbageBag, GarbageType, GarbageBagNotUse
@@ -35,6 +35,10 @@ class CreatUserError(ControlError):
     ...
 
 
+class RankingUserError(ControlError):
+    ...
+
+
 class ControlScanType:
     switch_user = 1
     throw_garbage = 2
@@ -61,6 +65,10 @@ class Control:
         self._loc: location_t = loc
         self._user: Optional[User] = None  # 操作者
         self._user_last_time: time_t = 0
+
+    def update_user_time(self):
+        if self.check_user():
+            self._user_last_time = time.time()
 
     def is_manager(self):
         if not self.check_user():
@@ -93,6 +101,11 @@ class Control:
     def get_user_info(self):
         self.__check_user()
         return self._user.get_info()
+
+    def get_uid_no_update(self):
+        if not self.check_user():
+            return ""
+        return self._user.get_uid()
 
     def get_user_info_no_update(self) -> Dict[str, str]:
         if not self.check_user():
@@ -187,6 +200,41 @@ class Control:
                 raise CreatUserError
             re.append(user)
         return re
+
+    def get_uid_qrcode(self, uid: uid_t, path: str) -> Tuple[str, Optional[User]]:
+        return write_uid_qr(uid, path, self._db)
+
+    def get_uid_qrcode_from_list(self, uid_list: List[uid_t], path: str) -> List[Tuple[str, Optional[User]]]:
+        re = []
+        for uid in uid_list:
+            res = write_uid_qr(uid, path, self._db)
+            re.append(res)
+        return re
+
+    def get_all_uid_qrcode(self, path: str, where: str = "") -> List[str]:
+        return write_all_uid_qr(path, self._db, where=where)
+
+    def ranking(self, limit: int = 0, order_by: str = 'DESC') -> list[Tuple[uid_t, uname_t, score_t, score_t]]:
+        """
+        获取排行榜的功能
+        :return:
+        """
+        if limit > 0:
+            limit = f"LIMIT {int(limit)}"
+        else:
+            limit = ""
+
+        if order_by != 'ASC' and order_by != 'DESC':
+            order_by = 'DESC'
+
+        cur = self._db.search((f"SELECT uid, name, score, reputation "
+                               f"FROM user "
+                               f"WHERE manager = 0 "
+                               f"ORDER BY reputation {order_by}, score {order_by} "
+                               f"{limit}"))
+        if cur is None:
+            raise RankingUserError
+        return list(cur.fetchall())
 
 
 global_control = Control()

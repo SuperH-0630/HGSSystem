@@ -3,7 +3,7 @@ from tool.type_ import *
 from tool.login import creat_uid, randomPassword
 from core.user import NormalUser, ManagerUser, User
 import conf
-from .garbage import countGarbageByTime
+from garbage import countGarbageByTime
 
 
 def find_user_by_id(uid: uid_t, db: DB) -> Optional[User]:
@@ -84,17 +84,17 @@ def creat_new_user(name: Optional[uname_t], passwd: Optional[passwd_t], phone: p
 
 
 if __name__ == '__main__':
-    name_ = 'Huan8'
+    name_ = 'Huan12'
     usr = find_user_by_name(name_, "123", mysql_db)
     if usr is None:
         usr = creat_new_user(name_, "123", "12345678900", False, mysql_db)
     print(usr)
 
-    for i in range(90):
+    for i in range(9):
         usr.evaluate(False)
         print(usr)
 
-    for i in range(90):
+    for i in range(1):
         usr.evaluate(True)
         print(usr)
 

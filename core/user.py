@@ -3,7 +3,6 @@ import conf
 from tool.type_ import *
 from tool.time_ import HGSTime
 from .garbage import GarbageBag, GarbageType
-from sql.garbage import update_garbage
 
 
 class UserException(Exception):

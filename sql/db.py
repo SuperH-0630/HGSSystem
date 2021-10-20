@@ -89,9 +89,6 @@ class DB:
     def done_commit(self):
         self._db.commit()
 
-
-mysql_db = DB()
-
 if __name__ == '__main__':
     # 测试程序
     mysql_db = DB()

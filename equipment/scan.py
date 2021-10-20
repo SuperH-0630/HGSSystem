@@ -6,7 +6,8 @@ from tool.type_ import *
 
 
 class HGSCapture:
-    def __init__(self, capnum: int = 0, *args, **kwargs):
+    def __init__(self, capnum: int = conf.capture_num, *args, **kwargs):
+        args = *args, *conf.capture_arg
         if cv2.CAP_DSHOW not in args:
             args = *args, cv2.CAP_DSHOW
         self._capture = cv2.VideoCapture(capnum, *args, **kwargs)
@@ -93,9 +94,9 @@ class HGSQRCoder:
         return False
 
 
-capture = HGSCapture(capnum=conf.capture_num, *conf.capture_arg)
-qr_capture = HGSQRCoder(capture)
 if __name__ == '__main__':
+    capture = HGSCapture()
+    qr_capture = HGSQRCoder(capture)
     while True:
         capture.get_image()
         qr_data = qr_capture.get_qr_code()

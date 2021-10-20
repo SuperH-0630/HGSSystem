@@ -1,6 +1,6 @@
 import time
 from decimal import Decimal
-from db import DB, mysql_db, DBBit, DBDataException, DBDoneException
+from db import DB, DBBit, DBDataException, DBDoneException
 from tool.type_ import *
 from tool.time_ import HGSTime
 from core.garbage import GarbageBag, GarbageType
@@ -145,6 +145,7 @@ def creat_new_garbage(db: DB) -> Optional[GarbageBag]:
 
 
 if __name__ == '__main__':
+    mysql_db = DB()
     bag = creat_new_garbage(mysql_db)
     print(bag)
     bag.config_use(GarbageType.recyclable, HGSTime(), "1e1d30a1f9b78c8fa852d19b4cfaee79", "HuaDu")

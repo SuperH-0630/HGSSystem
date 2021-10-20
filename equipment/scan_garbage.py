@@ -1,8 +1,8 @@
 from core.garbage import GarbageBag
-from sql.db import DB, mysql_db
+from sql.db import DB
 from sql.garbage import find_garbage
 from type_ import *
-from scan import QRCode, capture, qr_capture
+from scan import QRCode, HGSCapture, HGSQRCoder
 from tool.pic import write_text
 import re
 import os.path
@@ -74,6 +74,9 @@ def write_all_gid_qr(path: str, db: DB, where: str = "") -> List[Tuple[str,]]:
 
 
 if __name__ == '__main__':
+    mysql_db = DB()
+    capture = HGSCapture()
+    qr_capture = HGSQRCoder(capture)
     write_all_gid_qr("gid", mysql_db)
     while True:
         capture.get_image()

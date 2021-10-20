@@ -1,4 +1,4 @@
-from db import DB, mysql_db, DBBit
+from db import DB, DBBit
 from tool.type_ import *
 from tool.login import creat_uid, randomPassword
 from core.user import NormalUser, ManagerUser, User
@@ -84,6 +84,7 @@ def creat_new_user(name: Optional[uname_t], passwd: Optional[passwd_t], phone: p
 
 
 if __name__ == '__main__':
+    mysql_db = DB()
     name_ = 'Huan12'
     usr = find_user_by_name(name_, "123", mysql_db)
     if usr is None:

@@ -1,10 +1,23 @@
-import conf
 import tkinter as tk
 import tkinter.font as font
+from PIL import Image, ImageTk
+
+import conf
+
 from tool.type_ import *
+
+from sql.db import DB
 
 
 class RankingStationException(Exception):
+    ...
+
+
+class RankingError(RankingStationException):
+    ...
+
+
+class RankingPageError(RankingStationException):
     ...
 
 
@@ -13,46 +26,100 @@ class RankingStatus:
     status_get_garbage_type = 2
     status_get_garbage_check = 3
 
-    def __init__(self, win):
+    def __init__(self, win, db: DB):
         self._win: RankingStation = win
+        self._db = db
         self.rank = [[]]
-        self.rank_index = 0
 
-    def get_show_rank(self):
-        rank_list = self.ranking()
-        self.rank = [[]]
+        self.rank_index = 0
+        self.rank_count = 1
+
+        self.offset = 0
+        self.limit_n = 2
+
+    def get_rank(self, offset: int = 0) -> Tuple[bool, list]:
+        limit = self.rank_count * self.limit_n
+        offset = self.offset + limit * offset  # offset为0表示不移动, 1表示向前, -1表示向后
+        cur = self._db.search((f"SELECT uid, name, score, reputation "
+                               f"FROM user "
+                               f"WHERE manager = 0 "
+                               f"ORDER BY reputation DESC, score DESC "
+                               f"LIMIT {limit} OFFSET {offset};"))
+        if cur is None or cur.rowcount == 0:
+            return False, []
+        self.offset = offset
+
+        rank_list = list(cur.fetchall())
+
+        rank = [[]]
         for i, r in enumerate(rank_list):
-            if len(self.rank[-1]) == 5:
-                self.rank.append([])
+            if len(rank[-1]) == self.rank_count:
+                rank.append([])
             color = None
-            if i == 0:
+            if self.offset + i == 0:
                 color = "#eaff56"
-            elif i == 1:
+            elif self.offset + i == 1:
                 color = "#ffa631"
-            elif i == 2:
+            elif self.offset + i == 2:
                 color = "#ff7500"
-            self.rank[-1].append((i + 1, r[1], r[0], r[2], r[3], color))
+            rank[-1].append((self.offset + i + 1, r[1], r[0], r[2], r[3], color))
 
-        self.rank_index = 0
-        self.show_rank(0)
+        return True, rank
 
-    def show_rank(self, n: int):
-        self.update_user_time()
-        self.rank_index += n
-
-        if self.rank_index < 0 or self.rank_index >= len(self.rank):
+    def rank_page_to_next(self):
+        if self.rank_index == len(self.rank) - 1:
+            self._win.set_next_btn(True)  # 当 rank_index为最后一项时, 该函数不应该被调用(除非数据库被外部改动)
             return
 
-        self._win.show_rank(self.rank_index + 1, len(self.rank),
-                            lambda: self.show_rank(-1),
-                            lambda: self.show_rank(+1),
-                            self.rank[self.rank_index])
+        self.rank_index += 1
+        if self.rank_index == len(self.rank) - 1:  # 最后一项
+            if len(self.rank[self.rank_index]) == self.rank_count:
+                res, rank = self.get_rank(1)  # 向前移动一个offset
+                if res:
+                    self.rank = self.rank[self.rank_index], *rank  # 调整rank的内容
+                    self.rank_index = 0
+                else:
+                    self._win.set_next_btn(True)
+            else:  # 如果最后一个表格没有填满, 直接判定无next
+                self._win.set_next_btn(True)
+        self._win.show_rank(self.rank[self.rank_index])
+        self._win.set_prev_btn(False)
+
+    def rank_page_to_prev(self):
+        if self.rank_index == 0:  # 当 rank_index为最后一项时, 该函数不应该被调用(除非数据库被外部改动)
+            self._win.set_prev_btn(True)
+            return
+
+        self.rank_index -= 1
+        if self.rank_index == 0:  # 回到第一项
+            res, rank = self.get_rank(-1)  # 向后移动一个offset
+            if res:
+                self.rank = *rank, self.rank[self.rank_index]  # 调整rank的内容
+                self.rank_index = 0
+            else:
+                self._win.set_prev_btn(True)
+        self._win.show_rank(self.rank[self.rank_index])
+        self._win.set_next_btn(False)
+
+    def show_rank(self):
+        self.rank_index = 0
+        self.offset = 0
+        self.rank_count = self._win.get_rank_count()
+        res, self.rank = self.get_rank(0)
+
+        self._win.show_rank(self.rank[0])
+
+        self._win.set_prev_btn(True)
+        if len(self.rank) == 1:
+            self._win.set_next_btn(True)
+        else:
+            self._win.set_next_btn(False)
 
 
 class RankingStation:
-    def __init__(self, refresh_delay: int = conf.tk_refresh_delay):
+    def __init__(self, db: DB, refresh_delay: int = conf.tk_refresh_delay):
         self.refresh_delay = refresh_delay
-        self._status = RankingStatus(self)
+        self._status = RankingStatus(self, db)
 
         self._window = tk.Tk()
         self._sys_height = self._window.winfo_screenheight()
@@ -63,9 +130,16 @@ class RankingStation:
         self._full_screen = False
         self.__conf_windows()
 
+        self._next_btn: bool = True  # 表示开关是否启用
+        self._prev_btn: bool = True
+        self._auto: bool = False
+        self._auto_to_next: bool = True  # auto的移动方向
+        self._auto_time: int = 5000  # 5s
+
         self.__conf_font_size()
         self.__creat_tk()
         self.__conf_tk()
+        self._status.show_rank()
 
     def __creat_tk(self):
         self._rank_frame = tk.Frame(self._window)
@@ -83,6 +157,7 @@ class RankingStation:
         self._rank_font_btn_size = int(20 * n)
 
     def __conf_tk(self):
+        self.__conf_windows_bg()
         self.__conf_rank()
 
     def __conf_windows(self):
@@ -90,6 +165,32 @@ class RankingStation:
         self._window.geometry(f'{self._win_width}x{self._win_height}')
         self._window['bg'] = "#F0FFF0"  # 蜜瓜绿
         self._window.resizable(False, False)
+        self.bg_img = None
+        self.bg_lb = tk.Label(self._window)
+        self.bg_lb['bg'] = "#F0FFF0"  # 蜜瓜绿
+        self.bg_lb.place(relx=0, rely=0, relwidth=1, relheight=1)
+
+        self._window.bind("<F11>", lambda _: self.__switch_full_screen())
+
+    def __conf_windows_bg(self):
+        img = Image.open(conf.pic_d['rank_bg']).resize((self._win_width, self._win_height))
+        self.bg_img = ImageTk.PhotoImage(img)
+        self.bg_lb['image'] = self.bg_img
+        self.bg_lb.place(relx=0, rely=0, relwidth=1, relheight=1)
+
+    def __switch_full_screen(self):
+        self._full_screen = not self._full_screen
+        self._window.attributes("-fullscreen", self._full_screen)
+
+        width = self._sys_width * (1 / 3)
+        height = self._sys_height * (2 / 3)
+        self._win_width = self._window.winfo_width()
+        self._win_height = self._window.winfo_height()
+
+        n = min((self._win_height / height), (self._win_width / width))  # 因为横和纵不是平均放大, 因此取倍数小的
+        self.__conf_font_size(n)
+        self.__conf_tk()
+        self._status.show_rank()
 
     def __conf_rank(self):
         title_font = self.__make_font(size=self._rank_font_title_size, weight="bold")
@@ -146,55 +247,101 @@ class RankingStation:
             self._rank_y_height.append((height, height_l))
             height += height_l + height_s
 
-        for btn, text, x in zip(self._rank_btn, ("prev", "close", "next"), (0.050, 0.375, 0.700)):
+        for btn, text, x in zip(self._rank_btn,
+                                ("prev", "manual" if self._auto else "auto", "next"), (0.050, 0.375, 0.700)):
             btn['font'] = btn_font
             btn['text'] = text
             btn['bg'] = "#00CED1"
-            btn['state'] = "disable"
             btn.place(relx=x, rely=0.93, relwidth=0.25, relheight=0.06)
-        self.show_rank()
 
-    # def set_rank_info(self, page, page_c, prev_func: Callable, next_func: Callable,
-    #                   rank_info: List[Tuple[int, uname_t, uid_t, score_t, score_t, Optional[str]]]):
-    #     if len(rank_info) > 5:
-    #         rank_info = rank_info[:5]
-    #
-    #     for lb in self._rank_label[1:]:  # 隐藏全部标签
-    #         lb.place_forget()
-    #
-    #     height = 0.12
-    #     for i, info in enumerate(rank_info):
-    #         no, name, uid, score, eval_, color = info
-    #         self._rank_var[i + 1].set(f"NO.{no}  {name}\nUID: {uid[0:conf.ranking_tk_show_uid_len]}\n"
-    #                                   f"Score: {score} Reputation: {eval_}")
-    #         if color is None:
-    #             self._rank_label[i + 1]['bg'] = "#F5FFFA"
-    #         else:
-    #             self._rank_label[i + 1]['bg'] = color
-    #
-    #         self._rank_label[i + 1].place(relx=0.04, rely=height, relwidth=0.92, relheight=0.13)
-    #         height += 0.15
-    #
-    #     self._rank_btn[0]['command'] = prev_func
-    #     self._rank_btn[0]['state'] = 'normal'
-    #     self._rank_btn[1]['command'] = lambda: self.hide_msg_rank(True)
-    #     self._rank_btn[2]['command'] = next_func
-    #     self._rank_btn[2]['state'] = 'normal'
-    #
-    #     if page == 1:
-    #         self._rank_btn[0]['state'] = 'disable'
-    #     if page == page_c:
-    #         self._rank_btn[2]['state'] = 'disable'
+        self._rank_btn[0]['command'] = lambda: self._status.rank_page_to_prev()
+        self._rank_btn[1]['command'] = lambda: self.rank_auto(True)
+        self._rank_btn[2]['command'] = lambda: self._status.rank_page_to_next()
 
-    def show_rank(self, *args):
-        for i in range(self._rank_count):
+    def set_rank_info(self, rank_info: List[Tuple[int, uname_t, uid_t, score_t, score_t, Optional[str]]]):
+        if len(rank_info) > self._rank_count:
+            rank_info = rank_info[:self._rank_count]
+
+        for lb in self._rank_label:  # 隐藏全部标签
+            lb.place_forget()
+
+        for i, info in enumerate(rank_info):
+            no, name, uid, score, eval_, color = info
+            self._rank_var[i].set(f"NO.{no}  {name}\nUID: {uid[0:conf.ranking_tk_show_uid_len]}\n"
+                                  f"Score: {score} Reputation: {eval_}")
+            if color is None:
+                self._rank_label[i]['bg'] = "#F5FFFA"
+            else:
+                self._rank_label[i]['bg'] = color
+
             rely = self._rank_y_height[i][0]
             relheight = self._rank_y_height[i][1]
             self._rank_label[i].place(relx=0.04, rely=rely, relwidth=0.92, relheight=relheight)
 
+    def show_rank(self, rank_info: List[Tuple[int, uname_t, uid_t, score_t, score_t, Optional[str]]]):
+        self.set_rank_info(rank_info)
+        self._rank_title_var.set("Ranking")
+
+    def rank_auto(self, auto):
+        if auto:
+            self._rank_btn[1]['command'] = lambda: self.rank_auto(False)
+            self._rank_btn[1]['text'] = 'manual'
+            self._auto = True
+            self._window.after(self._auto_time, self.update_rank_auto)  # 注册自动函数
+            self.disable_btn()
+        else:
+            self._rank_btn[1]['command'] = lambda: self.rank_auto(True)
+            self._rank_btn[1]['text'] = 'auto'
+            self._auto = False
+            self.able_btn()
+
+    def update_rank_auto(self):
+        if not self._auto:
+            return
+
+        if (self._auto_to_next and self._next_btn or
+                not self._auto_to_next and not self._prev_btn and self._next_btn):
+            self._status.rank_page_to_next()
+            self._auto_to_next = True
+        elif (not self._auto_to_next and self._prev_btn or
+              self._auto_to_next and not self._next_btn and self._prev_btn):
+            self._status.rank_page_to_prev()
+            self._auto_to_next = False
+        else:
+            return  # 无法动弹
+
+        self._window.after(self._auto_time, self.update_rank_auto)
+
     @staticmethod
     def __make_font(family: str = 'noto', **kwargs):
         return font.Font(family=conf.font_d[family], **kwargs)
+
+    def set_next_btn(self, disable: False):
+        if disable or self._auto:  # auto 模式令btn失效
+            self._rank_btn[2]['state'] = 'disable'
+        else:
+            self._rank_btn[2]['state'] = 'normal'
+        self._next_btn = not disable
+
+    def set_prev_btn(self, disable: False):
+        if disable or self._auto:
+            self._rank_btn[0]['state'] = 'disable'
+        else:
+            self._rank_btn[0]['state'] = 'normal'
+        self._prev_btn = not disable
+
+    def disable_btn(self):
+        self._rank_btn[0]['state'] = 'disable'
+        self._rank_btn[2]['state'] = 'disable'
+
+    def able_btn(self):
+        if self._prev_btn:
+            self._rank_btn[0]['state'] = 'normal'
+        if self._next_btn:
+            self._rank_btn[2]['state'] = 'normal'
+
+    def get_rank_count(self):
+        return self._rank_count
 
     def mainloop(self):
         self._window.mainloop()
@@ -204,5 +351,6 @@ class RankingStation:
 
 
 if __name__ == '__main__':
-    station = RankingStation()
+    mysql_db = DB()
+    station = RankingStation(mysql_db)
     station.mainloop()

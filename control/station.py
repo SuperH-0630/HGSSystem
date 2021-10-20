@@ -18,7 +18,7 @@ from sql.db import DB
 from sql.user import update_user, find_user_by_id, creat_new_user
 from sql.garbage import update_garbage, creat_new_garbage
 
-from equipment.scan import HGSCapture, HGSQRCoder, QRCode
+from equipment.scan import HGSCapture, HGSQRCoder
 from equipment.scan_user import scan_user, write_uid_qr, write_all_uid_qr
 from equipment.scan_garbage import scan_garbage, write_gid_qr
 

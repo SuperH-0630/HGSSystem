@@ -30,7 +30,8 @@ font_d = {
 }
 
 pic_d = {
-    "head": head_pic
+    "head": head_pic,
+    "rank_bg": rank_bg_pic
 }
 
 capture_num = 0  # 摄像头号

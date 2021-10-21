@@ -72,7 +72,7 @@ def creat_new_user(name: Optional[uname_t], passwd: Optional[passwd_t], phone: p
     uid = creat_uid(name, passwd)
     if is_user_exists(uid, db):
         return None
-    is_manager = manager if '1' else '0'
+    is_manager = '1' if manager else '0'
     cur = db.done(f"INSERT INTO user(uid, name, manager, phone, score, reputation) "
                   f"VALUES ('{uid}', '{name}', {is_manager}, '{phone}', {conf.default_score}, "
                   f"{conf.default_reputation});")

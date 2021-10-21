@@ -1,4 +1,5 @@
 import pymysql
+import threading
 from conf import MYSQL_URL, MYSQL_NAME, MYSQL_PASSWORD
 from tool.type_ import *
 
@@ -31,6 +32,7 @@ class DB:
         except pymysql.err.OperationalError:
             raise DBException
         self._cursor = self._db.cursor()
+        self._lock = threading.RLock()
 
     def __del__(self):
         self.close()
@@ -42,6 +44,7 @@ class DB:
             self._db.close()
         self._db = None
         self._cursor = None
+        self._lock = None
 
     def is_connect(self) -> bool:
         if self._cursor is None or self._db is None:
@@ -58,9 +61,12 @@ class DB:
             raise DBCloseException
 
         try:
+            self._lock.acquire()  # 上锁
             self._cursor.execute(sql)
         except pymysql.MySQLError:
             return None
+        finally:
+            self._lock.release()  # 释放锁
         return self._cursor
 
     def done(self, sql) -> Union[None, pymysql.cursors.Cursor]:
@@ -68,26 +74,36 @@ class DB:
             raise DBCloseException
 
         try:
+            self._lock.acquire()
             self._cursor.execute(sql)
         except pymysql.MySQLError:
             self._db.rollback()
             return None
         finally:
             self._db.commit()
+            self._lock.release()
         return self._cursor
 
     def done_(self, sql) -> Union[None, pymysql.cursors.Cursor]:
         if self._cursor is None or self._db is None:
             raise DBCloseException
         try:
+            self._lock.acquire()
             self._cursor.execute(sql)
         except pymysql.MySQLError:
             self._db.rollback()
             raise DBDoneException
+        finally:
+            self._lock.release()
         return self._cursor
 
     def done_commit(self):
-        self._db.commit()
+        try:
+            self._lock.acquire()
+            self._db.commit()
+        finally:
+            self._lock.release()
+
 
 if __name__ == '__main__':
     # 测试程序

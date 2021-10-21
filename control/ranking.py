@@ -117,8 +117,7 @@ class RankingStatus:
 
 
 class RankingStation:
-    def __init__(self, db: DB, refresh_delay: int = conf.tk_refresh_delay):
-        self.refresh_delay = refresh_delay
+    def __init__(self, db: DB):
         self._status = RankingStatus(self, db)
 
         self._window = tk.Tk()

@@ -15,12 +15,12 @@ from core.user import User, UserNotSupportError
 from core.garbage import GarbageBag, GarbageType, GarbageBagNotUse
 
 from sql.db import DB
-from sql.user import update_user, find_user_by_id, creat_new_user
-from sql.garbage import update_garbage, creat_new_garbage
+from sql.user import update_user, find_user_by_id
+from sql.garbage import update_garbage
 
 from equipment.scan import HGSCapture, HGSQRCoder
-from equipment.scan_user import scan_user, write_uid_qr, write_all_uid_qr
-from equipment.scan_garbage import scan_garbage, write_gid_qr
+from equipment.scan_user import scan_user
+from equipment.scan_garbage import scan_garbage
 
 
 class GarbageStationException(Exception):
@@ -36,14 +36,6 @@ class ThrowGarbageError(GarbageStationException):
 
 
 class CheckGarbageError(GarbageStationException):
-    ...
-
-
-class CreatGarbageError(GarbageStationException):
-    ...
-
-
-class CreatUserError(GarbageStationException):
     ...
 
 
@@ -190,48 +182,7 @@ class GarbageStationStatus:
         update_user(self._user, self._db)
         update_user(user, self._db)
 
-    def creat_garbage(self, path: str, num: int = 1) -> List[tuple[str, Optional[GarbageBag]]]:
-        self.__check_manager_user()
-        if self._user is None:
-            raise ControlNotLogin
-
-        re = []
-        for _ in range(num):
-            gar = creat_new_garbage(self._db)
-            if gar is None:
-                raise CreatGarbageError
-            res = write_gid_qr(gar.get_gid(), path, self._db)
-            re.append(res)
-        return re
-
-    def creat_user(self, name: uname_t, passwd: passwd_t, phone: str, manager: bool) -> Optional[User]:
-        user = creat_new_user(name, passwd, phone, manager, self._db)
-        if user is None:
-            raise CreatUserError
-        return user
-
-    def creat_user_from_list(self, user_list: List[Tuple[uname_t, passwd_t, str]], manager: bool) -> List[User]:
-        re = []
-        for i in user_list:
-            user = creat_new_user(i[0], i[1], i[2], manager, self._db)
-            if user is None:
-                raise CreatUserError
-            re.append(user)
-        return re
-
-    def get_uid_qrcode(self, uid: uid_t, path: str) -> Tuple[str, Optional[User]]:
-        return write_uid_qr(uid, path, self._db)
-
-    def get_uid_qrcode_from_list(self, uid_list: List[uid_t], path: str) -> List[Tuple[str, Optional[User]]]:
-        re = []
-        for uid in uid_list:
-            res = write_uid_qr(uid, path, self._db)
-            re.append(res)
-        return re
-
-    def get_all_uid_qrcode(self, path: str, where: str = "") -> List[str]:
-        return write_all_uid_qr(path, self._db, where=where)
-
+    # TODO-szh 涉及数据库, 改为异步执行避免阻塞
     def ranking(self, limit: int = 0, order_by: str = 'DESC') -> list[Tuple[uid_t, uname_t, score_t, score_t]]:
         """
         获取排行榜的功能
@@ -270,7 +221,7 @@ class GarbageStationStatus:
             self._garbage = None
         return self._garbage
 
-    def throw_garbage(self, garbage_type: enum):
+    def throw_garbage(self, garbage_type: enum):  # TODO-szh 涉及数据库, 改为异步执行避免阻塞
         self.update_user_time()
         if self._flat != GarbageStationStatus.status_get_garbage_type or self._garbage is None:
             self._win.show_warning("Operation Fail", "You should login first and scan the QR code of the trash bag")
@@ -312,9 +263,14 @@ class GarbageStationStatus:
         info = self._garbage.get_info()
         garbage_type = GarbageType.GarbageTypeStrList[int(info['type'])]
         time_str = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(float(info['use_time'])))
+        check = ""
+        if info['checker'] != 'None':
+            check = f'Checker is f{info["checker"][0:conf.tk_show_uid_len]}\nCheckResult is {info["check"]}\n'
         self._win.show_msg("Garbage Info", (f"Type is {garbage_type}\n"
+                                            f"User is {info['user'][0:conf.tk_show_uid_len]}\n"
                                             f"Location:\n  {info['loc']}\n"
-                                            f"Date:\n  {time_str}"))
+                                            f"{check}"
+                                            f"Date:\n  {time_str}"), big=False)  # 不遮蔽Pass和Fail按键
 
     def show_user_info(self):
         self.update_user_time()
@@ -416,10 +372,7 @@ The function has not yet been implemented.
             self._win.show_msg("RankError", f'Unable to get leaderboard data')
             return
 
-        self._win.show_rank(self.rank_index + 1, len(self.rank),
-                            lambda: self.show_rank(-1),
-                            lambda: self.show_rank(+1),
-                            self.rank[self.rank_index])
+        self._win.show_rank(self.rank_index + 1, len(self.rank), self.rank[self.rank_index])
 
 
 class GarbageStation:
@@ -804,17 +757,24 @@ class GarbageStation:
         self._msg_hide['command'] = lambda: self.hide_msg_rank(True)
         self._msg_hide.place(relx=0.375, rely=0.85, relwidth=0.25, relheight=0.1)
 
-    def show_msg(self, title, info, msg_type='info'):
+    def show_msg(self, title, info, msg_type='info', big: bool = True):
         self._msg_label[2].set(f'{msg_type}: {title}')
         self._msg_label[3].set(f'{info}')
 
-        self.__show_check_frame()
-        self._msg_frame.place(relx=0.45, rely=0.20, relwidth=0.53, relheight=0.50)
         frame_width = self._win_width * 0.53
         self._msg_label[1]['wraplength'] = frame_width * 0.85 - 5  # 设定自动换行的像素
 
-        self._throw_ctrl_frame.place_forget()
-        self._rank_frame.place_forget()
+        if big:
+            self._msg_frame.place(relx=0.45, rely=0.15, relwidth=0.53, relheight=0.70)
+            self._check_ctrl_frame.place_forget()
+            self._throw_ctrl_frame.place_forget()
+            self._rank_frame.place_forget()
+        else:
+            self._msg_frame.place(relx=0.45, rely=0.20, relwidth=0.53, relheight=0.50)
+            self.__show_check_frame()
+
+            self._throw_ctrl_frame.place_forget()
+            self._rank_frame.place_forget()
 
         self._msg_time = time.time()
 
@@ -850,11 +810,15 @@ class GarbageStation:
             btn['text'] = text
 
         self._rank_btn[0].place(relx=0.050, rely=0.88, relwidth=0.25, relheight=0.1)
-        self._rank_btn[1].place(relx=0.375, rely=0.88, relwidth=0.25, relheight=0.1)
-        self._rank_btn[2].place(relx=0.700, rely=0.88, relwidth=0.25, relheight=0.1)
+        self._rank_btn[0]['command'] = lambda: self._status.show_rank(-1)
 
-    def set_rank_info(self, page, page_c, prev_func: Callable, next_func: Callable,
-                      rank_info: List[Tuple[int, uname_t, uid_t, score_t, score_t, Optional[str]]]):
+        self._rank_btn[1].place(relx=0.375, rely=0.88, relwidth=0.25, relheight=0.1)
+        self._rank_btn[1]['command'] = lambda: self.hide_msg_rank(True)
+
+        self._rank_btn[2].place(relx=0.700, rely=0.88, relwidth=0.25, relheight=0.1)
+        self._rank_btn[2]['command'] = lambda: self._status.show_rank(+1)
+
+    def set_rank_info(self, rank_info: List[Tuple[int, uname_t, uid_t, score_t, score_t, Optional[str]]]):
         if len(rank_info) > 5:
             rank_info = rank_info[:5]
 
@@ -874,18 +838,7 @@ class GarbageStation:
             self._rank_label[i + 1].place(relx=0.04, rely=height, relwidth=0.92, relheight=0.13)
             height += 0.15
 
-        self._rank_btn[0]['command'] = prev_func
-        self._rank_btn[0]['state'] = 'normal'
-        self._rank_btn[1]['command'] = lambda: self.hide_msg_rank(True)
-        self._rank_btn[2]['command'] = next_func
-        self._rank_btn[2]['state'] = 'normal'
-
-        if page == 1:
-            self._rank_btn[0]['state'] = 'disable'
-        if page == page_c:
-            self._rank_btn[2]['state'] = 'disable'
-
-    def show_rank(self, page: int, page_c: int, prev_func: Callable, next_func: Callable,
+    def show_rank(self, page: int, page_c: int,
                   rank_info: List[Tuple[int, uname_t, uid_t, score_t, score_t, Optional[str]]],
                   title: str = 'Ranking'):
         self._rank_var[0].set(f'{title} ({page}/{page_c})')
@@ -895,7 +848,16 @@ class GarbageStation:
         for lb in self._rank_label[1:]:
             lb['wraplength'] = frame_width * 0.85 - 5  # 设定自动换行的像素
 
-        self.set_rank_info(page, page_c, prev_func, next_func, rank_info)
+        if page == 1:
+            self._rank_btn[0]['state'] = 'disable'
+        else:
+            self._rank_btn[0]['state'] = 'normal'
+        if page == page_c:
+            self._rank_btn[2]['state'] = 'disable'
+        else:
+            self._rank_btn[2]['state'] = 'normal'
+
+        self.set_rank_info(rank_info)
         self._throw_ctrl_frame.place_forget()
         self._check_ctrl_frame.place_forget()
         self._msg_frame.place_forget()
@@ -1027,7 +989,7 @@ class GarbageStation:
 
     def __switch_to_manager_user(self):
         self.manager_user_disable()
-        self.manager_user_disable()
+        self.manager_user_able()
 
     def __switch_to_no_user(self):
         self.manager_user_disable()

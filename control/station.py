@@ -1,3 +1,4 @@
+import threading
 import time
 import conf
 import cv2
@@ -5,6 +6,7 @@ import sys
 import random
 import traceback
 import tkinter as tk
+from tkinter import ttk
 import tkinter.font as font
 import datetime
 from PIL import Image, ImageTk
@@ -18,9 +20,11 @@ from sql.db import DB
 from sql.user import update_user, find_user_by_id
 from sql.garbage import update_garbage
 
-from equipment.scan import HGSCapture, HGSQRCoder
+from equipment.scan import HGSCapture, HGSQRCoder, QRCode
 from equipment.scan_user import scan_user
 from equipment.scan_garbage import scan_garbage
+
+from tk_event import TkEventBase
 
 
 class GarbageStationException(Exception):
@@ -43,7 +47,24 @@ class RankingUserError(GarbageStationException):
     ...
 
 
-class GarbageStationStatus:
+class StationEventBase(TkEventBase):
+    def __init__(self, win, status, db: DB, title: str = 'unknown'):
+        self._win: GarbageStationTkinter = win
+        self._status: GarbageStation = status
+        self._db: DB = db
+        self._title = title
+
+    def get_title(self) -> str:
+        return self._title
+
+    def is_end(self) -> bool:
+        raise GarbageStationException
+
+    def done_after_event(self):
+        raise GarbageStationException
+
+
+class GarbageStation:
     status_normal = 1
     status_get_garbage_type = 2
     status_get_garbage_check = 3
@@ -54,15 +75,14 @@ class GarbageStationStatus:
     scan_no_to_done = 4
 
     def __init__(self,
-                 win,
                  db: DB,
                  cap: HGSCapture,
                  qr: HGSQRCoder,
                  loc: location_t = conf.base_location):
         self._db: DB = db
-        self._cap = cap
-        self._qr = qr
-        self._win: GarbageStation = win
+        self._cap: HGSCapture = cap
+        self._qr: HGSQRCoder = qr
+        self._win: GarbageStationTkinter = GarbageStationTkinter(self)
         self._loc: location_t = loc
 
         self._user: Optional[User] = None  # 操作者
@@ -70,15 +90,19 @@ class GarbageStationStatus:
 
         self._garbage: Optional[GarbageBag] = None
 
-        self._flat = GarbageStationStatus.status_normal
+        self._flat = GarbageStation.status_normal
         self._have_easter_eggs = False
 
         self.rank = None
         self.rank_index = 0
+        self._event_list: List[StationEventBase] = []
 
     def update_user_time(self):
         if self.check_user():
             self._user_last_time = time.time()
+
+    def get_user(self):
+        return self._user
 
     def is_manager(self):
         if not self.check_user():
@@ -122,31 +146,6 @@ class GarbageStationStatus:
             return {}
         return self._user.get_info()
 
-    def scan(self) -> Tuple[int, any]:
-        """
-        处理扫码事务
-        二维码扫描的任务包括: 登录, 扔垃圾, 标记垃圾
-        :return:
-        """
-        self._cap.get_image()
-        qr_code = self._qr.get_qr_code()
-        if qr_code is None:
-            return GarbageStationStatus.scan_no_to_done, None
-
-        user: Optional[User] = scan_user(qr_code, self._db)
-        if user is not None:
-            return GarbageStationStatus.scan_switch_user, user
-
-        garbage: Optional[GarbageBag] = scan_garbage(qr_code, self._db)
-        if garbage is not None:
-            if self._user is None:
-                raise ControlNotLogin
-            if self._user.is_manager():
-                return GarbageStationStatus.scan_check_garbage, garbage
-            return GarbageStationStatus.scan_throw_garbage, garbage
-
-        return GarbageStationStatus.scan_no_to_done, None
-
     def get_cap_img(self):
         return self._cap.get_frame()
 
@@ -164,14 +163,14 @@ class GarbageStationStatus:
         self._user_last_time = time.time()
         return True  # 登录
 
-    def __throw_garbage(self, garbage: GarbageBag, garbage_type: enum):
+    def throw_garbage_core(self, garbage: GarbageBag, garbage_type: enum):
         self.__check_normal_user()
         if not self._user.throw_rubbish(garbage, garbage_type, self._loc):
             raise ThrowGarbageError
         update_garbage(garbage, self._db)
         update_user(self._user, self._db)
 
-    def __check_garbage(self, garbage: GarbageBag, check_result: bool):
+    def check_garbage_core(self, garbage: GarbageBag, check_result: bool):
         self.__check_manager_user()
         user = find_user_by_id(garbage.get_user(), self._db)
         if user is None:
@@ -182,7 +181,6 @@ class GarbageStationStatus:
         update_user(self._user, self._db)
         update_user(user, self._db)
 
-    # TODO-szh 涉及数据库, 改为异步执行避免阻塞
     def ranking(self, limit: int = 0, order_by: str = 'DESC') -> list[Tuple[uid_t, uname_t, score_t, score_t]]:
         """
         获取排行榜的功能
@@ -206,11 +204,11 @@ class GarbageStationStatus:
         return list(cur.fetchall())
 
     def to_get_garbage_type(self, garbage: GarbageBag):
-        self._flat = GarbageStationStatus.status_get_garbage_type
+        self._flat = GarbageStation.status_get_garbage_type
         self.set_garbage(garbage)
 
     def to_get_garbage_check(self, garbage: GarbageBag):
-        self._flat = GarbageStationStatus.status_get_garbage_check
+        self._flat = GarbageStation.status_get_garbage_check
         self.set_garbage(garbage)
 
     def set_garbage(self, garbage: GarbageBag):
@@ -221,38 +219,31 @@ class GarbageStationStatus:
             self._garbage = None
         return self._garbage
 
-    def throw_garbage(self, garbage_type: enum):  # TODO-szh 涉及数据库, 改为异步执行避免阻塞
+    def throw_garbage(self, garbage_type: enum):
         self.update_user_time()
-        if self._flat != GarbageStationStatus.status_get_garbage_type or self._garbage is None:
+        if self._flat != GarbageStation.status_get_garbage_type or self._garbage is None:
             self._win.show_warning("Operation Fail", "You should login first and scan the QR code of the trash bag")
             return
 
-        try:
-            self.__throw_garbage(self._garbage, garbage_type)
-        except (ThrowGarbageError, UserNotSupportError, ControlNotLogin):
-            self._win.show_warning("Operation Fail", "The garbage bags have been used.")
-            raise
-        finally:
-            self._flat = GarbageStationStatus.status_normal
-            self._garbage = None
+        event = ThrowGarbageEvent(self._win, self, self._db).start(self._garbage, garbage_type)
+        self.push_event(event)
+        self._flat = GarbageStation.status_normal
+        self._garbage = None
 
     def check_garbage(self, check: bool):
         self.update_user_time()
-        if self._flat != GarbageStationStatus.status_get_garbage_check or self._garbage is None:
+        if self._flat != GarbageStation.status_get_garbage_check or self._garbage is None:
             self._win.show_warning("Operation Fail", "You should login first and scan the QR code of the trash bag")
             return
 
-        try:
-            self.__check_garbage(self._garbage, check)
-        except (ThrowGarbageError, UserNotSupportError, CheckGarbageError, GarbageBagNotUse):
-            self._win.show_warning("Operation Fail", "The garbage bag has been checked")
-        finally:
-            self._flat = GarbageStationStatus.status_normal
-            self._garbage = None
+        event = CheckGarbageEvent(self._win, self, self._db).start(self._garbage, check)
+        self.push_event(event)
+        self._flat = GarbageStation.status_normal
+        self._garbage = None
 
     def show_garbage_info(self):
         self.update_user_time()
-        if self._flat != GarbageStationStatus.status_get_garbage_check or self._garbage is None:
+        if self._flat != GarbageStation.status_get_garbage_check or self._garbage is None:
             self._win.show_warning("Operation Fail", "You should login first and scan the QR code of the trash bag")
             return
 
@@ -262,15 +253,26 @@ class GarbageStationStatus:
 
         info = self._garbage.get_info()
         garbage_type = GarbageType.GarbageTypeStrList[int(info['type'])]
-        time_str = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(float(info['use_time'])))
-        check = ""
-        if info['checker'] != 'None':
-            check = f'Checker is f{info["checker"][0:conf.tk_show_uid_len]}\nCheckResult is {info["check"]}\n'
-        self._win.show_msg("Garbage Info", (f"Type is {garbage_type}\n"
-                                            f"User is {info['user'][0:conf.tk_show_uid_len]}\n"
-                                            f"Location:\n  {info['loc']}\n"
-                                            f"{check}"
-                                            f"Date:\n  {time_str}"), big=False)  # 不遮蔽Pass和Fail按键
+        if self._garbage.is_check():
+            time_str = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(float(info['use_time'])))
+            check = f'Checker is f{info["checker"][0:conf.tk_show_uid_len]}\n'
+            if info["check"] == '1':
+                check += f'CheckResult is Pass\n'
+            else:
+                check += f'CheckResult is Fail\n'
+            self._win.show_msg("Garbage Info", (f"Type is {garbage_type}\n"
+                                                f"User is {info['user'][0:conf.tk_show_uid_len]}\n"
+                                                f"Location:\n  {info['loc']}\n"
+                                                f"{check}"
+                                                f"Date:\n  {time_str}"))  # 遮蔽Pass和Fail按键
+        elif self._garbage.is_use():
+            time_str = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(float(info['use_time'])))
+            self._win.show_msg("Garbage Info", (f"Type is {garbage_type}\n"
+                                                f"User is {info['user'][0:conf.tk_show_uid_len]}\n"
+                                                f"Location:\n  {info['loc']}\n"
+                                                f"Date:\n  {time_str}"), big=False)  # 不遮蔽Pass和Fail按键
+        else:
+            self._win.show_msg("Garbage Info", f"Garbage has not use")  # 遮蔽Pass和Fail按键
 
     def show_user_info(self):
         self.update_user_time()
@@ -340,9 +342,7 @@ He will get the camera content and feedback the garbage type.
 The function has not yet been implemented.
                 '''.strip())
 
-    def get_show_rank(self):
-        self.update_user_time()
-        rank_list = self.ranking(limit=20)
+    def thread_show_rank(self, rank_list):
         self.rank = [[]]
         for i, r in enumerate(rank_list):
             if len(self.rank[-1]) == 5:
@@ -374,16 +374,60 @@ The function has not yet been implemented.
 
         self._win.show_rank(self.rank_index + 1, len(self.rank), self.rank[self.rank_index])
 
+    def scan(self):
+        """
+        处理扫码事务
+        二维码扫描的任务包括: 登录, 扔垃圾, 标记垃圾
+        :return:
+        """
+        self._cap.get_image()
+        qr_code = self._qr.get_qr_code()
+        if qr_code is None:
+            return GarbageStation.scan_no_to_done, None
 
-class GarbageStation:
+        user_scan_event = ScanUserEvent(self._win, self, self._db).start(qr_code)
+        self.push_event(user_scan_event)
+
+    def get_show_rank(self):
+        event = RankingEvent(self._win, self, self._db)
+        self.push_event(event)
+
+    def mainloop(self):
+        self._win.mainloop()
+
+    def push_event(self, event: StationEventBase):
+        self._event_list.append(event)
+        self._win.show_loading(event.get_title())
+        self.run_event()
+
+    def run_event(self):
+        if len(self._event_list) == 0:
+            return
+
+        new_event: List[StationEventBase] = []
+        done_event: List[StationEventBase] = []
+        for event in self._event_list:
+            if event.is_end():
+                done_event.append(event)
+            else:
+                new_event.append(event)
+        self._event_list = new_event
+        if len(self._event_list) == 0:
+            self._win.stop_loading()
+
+        for event in done_event:  # 隐藏进度条后执行Event-GUI任务
+            try:
+                event.done_after_event()
+            except:
+                traceback.print_exc()
+
+
+class GarbageStationTkinter:
     def __init__(self,
-                 db: DB,
-                 cap: HGSCapture,
-                 qr: HGSQRCoder,
-                 loc: location_t = conf.base_location,
+                 status: GarbageStation,
                  refresh_delay: int = conf.tk_refresh_delay):
         self.refresh_delay = refresh_delay
-        self._status = GarbageStationStatus(self, db, cap, qr, loc)
+        self._status = status
 
         self._window = tk.Tk()
         self._sys_height = self._window.winfo_screenheight()
@@ -398,7 +442,8 @@ class GarbageStation:
         self._cap_img = None  # 存储 PIL.image 的变量 防止gc释放
         self._user_im = None
 
-        self._msg_time = None  # msg 显示时间累计
+        self._msg_time: Optional[float] = None  # msg 显示时间累计
+        self._disable_all_btn: bool = False  # 禁用所有按钮和操作
 
         self.__creat_tk()
         self.__conf_tk()
@@ -466,6 +511,10 @@ class GarbageStation:
                           tk.StringVar()]
         self._rank_btn = [tk.Button(self._rank_frame), tk.Button(self._rank_frame), tk.Button(self._rank_frame)]
 
+        self._loading_frame = tk.Frame(self._window)
+        self._loading_title: Tuple[tk.Label, tk.Variable] = tk.Label(self._loading_frame), tk.StringVar()
+        self._loading_pro = ttk.Progressbar(self._loading_frame)
+
     def __conf_font_size(self, n: Union[int, float] = 1):
         self._title_font_size = int(27 * n)
         self._win_ctrl_font_size = int(15 * n)
@@ -477,6 +526,7 @@ class GarbageStation:
         self._msg_font_size = int(20 * n)
         self._rank_font_title_size = int(24 * n)
         self._rank_font_size = int(16 * n)
+        self._loading_tile_font = int(20 * n)
 
     def __conf_tk(self):
         self.__conf_title_label()
@@ -489,6 +539,7 @@ class GarbageStation:
         self.__conf_user_btn()
         self.__conf_msg()
         self.__conf_rank()
+        self.__conf_loading()
         self.hide_msg_rank()  # 隐藏消息
 
     def __conf_windows(self):
@@ -501,22 +552,36 @@ class GarbageStation:
         self._window.overrideredirect(False)  # 显示标题栏
         self._window.bind("<Alt-Control-KeyPress-s>", lambda _: self.__set_windows_overrideredirect(True))  # 锁定窗口
 
+        def lock_windows(_):
+            if self._disable_all_btn:
+                return
+            self.__set_windows_overrideredirect(True)
+
         def unlock_windows(_):
+            if self._disable_all_btn:
+                return
             if self._status.is_manager():
                 self.__set_windows_overrideredirect(False)
                 return
             self.show_warning("Exit", f'Permission not permitted'.strip())
 
         def full_screen_windows(_):
+            if self._disable_all_btn:
+                return
             if not self._full_screen or self._status.is_manager():
                 self.__full_screen(not self._full_screen)
                 return
             self.show_warning("Exit", f'Permission not permitted'.strip())
 
-        self._window.bind("<Alt-Control-KeyPress-s>", lambda _: self.__set_windows_overrideredirect(True))  # 锁定窗口
+        def easter_eggs(_):
+            if self._disable_all_btn:
+                return
+            self._status.easter_eggs()
+
+        self._window.bind("<Alt-Control-KeyPress-s>", lock_windows)  # 锁定窗口
         self._window.bind("<Alt-Control-KeyPress-e>", unlock_windows)
         self._window.bind("<F11>", full_screen_windows)
-        self._window.bind("<F5>", lambda _: self._status.easter_eggs())
+        self._window.bind("<F5>", easter_eggs)
 
     def __full_screen(self, full: bool = True):
         self._window.attributes("-fullscreen", full)
@@ -758,6 +823,9 @@ class GarbageStation:
         self._msg_hide.place(relx=0.375, rely=0.85, relwidth=0.25, relheight=0.1)
 
     def show_msg(self, title, info, msg_type='info', big: bool = True):
+        if self._disable_all_btn:
+            return
+
         self._msg_label[2].set(f'{msg_type}: {title}')
         self._msg_label[3].set(f'{info}')
 
@@ -818,7 +886,7 @@ class GarbageStation:
         self._rank_btn[2].place(relx=0.700, rely=0.88, relwidth=0.25, relheight=0.1)
         self._rank_btn[2]['command'] = lambda: self._status.show_rank(+1)
 
-    def set_rank_info(self, rank_info: List[Tuple[int, uname_t, uid_t, score_t, score_t, Optional[str]]]):
+    def __set_rank_info(self, rank_info: List[Tuple[int, uname_t, uid_t, score_t, score_t, Optional[str]]]):
         if len(rank_info) > 5:
             rank_info = rank_info[:5]
 
@@ -841,6 +909,9 @@ class GarbageStation:
     def show_rank(self, page: int, page_c: int,
                   rank_info: List[Tuple[int, uname_t, uid_t, score_t, score_t, Optional[str]]],
                   title: str = 'Ranking'):
+        if self._disable_all_btn:
+            return
+
         self._rank_var[0].set(f'{title} ({page}/{page_c})')
         self._rank_frame.place(relx=0.47, rely=0.15, relwidth=0.47, relheight=0.80)
         frame_width = self._win_width * 0.53
@@ -857,7 +928,7 @@ class GarbageStation:
         else:
             self._rank_btn[2]['state'] = 'normal'
 
-        self.set_rank_info(rank_info)
+        self.__set_rank_info(rank_info)
         self._throw_ctrl_frame.place_forget()
         self._check_ctrl_frame.place_forget()
         self._msg_frame.place_forget()
@@ -872,6 +943,38 @@ class GarbageStation:
         if update:
             self._status.update_user_time()
 
+    def __conf_loading(self):
+        title_font = self.__make_font(size=self._loading_tile_font, weight="bold")
+
+        self._loading_frame['bg'] = "#808080"
+        self._loading_frame['bd'] = 5
+        self._loading_frame['relief'] = "ridge"
+        # frame 不会立即显示
+
+        self._loading_title[0]['font'] = title_font
+        self._loading_title[0]['bg'] = "#808080"
+        self._loading_title[0]['fg'] = "#F8F8FF"
+        self._loading_title[0]['anchor'] = 'w'
+        self._loading_title[0]['textvariable'] = self._loading_title[1]
+        self._loading_title[0].place(relx=0.02, rely=0.00, relwidth=0.96, relheight=0.7)
+
+        self._loading_pro['mode'] = 'indeterminate'
+        self._loading_pro['orient'] = tk.HORIZONTAL
+        self._loading_pro['maximum'] = 100
+        self._loading_pro.place(relx=0.02, rely=0.73, relwidth=0.96, relheight=0.22)
+
+    def show_loading(self, title: str):
+        self.set_all_btn_disable()
+        self._loading_title[1].set(f"Loading: {title}")
+        self._loading_pro['value'] = 0
+        self._loading_frame.place(relx=0.30, rely=0.40, relwidth=0.40, relheight=0.15)
+        self._loading_pro.start(50)
+
+    def stop_loading(self):
+        self._loading_frame.place_forget()
+        self._loading_pro.stop()
+        self.set_reset_all_btn()
+
     def __show_check_frame(self):
         self._check_ctrl_frame.place(relx=0.45, rely=0.82, relwidth=0.53, relheight=0.16)
 
@@ -883,6 +986,7 @@ class GarbageStation:
 
     def __conf_after(self):
         self.__define_after(self.refresh_delay, self.update_time)
+        self.__define_after(self.refresh_delay, self.update_event)
         self.__define_after(self.refresh_delay, self.update_control)
         self.__define_after(self.refresh_delay, self.update_scan)
         self.__define_after(self.refresh_delay, self.update_msg)
@@ -898,6 +1002,9 @@ class GarbageStation:
                 self._window.after(self.refresh_delay, new_func)
 
         return new_func
+
+    def update_event(self):
+        self._status.run_event()
 
     def update_time(self):
         var: tk.Variable = self._sys_date[2]
@@ -952,29 +1059,13 @@ class GarbageStation:
             self._garbage_id[2].set(gid)
 
     def update_scan(self):
-        res: Tuple[enum, any] = GarbageStationStatus.scan_no_to_done, None
-        try:
-            res = self._status.scan()
-        except ControlNotLogin:
-            self.show_warning("Scan Fail", "You should login first")
+        self._status.scan()
 
         # 需要存储一些数据 谨防被gc释放
         _cap_img_info = (Image.fromarray(cv2.cvtColor(self._status.get_cap_img(), cv2.COLOR_BGR2RGB)).
                          transpose(Image.FLIP_LEFT_RIGHT))
         self._cap_img = ImageTk.PhotoImage(image=_cap_img_info)
         self._cap_label['image'] = self._cap_img
-
-        if res[0] == GarbageStationStatus.scan_switch_user:
-            self._status.switch_user(res[1])
-            self.update_control()
-        elif res[0] == GarbageStationStatus.scan_throw_garbage:
-            self._status.to_get_garbage_type(res[1])
-            self.hide_msg_rank()  # 如果有msg也马上隐藏
-            self.update_control()
-        elif res[0] == GarbageStationStatus.scan_check_garbage:
-            self._status.to_get_garbage_check(res[1])
-            self._status.show_garbage_info()  # 显示信息
-            self.update_control()
 
     def update_msg(self):
         if self._msg_time is None:
@@ -984,10 +1075,16 @@ class GarbageStation:
             self.hide_msg_rank()
 
     def __switch_to_normal_user(self):
+        if self._disable_all_btn:
+            return
+
         self.normal_user_disable()
         self.normal_user_able()
 
     def __switch_to_manager_user(self):
+        if self._disable_all_btn:
+            return
+
         self.manager_user_disable()
         self.manager_user_able()
 
@@ -1016,6 +1113,23 @@ class GarbageStation:
         for btn in self._check_ctrl_btn:
             btn['state'] = 'normal'
 
+    def set_all_btn_disable(self):
+        self.__switch_to_no_user()  # 禁用所有操作性按钮
+        self.hide_msg_rank()
+        for btn in self._user_btn:
+            btn['state'] = 'disable'
+        for btn in self._win_ctrl_button:
+            btn['state'] = 'disable'
+        self._disable_all_btn = True
+
+    def set_reset_all_btn(self):
+        for btn in self._user_btn:
+            btn['state'] = 'normal'
+        for btn in self._win_ctrl_button:
+            btn['state'] = 'normal'
+        self.update_control()  # 位于_user_btn之后, 会自动设定detail按钮
+        self._disable_all_btn = False
+
     @staticmethod
     def __make_font(family: str = 'noto', **kwargs):
         return font.Font(family=conf.font_d[family], **kwargs)
@@ -1025,6 +1139,200 @@ class GarbageStation:
 
     def exit_win(self):
         self._window.destroy()
+
+
+class ScanUserEvent(StationEventBase):
+    class ScanUserThread(threading.Thread):  # 继承父类threading.Thread
+        def __init__(self, qr_: QRCode, db_: DB):
+            threading.Thread.__init__(self)
+            self.thread_db = db_
+            self.thread_qr = qr_
+            self.result: Optional[User] = None
+
+        def run(self):
+            self.result = scan_user(self.thread_qr, self.thread_db)
+
+    def __init__(self, win: GarbageStationTkinter, status: GarbageStation, db: DB):
+        super(ScanUserEvent, self).__init__(win, status, db, "Scan User")
+
+        self._user: User = status.get_user()
+        self._qr_code: Optional[QRCode] = None
+        self.thread: Optional[ScanUserEvent.ScanUserThread] = None
+
+    def start(self, qr_code: QRCode):
+        self._qr_code = qr_code
+        self.thread = ScanUserEvent.ScanUserThread(qr_code, self._db)
+        self.thread.start()
+        return self
+
+    def is_end(self) -> bool:
+        return self.thread is not None and not self.thread.is_alive()
+
+    def done_after_event(self):
+        self.thread.join()
+        if self.thread.result is not None:
+            self._status.switch_user(self.thread.result)
+            self._win.update_control()
+        else:
+            event = ScanGarbageEvent(self._win, self._status, self._db).start(self._qr_code)
+            self._status.push_event(event)
+
+
+class ScanGarbageEvent(StationEventBase):
+    class ScanUserThread(threading.Thread):  # 继承父类threading.Thread
+        def __init__(self, qr_: QRCode, db_: DB):
+            threading.Thread.__init__(self)
+            self.thread_db = db_
+            self.thread_qr = qr_
+            self.result: Optional[GarbageBag] = None
+
+        def run(self):
+            self.result = scan_garbage(self.thread_qr, self.thread_db)
+
+    def __init__(self, win: GarbageStationTkinter, status: GarbageStation, db: DB):
+        super().__init__(win, status, db, "Scan Garbage")
+
+        self._user: User = status.get_user()
+        self._qr_code: Optional[QRCode] = None
+        self.thread: Optional[ScanGarbageEvent.ScanUserThread] = None
+
+    def start(self, qr_code: QRCode):
+        self._qr_code = qr_code
+        self.thread = ScanGarbageEvent.ScanUserThread(self._qr_code, self._db)
+        self.thread.start()
+        return self
+
+    def is_end(self) -> bool:
+        return self.thread is not None and not self.thread.is_alive()
+
+    def done_after_event(self):
+        self.thread.join()
+        if self.thread.result is not None:
+            if self._user is None:
+                self._win.show_warning("Operation Fail", "The garbage bags have been used.")
+            elif self._user.is_manager():
+                self._status.to_get_garbage_check(self.thread.result)
+                self._status.show_garbage_info()  # 显示信息
+                self._win.update_control()
+            else:
+                self._status.to_get_garbage_type(self.thread.result)
+                self._win.hide_msg_rank()  # 如果有msg也马上隐藏
+                self._win.update_control()
+
+
+class RankingEvent(StationEventBase):
+    class RankingThread(threading.Thread):
+        def __init__(self, db_: DB):
+            threading.Thread.__init__(self)
+            self.thread_db = db_
+            self.result: Optional[List[Tuple[uid_t, uname_t, score_t, score_t]]] = None
+
+        def run(self):
+            cur = self.thread_db.search((f"SELECT uid, name, score, reputation "
+                                         f"FROM user "
+                                         f"WHERE manager = 0 "
+                                         f"ORDER BY reputation DESC, score DESC "
+                                         f"LIMIT 20;"))
+            if cur is None:
+                self.result = []
+            self.result = list(cur.fetchall())
+
+    def __init__(self, win: GarbageStationTkinter, status: GarbageStation, db: DB):
+        super().__init__(win, status, db, "Ranking")
+
+        self._user: User = status.get_user()
+        self.thread: Optional[RankingEvent.RankingThread] = RankingEvent.RankingThread(self._db)
+        self.thread.start()
+
+    def is_end(self) -> bool:
+        return not self.thread.is_alive()
+
+    def done_after_event(self):
+        self.thread.join()
+        if self.thread.result is not None:
+            self._status.thread_show_rank(self.thread.result)
+
+
+class ThrowGarbageEvent(StationEventBase):
+    class ThrowGarbageThread(threading.Thread):
+        def __init__(self, win: GarbageStationTkinter, status: GarbageStation,
+                     garbage: GarbageBag, garbage_type: enum, db_: DB):
+            threading.Thread.__init__(self)
+            self.thread_win = win
+            self.thread_status = status
+            self.thread_db = db_
+            self.thread_garbage = garbage
+            self.thread_garbage_type = garbage_type
+            self.result: bool = False
+
+        def run(self):
+            try:
+                self.thread_status.throw_garbage_core(self.thread_garbage, self.thread_garbage_type)
+            except (ThrowGarbageError, UserNotSupportError, ControlNotLogin):
+                self.thread_win.show_warning("Operation Fail", "The garbage bags have been used.")
+                self.result = False
+            finally:
+                self.result = True
+
+    def __init__(self, win: GarbageStationTkinter, status: GarbageStation, db: DB):
+        super().__init__(win, status, db, "ThrowGarbage")
+
+        self._user: User = status.get_user()
+        self.thread: Optional[ThrowGarbageEvent.ThrowGarbageThread] = None
+
+    def start(self, garbage: GarbageBag, garbage_type: enum):
+        self.thread = ThrowGarbageEvent.ThrowGarbageThread(self._win, self._status, garbage, garbage_type, self._db)
+        self.thread.start()
+        return self
+
+    def is_end(self) -> bool:
+        return not self.thread.is_alive()
+
+    def done_after_event(self):
+        self.thread.join()
+        if not self.thread.result:
+            self._win.show_warning("Operation Fail", "The garbage bag throw error")
+
+
+class CheckGarbageEvent(StationEventBase):
+    class CheckGarbageThread(threading.Thread):
+        def __init__(self, win: GarbageStationTkinter, status: GarbageStation,
+                     garbage: GarbageBag, check: bool, db_: DB):
+            threading.Thread.__init__(self)
+            self.thread_win = win
+            self.thread_status = status
+            self.thread_db = db_
+            self.thread_garbage = garbage
+            self.thread_garbage_check = check
+            self.result: bool = False
+
+        def run(self):
+            try:
+                self.thread_status.check_garbage_core(self.thread_garbage, self.thread_garbage_check)
+            except (ThrowGarbageError, UserNotSupportError, ControlNotLogin):
+                self.thread_win.show_warning("Operation Fail", "The garbage bag has been checked")
+                self.result = False
+            finally:
+                self.result = True
+
+    def __init__(self, win: GarbageStationTkinter, status: GarbageStation, db: DB):
+        super().__init__(win, status, db, "CheckGarbage")
+
+        self._user: User = status.get_user()
+        self.thread: Optional[CheckGarbageEvent.CheckGarbageThread] = None
+
+    def start(self, garbage: GarbageBag, garbage_check: bool):
+        self.thread = CheckGarbageEvent.CheckGarbageThread(self._win, self._status, garbage, garbage_check, self._db)
+        self.thread.start()
+        return self
+
+    def is_end(self) -> bool:
+        return not self.thread.is_alive()
+
+    def done_after_event(self):
+        self.thread.join()
+        if not self.thread.result:
+            self._win.show_warning("Operation Fail", "The garbage bag check error")
 
 
 if __name__ == '__main__':

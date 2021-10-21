@@ -68,7 +68,7 @@ class GarbageBag:
                 "use_time": "" if (self._use_time is None) else str(self._use_time.get_time()),
                 "user": str(self._user),
                 "loc": "" if (self._loc is None) else str(self._loc.get_location()),
-                "check": 'Pass' if self._check else 'Fail',
+                "check": '1' if self._check else '0',
                 "checker": "None" if self._checker is None else self._checker,
             }
         finally:

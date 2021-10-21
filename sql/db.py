@@ -92,7 +92,7 @@ class DB:
             self._cursor.execute(sql)
         except pymysql.MySQLError:
             self._db.rollback()
-            raise DBDoneException
+            raise
         finally:
             self._lock.release()
         return self._cursor

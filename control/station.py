@@ -1,4 +1,3 @@
-import threading
 import time
 import conf
 import cv2
@@ -1174,27 +1173,20 @@ class GarbageStation(GarbageStationBase):
 
 
 class ScanUserEvent(StationEventBase):
-    class ScanUserThread(threading.Thread):  # 继承父类threading.Thread
-        def __init__(self, qr_: QRCode, db_: DB):
-            threading.Thread.__init__(self)
-            self.thread_db = db_
-            self.thread_qr = qr_
-            self.result: Optional[User] = None
-
-        def run(self):
-            self.result = scan_user(self.thread_qr, self.thread_db)
+    @staticmethod
+    def func(qr: QRCode, db: DB):
+        return scan_user(qr, db)
 
     def __init__(self, gb_station: GarbageStationBase, db: DB):
         super().__init__(gb_station, db, "Scan User")
 
         self._user: User = gb_station.get_user()
         self._qr_code: Optional[QRCode] = None
-        self.thread: Optional[ScanUserEvent.ScanUserThread] = None
+        self.thread = None
 
     def start(self, qr_code: QRCode):
         self._qr_code = qr_code
-        self.thread = ScanUserEvent.ScanUserThread(qr_code, self._db)
-        self.thread.start()
+        self.thread = TkThreading(self.func, qr_code, self._db)
         return self
 
     def is_end(self) -> bool:
@@ -1211,27 +1203,20 @@ class ScanUserEvent(StationEventBase):
 
 
 class ScanGarbageEvent(StationEventBase):
-    class ScanUserThread(threading.Thread):  # 继承父类threading.Thread
-        def __init__(self, qr_: QRCode, db_: DB):
-            threading.Thread.__init__(self)
-            self.thread_db = db_
-            self.thread_qr = qr_
-            self.result: Optional[GarbageBag] = None
-
-        def run(self):
-            self.result = scan_garbage(self.thread_qr, self.thread_db)
+    @staticmethod
+    def func(qr: QRCode, db: DB):
+        return scan_garbage(qr, db)
 
     def __init__(self, gb_station: GarbageStationBase, db: DB):
         super().__init__(gb_station, db, "Scan Garbage")
 
         self._user: User = gb_station.get_user()
         self._qr_code: Optional[QRCode] = None
-        self.thread: Optional[ScanGarbageEvent.ScanUserThread] = None
+        self.thread = None
 
     def start(self, qr_code: QRCode):
         self._qr_code = qr_code
-        self.thread = ScanGarbageEvent.ScanUserThread(self._qr_code, self._db)
-        self.thread.start()
+        self.thread = TkThreading(self.func, qr_code, self._db)
         return self
 
     def is_end(self) -> bool:
@@ -1253,28 +1238,20 @@ class ScanGarbageEvent(StationEventBase):
 
 
 class RankingEvent(StationEventBase):
-    class RankingThread(threading.Thread):
-        def __init__(self, db_: DB):
-            threading.Thread.__init__(self)
-            self.thread_db = db_
-            self.result: Optional[List[Tuple[uid_t, uname_t, score_t, score_t]]] = None
-
-        def run(self):
-            cur = self.thread_db.search((f"SELECT uid, name, score, reputation "
-                                         f"FROM user "
-                                         f"WHERE manager = 0 "
-                                         f"ORDER BY reputation DESC, score DESC "
-                                         f"LIMIT 20;"))
-            if cur is None:
-                self.result = []
-            self.result = list(cur.fetchall())
+    @staticmethod
+    def func(db: DB):
+        cur = db.search((f"SELECT uid, name, score, reputation "
+                         f"FROM user "
+                         f"WHERE manager = 0 "
+                         f"ORDER BY reputation DESC, score DESC "
+                         f"LIMIT 20;"))
+        if cur is None:
+            return []
+        return list(cur.fetchall())
 
     def __init__(self, gb_station: GarbageStationBase, db: DB):
         super().__init__(gb_station, db, "Ranking")
-
-        self._user: User = gb_station.get_user()
-        self.thread: Optional[RankingEvent.RankingThread] = RankingEvent.RankingThread(self._db)
-        self.thread.start()
+        self.thread = TkThreading(self.func, self._db)
 
     def is_end(self) -> bool:
         return not self.thread.is_alive()
@@ -1286,32 +1263,22 @@ class RankingEvent(StationEventBase):
 
 
 class ThrowGarbageEvent(StationEventBase):
-    class ThrowGarbageThread(threading.Thread):
-        def __init__(self, gb_station: GarbageStationBase, garbage: GarbageBag, garbage_type: enum, db_: DB):
-            threading.Thread.__init__(self)
-            self.thread_station = gb_station
-            self.thread_db = db_
-            self.thread_garbage = garbage
-            self.thread_garbage_type = garbage_type
-            self.result: bool = False
-
-        def run(self):
-            try:
-                self.thread_station.throw_garbage_core(self.thread_garbage, self.thread_garbage_type)
-            except (ThrowGarbageError, UserNotSupportError, ControlNotLogin):
-                self.thread_station.show_warning("Operation Fail", "The garbage bags have been used.")
-                self.result = False
-            finally:
-                self.result = True
+    def func(self, garbage: GarbageBag, garbage_type: enum):
+        try:
+            self.station.throw_garbage_core(garbage, garbage_type)
+        except (ThrowGarbageError, UserNotSupportError, ControlNotLogin):
+            self.station.show_warning("Operation Fail", "The garbage bags have been used.")
+            return False
+        else:
+            return True
 
     def __init__(self, gb_station: GarbageStationBase, db: DB):
         super().__init__(gb_station, db, "ThrowGarbage")
 
-        self._user: User = gb_station.get_user()
-        self.thread: Optional[ThrowGarbageEvent.ThrowGarbageThread] = None
+        self.thread = None
 
     def start(self, garbage: GarbageBag, garbage_type: enum):
-        self.thread = ThrowGarbageEvent.ThrowGarbageThread(self.station, garbage, garbage_type, self._db)
+        self.thread = TkThreading(self.func, garbage, garbage_type)
         self.thread.start()
         return self
 
@@ -1325,33 +1292,21 @@ class ThrowGarbageEvent(StationEventBase):
 
 
 class CheckGarbageEvent(StationEventBase):
-    class CheckGarbageThread(threading.Thread):
-        def __init__(self, gb_station: GarbageStationBase, garbage: GarbageBag, check: bool, db_: DB):
-            threading.Thread.__init__(self)
-            self.thread_station = gb_station
-            self.thread_db = db_
-            self.thread_garbage = garbage
-            self.thread_garbage_check = check
-            self.result: bool = False
-
-        def run(self):
-            try:
-                self.thread_station.check_garbage_core(self.thread_garbage, self.thread_garbage_check)
-            except (ThrowGarbageError, UserNotSupportError, ControlNotLogin, CheckGarbageError):
-                self.thread_station.show_warning("Operation Fail", "The garbage bag has been checked")
-                self.result = False
-            finally:
-                self.result = True
+    def func(self, garbage: GarbageBag, check: bool):
+        try:
+            self.station.check_garbage_core(garbage, check)
+        except (ThrowGarbageError, UserNotSupportError, ControlNotLogin, CheckGarbageError):
+            self.station.show_warning("Operation Fail", "The garbage bag has been checked")
+            return False
+        else:
+            return True
 
     def __init__(self, gb_station: GarbageStationBase, db: DB):
         super().__init__(gb_station, db, "CheckGarbage")
-
-        self._user: User = gb_station.get_user()
-        self.thread: Optional[CheckGarbageEvent.CheckGarbageThread] = None
+        self.thread = None
 
     def start(self, garbage: GarbageBag, garbage_check: bool):
-        self.thread = CheckGarbageEvent.CheckGarbageThread(self.station, garbage, garbage_check, self._db)
-        self.thread.start()
+        self.thread = TkThreading(self.func, garbage, garbage_check)
         return self
 
     def is_end(self) -> bool:
@@ -1367,5 +1322,5 @@ if __name__ == '__main__':
     mysql_db = DB()
     capture = HGSCapture()
     qr_capture = HGSQRCoder(capture)
-    station = GarbageStation(mysql_db, capture, qr_capture)
-    station.mainloop()
+    station_ = GarbageStation(mysql_db, capture, qr_capture)
+    station_.mainloop()

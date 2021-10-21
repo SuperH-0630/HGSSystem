@@ -83,6 +83,25 @@ def creat_new_user(name: Optional[uname_t], passwd: Optional[passwd_t], phone: p
     return NormalUser(name, uid, conf.default_reputation, 0, conf.default_score)
 
 
+def get_user_phone(uid: uid_t, db: DB) -> Optional[str]:
+    cur = db.done(f"SELECT phone FROM user WHERE uid = {uid};")
+    if cur is None or cur.rowcount == 0:
+        return None
+    assert cur.rowcount == 1
+    return cur.fetchall()[0]
+
+
+def del_user(uid: uid_t, db: DB) -> bool:
+    cur = db.search(f"SELECT gid FROM garbage_time WHERE uid = {uid};")
+    if cur is None or cur.rowcount != 0:
+        return False
+    cur = db.done(f"DELETE FROM user WHERE uid = {uid};")
+    if cur is None or cur.rowcount == 0:
+        return False
+    assert cur.rowcount == 1
+    return True
+
+
 if __name__ == '__main__':
     mysql_db = DB()
     name_ = 'Huan12'

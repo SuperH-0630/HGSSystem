@@ -25,7 +25,7 @@ from equipment.scan import HGSCapture, HGSQRCoder, QRCode
 from equipment.scan_user import scan_user
 from equipment.scan_garbage import scan_garbage
 
-from tk_event import TkEventBase
+from tk_event import TkEventBase, TkEventMain, TkThreading
 
 
 class GarbageStationException(Exception):
@@ -64,7 +64,7 @@ class StationEventBase(TkEventBase):
         raise GarbageStationException
 
 
-class GarbageStationBase(metaclass=abc.ABCMeta):
+class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
     status_normal = 1
     status_get_garbage_type = 2
     status_get_garbage_check = 3
@@ -94,8 +94,7 @@ class GarbageStationBase(metaclass=abc.ABCMeta):
 
         self.rank = None
         self.rank_index = 0
-        self._event_list: List[StationEventBase] = []
-        self.set_after_run(conf.tk_refresh_delay, lambda: self.run_event())
+        super(GarbageStationBase, self).__init__()
 
     def update_user_time(self):
         if self.check_user():
@@ -392,32 +391,6 @@ The function has not yet been implemented.
         event = RankingEvent(self, self._db)
         self.push_event(event)
 
-    def push_event(self, event: StationEventBase):
-        self._event_list.append(event)
-        self.show_loading(event.get_title())
-        self.run_event()
-
-    def run_event(self):
-        if len(self._event_list) == 0:
-            return
-
-        new_event: List[StationEventBase] = []
-        done_event: List[StationEventBase] = []
-        for event in self._event_list:
-            if event.is_end():
-                done_event.append(event)
-            else:
-                new_event.append(event)
-        self._event_list = new_event
-        if len(self._event_list) == 0:
-            self.stop_loading()
-
-        for event in done_event:  # 隐藏进度条后执行Event-GUI任务
-            try:
-                event.done_after_event()
-            except:
-                traceback.print_exc()
-
     @abc.abstractmethod
     def show_msg(self, title, info, msg_type='info', big: bool = True):
         ...
@@ -475,7 +448,10 @@ class GarbageStation(GarbageStationBase):
 
     def __conf_set_after_run(self):
         for ms, func, args in self.init_after_run_list:
-            self.__define_after(ms, func, *args)
+            self.set_after_run_now(ms, func, *args)
+
+    def set_after_run_now(self, ms, func, *args):
+        self._window.after(ms, func, *args)
 
     def __init__(self,
                  db: DB,
@@ -508,6 +484,7 @@ class GarbageStation(GarbageStationBase):
         self.__conf_tk()
 
         self.__conf_after()
+        self.__conf_set_after_run()
         self.__switch_to_no_user()
 
     def __creat_tk(self):
@@ -1048,7 +1025,6 @@ class GarbageStation(GarbageStationBase):
         self.__define_after(self.refresh_delay, self.update_control)
         self.__define_after(self.refresh_delay, self.update_scan)
         self.__define_after(self.refresh_delay, self.update_msg)
-        self.__conf_set_after_run()
 
     def __after_func_maker(self, func):
         def new_func(*args, **kwargs):

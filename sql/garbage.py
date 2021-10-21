@@ -144,6 +144,29 @@ def creat_new_garbage(db: DB) -> Optional[GarbageBag]:
     return GarbageBag(str(gid))
 
 
+def del_garbage_not_use(gid: gid_t, db: DB) -> bool:
+    cur = db.done(f"DELETE FROM garbage_n WHERE gid = {gid};")
+    if cur is None or cur.rowcount == 0:
+        return False
+    assert cur.rowcount == 1
+    cur = db.done(f"DELETE FROM garbage WHERE gid = {gid};")
+    if cur is None or cur.rowcount == 0:
+        return False
+    assert cur.rowcount == 1
+    return True
+
+
+def del_garbage_not_use_many(gid_from: gid_t, gid_to: gid_t, db: DB) -> int:
+    cur = db.done(f"DELETE FROM garbage "
+                  f"WHERE gid IN (SELECT gid FROM garbage_n WHERE gid BETWEEN {gid_from} and {gid_to});")
+    if cur is None or cur.rowcount == 0:
+        return 0
+    cur = db.done(f"DELETE FROM garbage WHERE gid BETWEEN {gid_from} and {gid_to};")
+    if cur is None or cur.rowcount == 0:
+        return 0
+    return cur.rowcount
+
+
 if __name__ == '__main__':
     mysql_db = DB()
     bag = creat_new_garbage(mysql_db)

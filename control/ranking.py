@@ -21,10 +21,6 @@ class RankingPageError(RankingStationException):
 
 
 class RankingStationBase(metaclass=abc.ABCMeta):
-    status_normal = 1
-    status_get_garbage_type = 2
-    status_get_garbage_check = 3
-
     def __init__(self, db: DB):
         self._db = db
         self.rank = [[]]
@@ -87,6 +83,9 @@ class RankingStationBase(metaclass=abc.ABCMeta):
         self.show_rank(self.rank[self.rank_index])
         self.set_prev_btn(False)
 
+        if self.auto:
+            self.set_run_after_now(self.auto_time, self.update_rank_auto)
+
     def rank_page_to_prev(self):
         if self.rank_index == 0:  # 当 rank_index为最后一项时, 该函数不应该被调用(除非数据库被外部改动)
             self.set_prev_btn(True)
@@ -102,6 +101,9 @@ class RankingStationBase(metaclass=abc.ABCMeta):
                 self.set_prev_btn(True)
         self.show_rank(self.rank[self.rank_index])
         self.set_next_btn(False)
+
+        if self.auto:
+            self.set_run_after_now(self.auto_time, self.update_rank_auto)
 
     def show_rank_first(self):
         self.rank_index = 0
@@ -121,7 +123,7 @@ class RankingStationBase(metaclass=abc.ABCMeta):
         if auto:
             self.auto = True
             self.disable_btn()
-            self.set_after_run(self.auto_time, self.update_rank_auto)  # 注册自动函数
+            self.set_run_after_now(self.auto_time, self.update_rank_auto)  # 注册自动函数
         else:
             self.auto = False
             self.able_btn()
@@ -140,8 +142,6 @@ class RankingStationBase(metaclass=abc.ABCMeta):
             self.auto_to_next = False
         else:
             return  # 无法动弹
-
-        self.set_after_run(self.auto_time, self.update_rank_auto)
 
     @abc.abstractmethod
     def show_rank(self, rank_info: List[Tuple[int, uname_t, uid_t, score_t, score_t, Optional[str]]]):
@@ -172,7 +172,7 @@ class RankingStationBase(metaclass=abc.ABCMeta):
         ...
 
     @abc.abstractmethod
-    def set_after_run(self, ms, func, *args):
+    def set_run_after_now(self, ms, func, *args):
         ...
 
     @abc.abstractmethod
@@ -182,6 +182,7 @@ class RankingStationBase(metaclass=abc.ABCMeta):
 
 class RankingStation(RankingStationBase):
     def __init__(self, db: DB):
+        self.init_after_run_list: List[Tuple[int, Callable, Tuple]] = []
         super(RankingStation, self).__init__(db)
 
         self.window = tk.Tk()
@@ -319,6 +320,9 @@ class RankingStation(RankingStationBase):
         self.rank_btn[1]['command'] = lambda: self.rank_auto(True)
         self.rank_btn[2]['command'] = lambda: self.rank_page_to_next()
 
+    def set_run_after_now(self, ms, func, *args):
+        self.window.after(ms, func, *args)
+
     def __set_rank_info(self, rank_info: List[Tuple[int, uname_t, uid_t, score_t, score_t, Optional[str]]]):
         if len(rank_info) > self.rank_count:
             rank_info = rank_info[:self.rank_count]
@@ -339,6 +343,10 @@ class RankingStation(RankingStationBase):
             relheight = self.rank_y_height[i][1]
             self.rank_label[i].place(relx=0.04, rely=rely, relwidth=0.92, relheight=relheight)
 
+    @staticmethod
+    def __make_font(family: str = 'noto', **kwargs):
+        return font.Font(family=conf.font_d[family], **kwargs)
+
     def show_rank(self, rank_info: List[Tuple[int, uname_t, uid_t, score_t, score_t, Optional[str]]]):
         self.__set_rank_info(rank_info)
         self.rank_title_var.set("Ranking")
@@ -351,10 +359,6 @@ class RankingStation(RankingStationBase):
         else:
             self.rank_btn[1]['command'] = lambda: self.rank_auto(True)
             self.rank_btn[1]['text'] = 'auto'
-
-    @staticmethod
-    def __make_font(family: str = 'noto', **kwargs):
-        return font.Font(family=conf.font_d[family], **kwargs)
 
     def set_next_btn(self, disable: False):
         if disable or self.auto:  # auto 模式令btn失效
@@ -385,9 +389,6 @@ class RankingStation(RankingStationBase):
 
     def is_able_next(self):
         return self.next_btn
-
-    def set_after_run(self, ms, func, *args):
-        self.window.after(ms, func, *args)
 
     def mainloop(self):
         self.window.mainloop()

@@ -17,12 +17,6 @@ class AdminEventBase(TkEventBase):
     def get_title(self) -> str:
         return "AdminEvent"
 
-    def is_end(self) -> bool:
-        raise TkEventException
-
-    def done_after_event(self):
-        raise TkEventException
-
 
 class LoginEvent(AdminEventBase):
     def __init__(self, station):
@@ -54,6 +48,3 @@ class TestProgressEvent(AdminEventBase):
 
     def is_end(self) -> bool:
         return not self.thread.is_alive()
-
-    def done_after_event(self):
-        ...

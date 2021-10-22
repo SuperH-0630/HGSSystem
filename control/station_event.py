@@ -23,12 +23,6 @@ class StationEventBase(TkEventBase):
     def get_title(self) -> str:
         return self._title
 
-    def is_end(self) -> bool:
-        raise tk_station.GarbageStationException
-
-    def done_after_event(self):
-        raise tk_station.GarbageStationException
-
 
 class ScanUserEvent(StationEventBase):
     @staticmethod

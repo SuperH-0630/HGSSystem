@@ -11,7 +11,7 @@ import datetime
 from PIL import Image, ImageTk
 
 from tool.type_ import *
-from tool.tk import set_button_disable_from_list, make_font
+from tool.tk import set_tk_disable_from_list, make_font
 
 from core.user import User, UserNotSupportError
 from core.garbage import GarbageBag, GarbageType, GarbageBagNotUse
@@ -504,9 +504,9 @@ class GarbageStation(GarbageStationBase):
 
         self._sys_info_frame = tk.Frame(self._window)
         self._garbage_id: win_info_type = (tk.Label(self._sys_info_frame), tk.Label(self._sys_info_frame),
-                                           tk.StringVar(), "GID")
+                                           tk.StringVar(), "GarbageID")
         self._sys_date: win_info_type = (tk.Label(self._sys_info_frame), tk.Label(self._sys_info_frame),
-                                         tk.StringVar(), "Date")
+                                         tk.StringVar(), "SystemDate")
 
         self._cap_label = tk.Label(self._window)
 
@@ -634,23 +634,20 @@ class GarbageStation(GarbageStationBase):
         for bt in self._win_ctrl_button:
             bt: tk.Button
             bt['font'] = title_font
-            bt['bg'] = "#B0C4DE"  # 浅钢青
+            bt['bg'] = conf.tk_btn_bg
 
         bt_help: tk.Button = self._win_ctrl_button[0]
         bt_help['text'] = 'Help'
-        bt_help['bg'] = '#A9A9A9'
         bt_help['command'] = lambda: self.show_help_info()
         bt_help.place(relx=0.81, rely=0.01, relwidth=0.05, relheight=0.05)
 
         bt_about: tk.Button = self._win_ctrl_button[1]
         bt_about['text'] = 'About'
-        bt_about['bg'] = '#A9A9A9'
         bt_about['command'] = lambda: self.show_about_info()
         bt_about.place(relx=0.87, rely=0.01, relwidth=0.05, relheight=0.05)
 
         bt_exit: tk.Button = self._win_ctrl_button[2]
         bt_exit['text'] = 'Exit'
-        bt_exit['bg'] = '#A9A9A9'
         bt_exit['command'] = lambda: self.show_exit()
         bt_exit.place(relx=0.93, rely=0.01, relwidth=0.05, relheight=0.05)
 
@@ -676,7 +673,7 @@ class GarbageStation(GarbageStationBase):
             lb_list[0]['font'] = title_font
             lb_list[0]['bg'] = "#FA8072"
             lb_list[0]['fg'] = "#FFB6C1"
-            lb_list[0]['text'] = lb_list[3] + " " * (10 - len(lb_list[3])) + " :"
+            lb_list[0]['text'] = lb_list[3] + ":"
             lb_list[0]['anchor'] = 'e'
             lb_list[0].place(relx=0.0, rely=height, relwidth=0.35, relheight=height_label)
             height += height_label + h_label_s / height_count
@@ -771,7 +768,7 @@ class GarbageStation(GarbageStationBase):
             info_list[0]['font'] = title_font
             info_list[0]['bg'] = "#F0F8FF"
             info_list[0]['anchor'] = 'e'
-            info_list[0]['text'] = info_list[3] + " " * (10 - len(info_list[3])) + " :"
+            info_list[0]['text'] = info_list[3] + ":"
             info_list[0].place(relx=0.0, rely=height, relwidth=0.35, relheight=height_label)
             height += height_label + h_label_s / height_count
 
@@ -1112,31 +1109,31 @@ class GarbageStation(GarbageStationBase):
         self._user_btn[0]['state'] = 'disable'
 
     def normal_user_disable(self):
-        set_button_disable_from_list(self._check_ctrl_btn, flat='disable')
+        set_tk_disable_from_list(self._check_ctrl_btn, flat='disable')
         self._user_btn[0]['state'] = 'normal'
         self._user_btn[0]['command'] = lambda: self.show_user_info()
 
     def manager_user_disable(self):
-        set_button_disable_from_list(self._throw_ctrl_btn, flat='disable')
+        set_tk_disable_from_list(self._throw_ctrl_btn, flat='disable')
         self._user_btn[0]['state'] = 'normal'
         self._user_btn[0]['command'] = lambda: self.show_garbage_info()
 
     def normal_user_able(self):
-        set_button_disable_from_list(self._throw_ctrl_btn, flat='normal')
+        set_tk_disable_from_list(self._throw_ctrl_btn, flat='normal')
 
     def manager_user_able(self):
-        set_button_disable_from_list(self._check_ctrl_btn, flat='normal')
+        set_tk_disable_from_list(self._check_ctrl_btn, flat='normal')
 
     def set_all_btn_disable(self):
         self.__switch_to_no_user()  # 禁用所有操作性按钮
         self.hide_msg_rank()
-        set_button_disable_from_list(self._user_btn, flat='disable')
-        set_button_disable_from_list(self._win_ctrl_button, flat='disable')
+        set_tk_disable_from_list(self._user_btn, flat='disable')
+        set_tk_disable_from_list(self._win_ctrl_button, flat='disable')
         self._disable_all_btn = True
 
     def set_reset_all_btn(self):
-        set_button_disable_from_list(self._user_btn, flat='normal')
-        set_button_disable_from_list(self._win_ctrl_button, flat='normal')
+        set_tk_disable_from_list(self._user_btn, flat='normal')
+        set_tk_disable_from_list(self._win_ctrl_button, flat='normal')
         self.update_control()  # 位于_user_btn之后, 会自动设定detail按钮
         self._disable_all_btn = False
 

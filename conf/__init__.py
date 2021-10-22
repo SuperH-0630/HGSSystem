@@ -42,3 +42,6 @@ tk_refresh_delay = 50  # 延时任务的时间
 qr_show_uid_len = 12  # qr 码上展示uid的长度
 tk_show_uid_len = qr_show_uid_len  # tk 界面上展示uid的长度
 ranking_tk_show_uid_len = tk_show_uid_len  # tk ranking 界面上展示uid的长度
+
+tk_win_bg = "#fffffb"  # tkinter manager 窗口 按钮标准颜色
+tk_btn_bg = "#dcdcdc"  # tkinter 按钮 按钮标准颜色

@@ -98,6 +98,9 @@ class AdminStationBase(TkEventMain, metaclass=abc.ABCMeta):
         else:
             return False
 
+    def logout(self):
+        self._admin = None
+
     @abc.abstractmethod
     def show_loading(self, title: str):
         ...
@@ -108,6 +111,22 @@ class AdminStationBase(TkEventMain, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def set_after_run(self, ms, func, *args):
+        ...
+
+    @abc.abstractmethod
+    def to_menu(self, name: str = "Main"):
+        ...
+
+    @abc.abstractmethod
+    def to_program(self, name: str = "Welcome"):
+        ...
+
+    @abc.abstractmethod
+    def show_msg(self, title, info, msg_type='info'):
+        ...
+
+    @abc.abstractmethod
+    def hide_msg(self):
         ...
 
 
@@ -145,7 +164,8 @@ class AdminStation(AdminStationBase):
         self._full_screen = False
         self._is_loading = False
         self._disable_all_btn = False
-        self._now_program: Optional[Tuple[str, tk.Frame, tk_program.AdminProgram]] = None
+        self._menu_now: Optional[Tuple[str, tk.Frame, tk_menu.AdminMenu]] = None
+        self._program_now: Optional[Tuple[str, tk.Frame, tk_program.AdminProgram]] = None
 
         self.__conf_font_size()
         self.__conf_creak_tk()
@@ -210,40 +230,55 @@ class AdminStation(AdminStationBase):
 
         for bt in self._win_ctrl_button:
             bt: tk.Button
-            bt['bg'] = "#B0C4DE"  # 浅钢青
+            bt['bg'] = conf.tk_btn_bg
             bt['font'] = title_font
 
         rely = 0.02
-        bt_help: tk.Button = self._win_ctrl_button[0]
-        bt_help['text'] = 'Back'
-        bt_help['bg'] = '#DCDCDC'
-        bt_help.place(relx=0.69, rely=rely, relwidth=0.05, relheight=0.05)
+        bt_back: tk.Button = self._win_ctrl_button[0]
+        bt_back['text'] = 'Back'
+        bt_back['state'] = 'disable'
+        bt_back['command'] = lambda: self.__to_back_menu()
+        bt_back.place(relx=0.69, rely=rely, relwidth=0.05, relheight=0.05)
 
-        bt_about: tk.Button = self._win_ctrl_button[1]
-        bt_about['text'] = 'Main'
-        bt_about['bg'] = '#DCDCDC'
-        bt_about.place(relx=0.75, rely=rely, relwidth=0.05, relheight=0.05)
+        bt_main: tk.Button = self._win_ctrl_button[1]
+        bt_main['text'] = 'Main'
+        bt_main['command'] = lambda: self.__to_main_menu()
+        bt_main.place(relx=0.75, rely=rely, relwidth=0.05, relheight=0.05)
 
         bt_help: tk.Button = self._win_ctrl_button[2]
         bt_help['text'] = 'Help'
-        bt_help['bg'] = '#DCDCDC'
         bt_help.place(relx=0.81, rely=rely, relwidth=0.05, relheight=0.05)
 
         bt_about: tk.Button = self._win_ctrl_button[3]
         bt_about['text'] = 'About'
-        bt_about['bg'] = '#DCDCDC'
         bt_about.place(relx=0.87, rely=rely, relwidth=0.05, relheight=0.05)
 
         bt_exit: tk.Button = self._win_ctrl_button[4]
         bt_exit['text'] = 'Exit'
-        bt_exit['bg'] = '#DCDCDC'
         bt_exit['command'] = lambda: self.main_exit()
         bt_exit.place(relx=0.93, rely=rely, relwidth=0.05, relheight=0.05)
 
+    def set_ctrl_back_button(self):
+        if len(self._menu_list) <= 1:
+            self._win_ctrl_button[0]['state'] = 'disable'
+        else:
+            self._win_ctrl_button[0]['state'] = 'normal'
+
+    def __to_main_menu(self):
+        self._menu_list = []
+        self.to_menu()
+        self.to_program()
+
+    def __to_back_menu(self):
+        assert len(self._menu_list) > 1
+        self._menu_list.pop()  # 弹出最后一个元素
+        self.to_menu(self._menu_list.pop())  # 再弹出一个元素
+
     def __conf_creak_menu(self):
-        frame_list = [
-            tk_menu.MainMenu(self, self._menu_back, '#fffffb')
-        ]
+        frame_list = []
+
+        for i in tk_menu.all_menu:
+            frame_list.append(i(self, self._menu_back, conf.tk_win_bg))
 
         for i in frame_list:
             name, _ = i.get_menu_frame()
@@ -252,15 +287,15 @@ class AdminStation(AdminStationBase):
     def __conf_menu(self, n: int = 1):
         for i in self._menu_dict:
             menu = self._menu_dict[i]
-            menu.conf_gui("#DCDCDC", n)
+            menu.conf_gui(conf.tk_btn_bg, n)
 
     def __conf_menu_title(self):
-        self._menu_back['bg'] = "#fffffb"
+        self._menu_back['bg'] = conf.tk_win_bg
         self._menu_back['bd'] = 5
         self._menu_back['relief'] = "ridge"
 
         title_font = make_font(size=self._menu_title_font_size, weight="bold")
-        self._menu_title[0]['bg'] = '#fffffb'
+        self._menu_title[0]['bg'] = conf.tk_win_bg
         self._menu_title[0]['font'] = title_font
         self._menu_title[0]['textvariable'] = self._menu_title[1]
 
@@ -268,9 +303,14 @@ class AdminStation(AdminStationBase):
         # 不立即显示
 
     def to_menu(self, name: str = "Main"):
+        if self._menu_now is not None:
+            self._menu_now[1].place_forget()
+
         menu = self._menu_dict.get(name)
         if menu is None:
-            ...
+            self.show_msg("Menu not found", f"System can not found menu:\n  {name}")
+            return
+
         name, frame = menu.get_menu_frame()
         self._menu_title[1].set(name)
 
@@ -280,9 +320,11 @@ class AdminStation(AdminStationBase):
         frame.place(relx=0.02, rely=0.07, relwidth=0.96, relheight=0.84)
 
         self._menu_list.append(name)
+        self._menu_now = name, frame, menu
+        self.set_ctrl_back_button()
 
     def __conf_program_title(self):
-        self._program_back['bg'] = "#fffffb"
+        self._program_back['bg'] = conf.tk_win_bg
         self._program_back['relief'] = "ridge"
         self._program_back['bd'] = 5
 
@@ -292,13 +334,12 @@ class AdminStation(AdminStationBase):
         self._program_title[0]['font'] = title_font
         self._program_title[0]['anchor'] = 'w'
         self._program_title[0]['textvariable'] = self._program_title[1]
-
         # 不立即显示
 
     def __conf_creak_program(self):
-        program_list = [
-            tk_program.WelcomeProgram(self, self._program_back, '#fffffb')
-        ]
+        program_list = []
+        for i in tk_program.all_program:
+            program_list.append(i(self, self._program_back, conf.tk_win_bg))
 
         for i in program_list:
             name, _ = i.get_program_frame()
@@ -310,9 +351,14 @@ class AdminStation(AdminStationBase):
             program.conf_gui(n)
 
     def to_program(self, name: str = "Welcome"):
+        if self._program_now is not None:
+            self._program_now[1].place_forget()
+
         program = self._program_dict.get(name)
         if program is None:
-            ...
+            self.show_msg("Program not found", f"System can not found program:\n  {name}")
+            return
+
         name, frame = program.get_program_frame()
 
         self.__show_program()
@@ -322,7 +368,7 @@ class AdminStation(AdminStationBase):
 
         frame.place(relx=0.02, rely=0.12, relwidth=0.96, relheight=0.86)
 
-        self._now_program = name, frame, program
+        self._program_now = name, frame, program
 
     def __show_program(self):
         self._program_back.place(relx=0.26, rely=0.1, relwidth=0.68, relheight=0.84)
@@ -352,18 +398,18 @@ class AdminStation(AdminStationBase):
         title_font = make_font(size=self._msg_font_size + 1, weight="bold")
         info_font = make_font(size=self._msg_font_size - 1)
 
-        self._msg_frame['bg'] = "#fffffb"
+        self._msg_frame['bg'] = conf.tk_win_bg
         self._msg_frame['bd'] = 5
         self._msg_frame['relief'] = "ridge"
         # frame 不会立即显示
 
         self._msg_label[0]['font'] = title_font
-        self._msg_label[0]['bg'] = "#fffffb"
+        self._msg_label[0]['bg'] = conf.tk_win_bg
         self._msg_label[0]['anchor'] = 'w'
         self._msg_label[0]['textvariable'] = self._msg_label[2]
 
         self._msg_label[1]['font'] = info_font
-        self._msg_label[1]['bg'] = "#fffffb"
+        self._msg_label[1]['bg'] = conf.tk_win_bg
         self._msg_label[1]['anchor'] = 'nw'
         self._msg_label[1]['textvariable'] = self._msg_label[3]
         self._msg_label[1]['justify'] = 'left'
@@ -373,7 +419,7 @@ class AdminStation(AdminStationBase):
 
         self._msg_hide['font'] = info_font
         self._msg_hide['text'] = 'close'
-        self._msg_hide['bg'] = "#DCDCDC"
+        self._msg_hide['bg'] = conf.tk_btn_bg
         self._msg_hide['command'] = lambda: self.hide_msg()
         self._msg_hide.place(relx=0.375, rely=0.80, relwidth=0.25, relheight=0.13)
 
@@ -388,12 +434,11 @@ class AdminStation(AdminStationBase):
         self._msg_label[1]['wraplength'] = frame_width * 0.85 - 5  # 设定自动换行的像素
 
         self._msg_frame.place(relx=0.30, rely=0.25, relwidth=0.55, relheight=0.50)
-        self.__hide_program()
+        # 不隐藏元素, 隐藏后界面会显得单调
 
     def hide_msg(self):
         self.set_reset_all_btn()
         self._msg_frame.place_forget()
-        self.__show_program()
 
     def set_all_btn_disable(self):
         for btn in self._win_ctrl_button[:-1]:  # Exit 不设置disable
@@ -404,20 +449,21 @@ class AdminStation(AdminStationBase):
             assert menu is not None
             menu.set_disable()
 
-        if self._now_program is not None:
-            self._now_program[2].set_disable()
+        if self._program_now is not None:
+            self._program_now[2].set_disable()
 
     def set_reset_all_btn(self):
         for btn in self._win_ctrl_button[:-1]:
             btn['state'] = 'normal'
 
+        self.set_ctrl_back_button()
         if self._menu_list != 0:
             menu = self._menu_dict.get(self._menu_list[-1], None)
             assert menu is not None
             menu.reset_disable()
 
-        if self._now_program is not None:
-            self._now_program[2].reset_disable()
+        if self._program_now is not None:
+            self._program_now[2].reset_disable()
 
     def __show_login_window(self):
         self.login_window: Optional[tk.Toplevel] = tk.Toplevel()
@@ -487,6 +533,10 @@ class AdminStation(AdminStationBase):
             msg.showerror("Login error", "Please, try again")
             self._login_name[2].set('')
             self._login_passwd[2].set('')
+
+    def logout(self):
+        super(AdminStation, self).logout()
+        self.__show_login_window()
 
     def login_exit(self):
         if not msg.askokcancel('Sure?', 'Exit manager system.'):

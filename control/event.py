@@ -14,17 +14,18 @@ class TkEventBase(metaclass=abc.ABCMeta):
     def __init__(self):
         self.thread: Optional[TkThreading] = None
 
-    @abc.abstractmethod
     def is_end(self) -> bool:
-        ...
+        if self.thread is not None and self.thread.is_alive():
+            return True
+        return False
 
     @abc.abstractmethod
     def get_title(self) -> str:
         ...
 
-    @abc.abstractmethod
     def done_after_event(self):
-        ...
+        if self.thread is not None:
+            self.thread.wait_event()
 
 
 class TkEventMain(metaclass=abc.ABCMeta):

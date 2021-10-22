@@ -2,14 +2,13 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox as msg
 import abc
-import time
 
 import conf
 from tool.type_ import *
-from tool.tk import set_button_disable_from_list, make_font
+from tool.tk import make_font
 
 from sql.db import DB
-from sql.user import creat_new_user, del_user, find_user_by_name
+from sql.user import creat_new_user, del_user
 from sql.garbage import creat_new_garbage, del_garbage_not_use, del_garbage_not_use_many
 
 from equipment.scan_user import write_uid_qr, write_all_uid_qr
@@ -18,7 +17,7 @@ from equipment.scan_garbage import write_gid_qr
 from core.user import User
 from core.garbage import GarbageBag
 
-from tk_event import TkEventBase, TkEventMain, TkThreading
+from tk_event import TkEventMain
 
 
 class AdminStationException(Exception):
@@ -31,22 +30,6 @@ class CreatGarbageError(AdminStationException):
 
 class CreatUserError(AdminStationException):
     ...
-
-
-class AdminEventBase(TkEventBase):
-    def __init__(self, station, title: str = 'unknown'):
-        self.station: AdminStationBase = station
-        self._db: DB = station.get_db()
-        self._title = title
-
-    def get_title(self) -> str:
-        return self._title
-
-    def is_end(self) -> bool:
-        raise AdminStationException
-
-    def done_after_event(self):
-        raise AdminStationException
 
 
 class AdminStationBase(TkEventMain, metaclass=abc.ABCMeta):
@@ -128,6 +111,11 @@ class AdminStationBase(TkEventMain, metaclass=abc.ABCMeta):
         ...
 
 
+import admin_program as tk_program
+import admin_menu as tk_menu
+import admin_event as tk_event
+
+
 class AdminStation(AdminStationBase):
     def set_after_run(self, ms, func, *args):  # super.__init__可能会调用
         self.init_after_run_list.append((ms, func, args))
@@ -157,7 +145,7 @@ class AdminStation(AdminStationBase):
         self._full_screen = False
         self._is_loading = False
         self._disable_all_btn = False
-        self._now_program: Optional[Tuple[str, tk.Frame, AdminProgram]] = None
+        self._now_program: Optional[Tuple[str, tk.Frame, tk_program.AdminProgram]] = None
 
         self.__conf_font_size()
         self.__conf_creak_tk()
@@ -185,12 +173,12 @@ class AdminStation(AdminStationBase):
         self._menu_back = tk.Frame(self._window)
         self._menu_line = tk.Label(self._menu_back)  # 下划线
         self._menu_title: Tuple[tk.Label, tk.Variable] = tk.Label(self._menu_back), tk.StringVar()
-        self._menu_dict: Dict[str, AdminMenu] = {}
+        self._menu_dict: Dict[str, tk_menu.AdminMenu] = {}
         self._menu_list: List[str] = []  # 菜单回溯
 
         self._program_back = tk.Frame(self._window)
         self._program_title: Tuple[tk.Label, tk.Variable] = tk.Label(self._program_back), tk.StringVar()
-        self._program_dict: Dict[str, AdminProgram] = {}
+        self._program_dict: Dict[str, tk_program.AdminProgram] = {}
 
         self._msg_frame = tk.Frame(self._window)
         self._msg_label = tk.Label(self._msg_frame), tk.Label(self._msg_frame), tk.StringVar(), tk.StringVar()
@@ -254,7 +242,7 @@ class AdminStation(AdminStationBase):
 
     def __conf_creak_menu(self):
         frame_list = [
-            MainMenu(self, self._menu_back, '#fffffb')
+            tk_menu.MainMenu(self, self._menu_back, '#fffffb')
         ]
 
         for i in frame_list:
@@ -309,7 +297,7 @@ class AdminStation(AdminStationBase):
 
     def __conf_creak_program(self):
         program_list = [
-            WelcomeProgram(self, self._program_back, '#fffffb')
+            tk_program.WelcomeProgram(self, self._program_back, '#fffffb')
         ]
 
         for i in program_list:
@@ -487,7 +475,7 @@ class AdminStation(AdminStationBase):
         self._login_btn[1].place(relx=0.70, rely=0.70, relwidth=0.16, relheight=0.15)
 
     def login_call(self):
-        event = LoginEvent(self).start(self._login_name[2].get(), self._login_passwd[2].get())
+        event = tk_event.LoginEvent(self).start(self._login_name[2].get(), self._login_passwd[2].get())
         self.push_event(event)
 
     def login(self, user: User):
@@ -524,174 +512,6 @@ class AdminStation(AdminStationBase):
 
     def exit_win(self):
         self._window.destroy()
-
-
-class LoginEvent(AdminEventBase):
-    def __init__(self, station: AdminStationBase):
-        super().__init__(station, "Ranking")
-        self.thread: Optional[TkThreading] = None
-
-    def login(self, name, passwd):
-        return find_user_by_name(name, passwd, self._db)
-
-    def start(self, name, passwd):
-        self.thread = TkThreading(self.login, name, passwd)
-        return self
-
-    def is_end(self) -> bool:
-        return not self.thread.is_alive()
-
-    def done_after_event(self):
-        self.station.login(self.thread.wait_event())
-
-
-class TestProgressEvent(AdminEventBase):
-    @staticmethod
-    def func(sleep_time):
-        time.sleep(sleep_time)
-
-    def __init__(self, station, db):
-        super(TestProgressEvent, self).__init__(station, db)
-        self.thread = TkThreading(self.func, 5)
-
-    def is_end(self) -> bool:
-        return not self.thread.is_alive()
-
-    def done_after_event(self):
-        ...
-
-
-class AdminMenu(metaclass=abc.ABCMeta):
-    def __init__(self, station: AdminStation, win: Union[tk.Frame, tk.Toplevel, tk.Tk], color: str):
-        self.station = station
-        self.win = win
-        self.color = color
-
-    @abc.abstractmethod
-    def set_disable(self):
-        ...
-
-    @abc.abstractmethod
-    def reset_disable(self):
-        ...
-
-    @abc.abstractmethod
-    def conf_gui(self, color: str, n: int = 1):
-        ...
-
-    @abc.abstractmethod
-    def get_menu_frame(self) -> Tuple[str, tk.Frame]:
-        ...
-
-
-class AdminProgram(metaclass=abc.ABCMeta):
-    def __init__(self, station: AdminStation, win: Union[tk.Frame, tk.Toplevel, tk.Tk], color: str):
-        self.station = station
-        self.win = win
-        self.color = color
-
-    @abc.abstractmethod
-    def set_disable(self):
-        ...
-
-    @abc.abstractmethod
-    def reset_disable(self):
-        ...
-
-    @abc.abstractmethod
-    def conf_gui(self, n: int = 1):
-        ...
-
-    @abc.abstractmethod
-    def get_program_frame(self) -> tk.Frame:
-        ...
-
-
-class MainMenu(AdminMenu):
-    def __init__(self, station, win, color):
-        super(MainMenu, self).__init__(station, win, color)
-        self.frame = tk.Frame(self.win)
-        self.frame['bg'] = color
-
-        self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(5)]
-        self.__conf_font()
-
-    def __conf_font(self, n: int = 1):
-        self.btn_font_size = int(16 * n)
-
-    def conf_gui(self, color: str, n: int = 1):
-        self.__conf_font(n)
-
-        btn_font = make_font(size=self.btn_font_size, weight="bold")
-        height = 0.02
-        for btn, text in zip(self.btn, ["Creat", "Delete", "Search", "Update", "Logout"]):
-            btn['font'] = btn_font
-            btn['text'] = text
-            btn['bg'] = color
-            btn.place(relx=0.02, rely=height, relwidth=0.96, relheight=0.1)
-            height += 0.1 + 0.02
-
-    def get_menu_frame(self) -> Tuple[str, tk.Frame]:
-        return "Main", self.frame
-
-    def set_disable(self):
-        set_button_disable_from_list(self.btn)
-
-    def reset_disable(self):
-        set_button_disable_from_list(self.btn, flat='normal')
-
-
-class WelcomeProgram(AdminProgram):
-    def __init__(self, station, win, color):
-        super(WelcomeProgram, self).__init__(station, win, color)
-        self.frame = tk.Frame(self.win)
-        self.frame['bg'] = color
-
-        self.title = tk.Label(self.frame)
-        self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(2)]
-        self.__conf_font()
-
-    def __conf_font(self, n: int = 1):
-        self.title_font_size = int(25 * n)
-        self.btn_font_size = int(14 * n)
-
-    def conf_gui(self, n: int = 1):
-        self.__conf_font(n)
-
-        title_font = make_font(size=self.title_font_size, weight="bold")
-        btn_font = make_font(size=self.btn_font_size)
-
-        for btn, text in zip(self.btn, ["TestMSG", "TestProgress"]):
-            btn['font'] = btn_font
-            btn['text'] = text
-            btn['bg'] = '#d3d7d4'
-
-        self.title['text'] = 'Welcome to HGSSystem Manager'
-        self.title['font'] = title_font
-        self.title['bg'] = self.color
-
-        self.btn[0]['command'] = lambda: self.test_msg()
-        self.btn[1]['command'] = lambda: self.test_progress()
-
-        self.title.place(relx=0.1, rely=0.3, relwidth=0.8, relheight=0.2)
-        self.btn[0].place(relx=0.2, rely=0.7, relwidth=0.2, relheight=0.1)
-        self.btn[1].place(relx=0.6, rely=0.7, relwidth=0.2, relheight=0.1)
-
-    def test_progress(self):
-        event = TestProgressEvent(self.station, "Sleep(5)")
-        self.station.push_event(event)
-
-    def test_msg(self):
-        self.station.show_msg("Test Msg", "test msg")
-
-    def get_program_frame(self) -> Tuple[str, tk.Frame]:
-        return "Welcome", self.frame
-
-    def set_disable(self):
-        set_button_disable_from_list(self.btn)
-
-    def reset_disable(self):
-        set_button_disable_from_list(self.btn, flat='normal')
 
 
 if __name__ == '__main__':

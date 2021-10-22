@@ -6,7 +6,14 @@ import conf
 from tool.type_ import *
 
 
+class TkEventException(Exception):
+    ...
+
+
 class TkEventBase(metaclass=abc.ABCMeta):
+    def __init__(self):
+        self.thread: Optional[TkThreading] = None
+
     @abc.abstractmethod
     def is_end(self) -> bool:
         ...

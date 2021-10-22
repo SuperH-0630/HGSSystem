@@ -45,13 +45,13 @@ def make_gid_image(gid: gid_t, path: str):
 
 
 def write_gid_qr(gid: gid_t, path: str, db: DB) -> Tuple[str, Optional[GarbageBag]]:
-    user = find_garbage(gid, db)
-    if user is None:
+    garbage = find_garbage(gid, db)
+    if garbage is None:
         return "", None
 
     path = __get_gid_qr_file_name(gid, path)
     if make_gid_image(gid, path):
-        return path, user
+        return path, garbage
     return "", None
 
 

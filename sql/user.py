@@ -64,7 +64,7 @@ def update_user(user: User, db: DB) -> bool:
 
 def creat_new_user(name: Optional[uname_t], passwd: Optional[passwd_t], phone: phone_t, manager: bool, db: DB) -> Optional[User]:
     if name is None:
-        name = randomPassword()
+        name = f'User-{phone[-6:]}'
 
     if passwd is None:
         passwd = randomPassword()
@@ -92,14 +92,32 @@ def get_user_phone(uid: uid_t, db: DB) -> Optional[str]:
 
 
 def del_user(uid: uid_t, db: DB) -> bool:
-    cur = db.search(f"SELECT gid FROM garbage_time WHERE uid = {uid};")
+    cur = db.search(f"SELECT gid FROM garbage_time WHERE uid = '{uid}';")  # 确保没有引用
     if cur is None or cur.rowcount != 0:
         return False
-    cur = db.done(f"DELETE FROM user WHERE uid = {uid};")
+    cur = db.done(f"DELETE FROM user WHERE uid = '{uid}';")
     if cur is None or cur.rowcount == 0:
         return False
     assert cur.rowcount == 1
     return True
+
+
+def del_user_from_where_scan(where: str, db: DB) -> int:
+    cur = db.search(f"SELECT uid FROM user WHERE {where};")
+    print(f"SELECT uid FROM user WHERE {where};")
+    if cur is None:
+        return -1
+    return cur.rowcount
+
+
+def del_user_from_where(where: str, db: DB) -> int:
+    cur = db.search(f"SELECT gid FROM garbage_user WHERE {where};")  # 确保没有引用
+    if cur is None or cur.rowcount != 0:
+        return False
+    cur = db.done(f"DELETE FROM user WHERE {where};")
+    if cur is None:
+        return -1
+    return cur.rowcount
 
 
 if __name__ == '__main__':

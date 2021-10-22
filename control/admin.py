@@ -8,8 +8,8 @@ from tool.type_ import *
 from tool.tk import make_font
 
 from sql.db import DB
-from sql.user import creat_new_user, del_user
-from sql.garbage import creat_new_garbage, del_garbage_not_use, del_garbage_not_use_many
+from sql.user import creat_new_user, del_user, del_user_from_where, del_user_from_where_scan
+from sql.garbage import creat_new_garbage, del_garbage_not_use, del_garbage_not_use_many, find_garbage
 
 from equipment.scan_user import write_uid_qr, write_all_uid_qr
 from equipment.scan_garbage import write_gid_qr
@@ -41,21 +41,21 @@ class AdminStationBase(TkEventMain, metaclass=abc.ABCMeta):
     def get_db(self):
         return self._db
 
-    def creat_garbage(self, path: str, num: int = 1) -> List[tuple[str, Optional[GarbageBag]]]:
+    def creat_garbage(self, path: Optional[str], num: int = 1) -> List[tuple[str, Optional[GarbageBag]]]:
         re = []
         for _ in range(num):
             gar = creat_new_garbage(self._db)
             if gar is None:
                 raise CreatGarbageError
-            res = write_gid_qr(gar.get_gid(), path, self._db)
-            re.append(res)
+            if path is not None:
+                res = write_gid_qr(gar.get_gid(), path, self._db)
+                re.append(res)
+            else:
+                re.append(("", gar))
         return re
 
     def creat_user(self, name: uname_t, passwd: passwd_t, phone: str, manager: bool) -> Optional[User]:
-        user = creat_new_user(name, passwd, phone, manager, self._db)
-        if user is None:
-            raise CreatUserError
-        return user
+        return creat_new_user(name, passwd, phone, manager, self._db)
 
     def creat_user_from_list(self, user_list: List[Tuple[uname_t, passwd_t, str]], manager: bool) -> List[User]:
         re = []
@@ -86,6 +86,12 @@ class AdminStationBase(TkEventMain, metaclass=abc.ABCMeta):
 
     def del_user(self, uid: uid_t) -> bool:
         return del_user(uid, self._db)
+
+    def del_user_from_where_scan(self, where: str) -> int:
+        return del_user_from_where_scan(where, self._db)
+
+    def del_user_from_where(self, where: str) -> int:
+        return del_user_from_where(where, self._db)
 
     @abc.abstractmethod
     def login_call(self):

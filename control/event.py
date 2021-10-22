@@ -15,7 +15,7 @@ class TkEventBase(metaclass=abc.ABCMeta):
         self.thread: Optional[TkThreading] = None
 
     def is_end(self) -> bool:
-        if self.thread is not None and self.thread.is_alive():
+        if self.thread is not None and not self.thread.is_alive():
             return True
         return False
 
@@ -88,7 +88,12 @@ class TkThreading(threading.Thread):
             self.start()
 
     def run(self):
-        self.result = self.func(*self.args)
+        try:
+            self.result = self.func(*self.args)
+        except:
+            ...
+        finally:
+            del self.func, self.args
 
     def wait_event(self):
         self.join()

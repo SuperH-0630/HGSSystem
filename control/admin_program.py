@@ -1,9 +1,11 @@
 import abc
 import tkinter as tk
 import tkinter.ttk as ttk
+from tkinter.filedialog import askdirectory
 
 from tool.type_ import *
 from tool.tk import make_font, set_tk_disable_from_list
+from tool.login import creat_uid
 
 import conf
 import admin
@@ -95,11 +97,12 @@ class CreatUserProgramBase(AdminProgram):
         self.var: List[tk.Variable] = [tk.StringVar() for _ in range(3)]
         self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(2)]  # creat(生成用户) try(计算uid)
 
-        self._conf("#FA8072")  # 默认颜色
+        self._conf("#FA8072", False)  # 默认颜色
         self.__conf_font()
 
-    def _conf(self, bg_color):
+    def _conf(self, bg_color, is_manager: bool):
         self.bg_color = bg_color
+        self.is_manager = is_manager
         return self
 
     def __conf_font(self, n: int = 1):
@@ -131,11 +134,42 @@ class CreatUserProgramBase(AdminProgram):
             enter.place(relx=0.35, rely=height, relwidth=0.60, relheight=0.17)
             height += 0.30
 
-        for btn, text, x in zip(self.btn, ["Creat", "GetUID"], [0.2, 0.6]):
+        for btn, text, x, func in zip(self.btn,
+                                      ["Creat", "GetUID"],
+                                      [0.2, 0.6],
+                                      [lambda: self.creat_by_name(), lambda: self.get_uid()]):
             btn['font'] = btn_font
             btn['text'] = text
             btn['bg'] = conf.tk_btn_bg
+            btn['command'] = func
             btn.place(relx=x, rely=0.7, relwidth=0.2, relheight=0.08)
+
+    def __get_info(self) -> Optional[Tuple[uname_t, passwd_t, str]]:
+        name: uname_t = self.var[0].get()
+        passwd: passwd_t = self.var[1].get()
+        phone: str = self.var[2].get()
+
+        if len(name) == 0 or len(passwd) == 0 or len(phone) != 11:
+            self.station.show_msg("UserInfoError", "Please, enter UserName/Passwd/Phone(11)")
+            return None
+
+        return name, passwd, phone
+
+    def creat_by_name(self):
+        res = self.__get_info()
+        if res is None:
+            return
+        name, passwd, phone = res
+        event = tk_event.CreatUserEvent(self.station).start(name, passwd, phone, self.is_manager)
+        self.station.push_event(event)
+
+    def get_uid(self):
+        res = self.__get_info()
+        if res is None:
+            return
+        name, passwd, phone = res
+        uid = creat_uid(name, passwd, phone)
+        self.station.show_msg("UserID", f"UserName: {name}\nUserID: {uid}")
 
     def set_disable(self):
         set_tk_disable_from_list(self.btn)
@@ -154,7 +188,7 @@ class CreatNormalUserProgram(CreatUserProgramBase):
 class CreatManagerUserProgram(CreatUserProgramBase):
     def __init__(self, station, win, color):
         super(CreatManagerUserProgram, self).__init__(station, win, color, "CreatManagerUser")
-        self._conf("#4b5cc4")
+        self._conf("#4b5cc4", True)
 
 
 class CreatAutoNormalUserProgram(AdminProgram):
@@ -198,7 +232,15 @@ class CreatAutoNormalUserProgram(AdminProgram):
         self.btn['font'] = btn_font
         self.btn['text'] = "Creat"
         self.btn['bg'] = conf.tk_btn_bg
+        self.btn['command'] = lambda: self.creat_user()
         self.btn.place(relx=0.4, rely=0.7, relwidth=0.2, relheight=0.08)
+
+    def creat_user(self):
+        phone = self.var.get()
+        if len(phone) != 11:
+            self.station.show_msg("UserInfoError", "Please, enter Phone(11)")
+        event = tk_event.CreatUserEvent(self.station).start(None, None, phone, False)
+        self.station.push_event(event)
 
     def set_disable(self):
         self.btn['state'] = 'disable'
@@ -251,11 +293,33 @@ class CreatGarbageProgram(AdminProgram):
             enter.place(relx=0.35, rely=height, relwidth=0.60, relheight=0.35)
             height += 0.43
 
-        for btn, text, x in zip([self.creat_btn, self.file_btn], ["Creat", "ChoosePath"], [0.2, 0.6]):
+        for btn, text, x, func in zip([self.creat_btn, self.file_btn],
+                                      ["Creat", "ChoosePath"],
+                                      [0.2, 0.6],
+                                      [lambda: self.creat_garbage(), lambda: self.choose_file()]):
             btn['font'] = btn_font
             btn['text'] = text
             btn['bg'] = conf.tk_btn_bg
+            btn['command'] = func
             btn.place(relx=x, rely=0.7, relwidth=0.2, relheight=0.08)
+
+    def choose_file(self):
+        path = askdirectory(title='path to save qr code')
+        self.var[1].set(path)
+
+    def creat_garbage(self):
+        try:
+            count = int(self.var[0].get())
+            if count <= 0:
+                raise ValueError
+        except (ValueError, TypeError):
+            self.station.show_msg("TypeError", "Count must be number > 1")
+        else:
+            path = self.var[1].get()
+            if len(path) == 0:
+                path = None
+            event = tk_event.CreatGarbageEvent(self.station).start(path, count)
+            self.station.push_event(event)
 
     def set_disable(self):
         self.creat_btn['state'] = 'disable'
@@ -331,13 +395,34 @@ class DeleteUserProgram(AdminProgram):
         self.uid_title.place(relx=0.01, rely=0.25, relwidth=0.30, relheight=0.50)
         self.uid_enter.place(relx=0.35, rely=0.25, relwidth=0.60, relheight=0.50)
 
-        for btn, text in zip(self.btn, ["Delete", "Delete"]):
+        for btn, text, func in zip(self.btn,
+                                   ["Delete By Uid", "Delete By Name"],
+                                   [lambda: self.del_by_uid(), lambda: self.del_by_name()]):
             btn['font'] = btn_font
             btn['text'] = text
             btn['bg'] = conf.tk_btn_bg
+            btn['command'] = func
 
         self.btn[0].place(relx=0.6, rely=0.32, relwidth=0.2, relheight=0.08)
         self.btn[1].place(relx=0.6, rely=0.75, relwidth=0.2, relheight=0.08)
+
+    def del_by_uid(self):
+        uid = self.uid_var.get()
+        if len(uid) != 32:
+            self.station.show_msg("UserID Error", "Len of UserID must be 32", "Error")
+            return
+        event = tk_event.DelUserEvent(self.station).start(uid)
+        self.station.push_event(event)
+
+    def del_by_name(self):
+        name = self.name_var[0].get()
+        passwd = self.name_var[1].get()
+        if len(name) == 0 or len(passwd) == 0:
+            self.station.show_msg("UserName/Password Error", "You should enter UserName and Password", "Error")
+            return
+        uid = creat_uid(name, passwd)
+        event = tk_event.DelUserEvent(self.station).start(uid)
+        self.station.push_event(event)
 
     def set_disable(self):
         set_tk_disable_from_list(self.btn)
@@ -389,11 +474,31 @@ class DeleteUsersProgram(AdminProgram):
         self.title.place(relx=0.01, rely=0.25, relwidth=0.30, relheight=0.50)
         self.enter.place(relx=0.35, rely=0.25, relwidth=0.60, relheight=0.50)
 
-        for btn, text, x in zip(self.btn, ["Delete", "Scan"], [0.2, 0.6]):
+        for btn, text, x, func in zip(self.btn,
+                                      ["Delete", "Scan"],
+                                      [0.2, 0.6],
+                                      [lambda: self.delete_user(), lambda: self.scan_user()]):
             btn['font'] = btn_font
             btn['text'] = text
             btn['bg'] = conf.tk_btn_bg
+            btn['command'] = func
             btn.place(relx=x, rely=0.6, relwidth=0.2, relheight=0.08)
+
+    def delete_user(self):
+        where = self.var.get()
+        if len(where) == 0:
+            self.station.show_msg("`Where`Error", "`Where` must be SQL", "Warning")
+            return
+        event = tk_event.DelUserFromWhereEvent(self.station).start(where)
+        self.station.push_event(event)
+
+    def scan_user(self):
+        where = self.var.get()
+        if len(where) == 0:
+            self.station.show_msg("`Where`Error", "`Where` must be SQL", "Warning")
+            return
+        event = tk_event.DelUserFromWhereScanEvent(self.station).start(where)
+        self.station.push_event(event)
 
     def set_disable(self):
         set_tk_disable_from_list(self.btn)

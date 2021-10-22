@@ -13,7 +13,7 @@ def check_login(uid: uid_t, name: uname_t, passwd: passwd_t, salt: str = conf.pa
 
 
 def randomPassword():
-    passwd_char = 'qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890<>,.?/:;''!@#$%^&*()-_=+*'
+    passwd_char = 'qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890@'
     passwd = []
     for i in range(randint(16, 22)):
         passwd.append(passwd_char[randint(0, len(passwd_char) - 1)])

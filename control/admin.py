@@ -1,12 +1,12 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox as msg
-import tkinter.font as font
 import abc
 import time
 
 import conf
 from tool.type_ import *
+from tool.tk import set_button_disable_from_list, make_font
 
 from sql.db import DB
 from sql.user import creat_new_user, del_user, find_user_by_name
@@ -218,7 +218,7 @@ class AdminStation(AdminStationBase):
         self.to_program()
 
     def __conf_win_ctrl_button(self):
-        title_font = self.make_font(size=self._win_ctrl_font_size)
+        title_font = make_font(size=self._win_ctrl_font_size)
 
         for bt in self._win_ctrl_button:
             bt: tk.Button
@@ -271,7 +271,7 @@ class AdminStation(AdminStationBase):
         self._menu_back['bd'] = 5
         self._menu_back['relief'] = "ridge"
 
-        title_font = self.make_font(size=self._menu_title_font_size, weight="bold")
+        title_font = make_font(size=self._menu_title_font_size, weight="bold")
         self._menu_title[0]['bg'] = '#fffffb'
         self._menu_title[0]['font'] = title_font
         self._menu_title[0]['textvariable'] = self._menu_title[1]
@@ -298,7 +298,7 @@ class AdminStation(AdminStationBase):
         self._program_back['relief'] = "ridge"
         self._program_back['bd'] = 5
 
-        title_font = self.make_font(size=self._program_title_font_size, weight="bold")
+        title_font = make_font(size=self._program_title_font_size, weight="bold")
         self._program_title[0]['bg'] = '#2468a2'
         self._program_title[0]['fg'] = "#F0F8FF"
         self._program_title[0]['font'] = title_font
@@ -361,8 +361,8 @@ class AdminStation(AdminStationBase):
         self.set_reset_all_btn()
 
     def __conf_msg(self):
-        title_font = self.make_font(size=self._msg_font_size + 1, weight="bold")
-        info_font = self.make_font(size=self._msg_font_size - 1)
+        title_font = make_font(size=self._msg_font_size + 1, weight="bold")
+        info_font = make_font(size=self._msg_font_size - 1)
 
         self._msg_frame['bg'] = "#fffffb"
         self._msg_frame['bd'] = 5
@@ -454,8 +454,8 @@ class AdminStation(AdminStationBase):
         self.hide_main()
 
     def __conf_login_window(self):
-        title_font = self.make_font(size=self._login_title_font_size, weight="bold")
-        btn_font = self.make_font(size=self._login_btn_font_size, weight="bold")
+        title_font = make_font(size=self._login_title_font_size, weight="bold")
+        btn_font = make_font(size=self._login_btn_font_size, weight="bold")
 
         for lb, text in zip([self._login_name[0], self._login_passwd[0]], ["User:", "Passwd:"]):
             lb['bg'] = "#d1d9e0"  # 蜜瓜绿
@@ -518,15 +518,6 @@ class AdminStation(AdminStationBase):
     def show_main(self):
         self._window.update()
         self._window.deiconify()
-
-    @staticmethod
-    def make_font(family: str = 'noto', **kwargs):
-        return font.Font(family=conf.font_d[family], **kwargs)
-
-    @staticmethod
-    def set_button_disable_from_list(btn_list: List[tk.Button], flat: str = 'disable'):
-        for btn in btn_list:
-            btn['state'] = flat
 
     def mainloop(self):
         self._window.mainloop()
@@ -631,7 +622,7 @@ class MainMenu(AdminMenu):
     def conf_gui(self, color: str, n: int = 1):
         self.__conf_font(n)
 
-        btn_font = self.station.make_font(size=self.btn_font_size, weight="bold")
+        btn_font = make_font(size=self.btn_font_size, weight="bold")
         height = 0.02
         for btn, text in zip(self.btn, ["Creat", "Delete", "Search", "Update", "Logout"]):
             btn['font'] = btn_font
@@ -644,10 +635,10 @@ class MainMenu(AdminMenu):
         return "Main", self.frame
 
     def set_disable(self):
-        self.station.set_button_disable_from_list(self.btn)
+        set_button_disable_from_list(self.btn)
 
     def reset_disable(self):
-        self.station.set_button_disable_from_list(self.btn, flat='normal')
+        set_button_disable_from_list(self.btn, flat='normal')
 
 
 class WelcomeProgram(AdminProgram):
@@ -667,8 +658,8 @@ class WelcomeProgram(AdminProgram):
     def conf_gui(self, n: int = 1):
         self.__conf_font(n)
 
-        title_font = self.station.make_font(size=self.title_font_size, weight="bold")
-        btn_font = self.station.make_font(size=self.btn_font_size)
+        title_font = make_font(size=self.title_font_size, weight="bold")
+        btn_font = make_font(size=self.btn_font_size)
 
         for btn, text in zip(self.btn, ["TestMSG", "TestProgress"]):
             btn['font'] = btn_font
@@ -697,10 +688,10 @@ class WelcomeProgram(AdminProgram):
         return "Welcome", self.frame
 
     def set_disable(self):
-        self.station.set_button_disable_from_list(self.btn)
+        set_button_disable_from_list(self.btn)
 
     def reset_disable(self):
-        self.station.set_button_disable_from_list(self.btn, flat='normal')
+        set_button_disable_from_list(self.btn, flat='normal')
 
 
 if __name__ == '__main__':

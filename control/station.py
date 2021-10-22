@@ -7,11 +7,11 @@ import traceback
 import abc
 import tkinter as tk
 from tkinter import ttk
-import tkinter.font as font
 import datetime
 from PIL import Image, ImageTk
 
 from tool.type_ import *
+from tool.tk import set_button_disable_from_list, make_font
 
 from core.user import User, UserNotSupportError
 from core.garbage import GarbageBag, GarbageType, GarbageBagNotUse
@@ -636,7 +636,7 @@ class GarbageStation(GarbageStationBase):
         self._window.overrideredirect(show)
 
     def __conf_title_label(self):
-        title_font = self.__make_font(size=self._title_font_size, weight="bold")
+        title_font = make_font(size=self._title_font_size, weight="bold")
         self._title_label['font'] = title_font
         self._title_label['bg'] = "#F0FFF0"  # 蜜瓜绿
         self._title_label['text'] = "HGSSystem: GarbageStation Control Center"
@@ -644,7 +644,7 @@ class GarbageStation(GarbageStationBase):
         self._title_label.place(relx=0.02, rely=0.0, relwidth=0.6, relheight=0.07)
 
     def __conf_win_ctrl_button(self):
-        title_font = self.__make_font(size=self._win_ctrl_font_size)
+        title_font = make_font(size=self._win_ctrl_font_size)
 
         for bt in self._win_ctrl_button:
             bt: tk.Button
@@ -670,8 +670,8 @@ class GarbageStation(GarbageStationBase):
         bt_exit.place(relx=0.93, rely=0.01, relwidth=0.05, relheight=0.05)
 
     def __conf_user_info_label(self):
-        title_font = self.__make_font(size=self._win_info_font_size - 1, weight="bold")
-        info_font = self.__make_font(size=self._win_info_font_size + 1)
+        title_font = make_font(size=self._win_info_font_size - 1, weight="bold")
+        info_font = make_font(size=self._win_info_font_size + 1)
 
         frame_width = self._win_width * 0.4
         frame_height = self._win_height * 0.4
@@ -725,7 +725,7 @@ class GarbageStation(GarbageStationBase):
         self._user_img['relief'] = "ridge"
 
     def __conf_throw_btn(self):
-        btn_font = self.__make_font(size=self._throw_ctrl_btn_font_size, weight="bold")
+        btn_font = make_font(size=self._throw_ctrl_btn_font_size, weight="bold")
         btn_info: List[Tuple[str, str]] = [("Recyclable", "#00BFFF"),
                                            ("Other", "#A9A9A9"),
                                            ("Hazardous", "#DC143C"),
@@ -749,7 +749,7 @@ class GarbageStation(GarbageStationBase):
         self._throw_ctrl_btn[3].place(relx=0.505, rely=0.505, relwidth=0.495, relheight=0.495)
 
     def __conf_check_btn(self):
-        btn_font = self.__make_font(size=self._check_ctrl_btn_font_size, weight="bold")
+        btn_font = make_font(size=self._check_ctrl_btn_font_size, weight="bold")
         btn_info: List[Tuple[str, str]] = [("Fail", "#ef7a82"),
                                            ("Pass", "#70f3ff")]
 
@@ -767,8 +767,8 @@ class GarbageStation(GarbageStationBase):
         self._check_ctrl_btn[1].place(relx=0.505, rely=0.000, relwidth=0.495, relheight=1)
 
     def __conf_sys_info_label(self):
-        title_font = self.__make_font(size=self._sys_info_font_size - 1, weight="bold")
-        info_font = self.__make_font(size=self._sys_info_font_size + 1)
+        title_font = make_font(size=self._sys_info_font_size - 1, weight="bold")
+        info_font = make_font(size=self._sys_info_font_size + 1)
 
         self._sys_info_frame['bg'] = "#F0F8FF"
         self._sys_info_frame.place(relx=0.02, rely=0.51, relwidth=0.4, relheight=0.14)
@@ -801,7 +801,7 @@ class GarbageStation(GarbageStationBase):
             height += height_label + h_label_s / height_count
 
     def __conf_user_btn(self):
-        btn_font = self.__make_font(size=self._user_btn_font_size, weight="bold")
+        btn_font = make_font(size=self._user_btn_font_size, weight="bold")
         btn_info: List[Tuple[str, str]] = [("Detail", "#b0a4e3"),
                                            ("Ranking", "#b0a4e3"),
                                            ("Search", "#b0a4e3")]
@@ -831,8 +831,8 @@ class GarbageStation(GarbageStationBase):
         self._cap_label.place(relx=0.22, rely=0.66, relwidth=0.2, relheight=0.32)
 
     def __conf_msg(self):
-        title_font = self.__make_font(size=self._msg_font_size + 1, weight="bold")
-        info_font = self.__make_font(size=self._msg_font_size - 1)
+        title_font = make_font(size=self._msg_font_size + 1, weight="bold")
+        info_font = make_font(size=self._msg_font_size - 1)
 
         self._msg_frame['bg'] = "#F5FFFA"
         self._msg_frame['bd'] = 5
@@ -887,9 +887,9 @@ class GarbageStation(GarbageStationBase):
         self.show_msg(title, info, msg_type='Warning')
 
     def __conf_rank(self):
-        title_font = self.__make_font(size=self._rank_font_title_size, weight="bold")
-        info_font = self.__make_font(size=self._rank_font_size)
-        btn_font = self.__make_font(size=self._msg_font_size - 1)
+        title_font = make_font(size=self._rank_font_title_size, weight="bold")
+        info_font = make_font(size=self._rank_font_size)
+        btn_font = make_font(size=self._msg_font_size - 1)
 
         self._rank_frame['bg'] = "#F5F5DC"
         self._rank_frame['relief'] = "ridge"
@@ -981,7 +981,7 @@ class GarbageStation(GarbageStationBase):
             self.update_user_time()
 
     def __conf_loading(self):
-        title_font = self.__make_font(size=self._loading_tile_font, weight="bold")
+        title_font = make_font(size=self._loading_tile_font, weight="bold")
 
         self._loading_frame['bg'] = "#808080"
         self._loading_frame['bd'] = 5
@@ -1127,45 +1127,33 @@ class GarbageStation(GarbageStationBase):
         self._user_btn[0]['state'] = 'disable'
 
     def normal_user_disable(self):
-        for btn in self._check_ctrl_btn:
-            btn['state'] = 'disabled'
+        set_button_disable_from_list(self._check_ctrl_btn, flat='disable')
         self._user_btn[0]['state'] = 'normal'
         self._user_btn[0]['command'] = lambda: self.show_user_info()
 
     def manager_user_disable(self):
-        for btn in self._throw_ctrl_btn:
-            btn['state'] = 'disabled'
+        set_button_disable_from_list(self._throw_ctrl_btn, flat='disable')
         self._user_btn[0]['state'] = 'normal'
         self._user_btn[0]['command'] = lambda: self.show_garbage_info()
 
     def normal_user_able(self):
-        for btn in self._throw_ctrl_btn:
-            btn['state'] = 'normal'
+        set_button_disable_from_list(self._throw_ctrl_btn, flat='normal')
 
     def manager_user_able(self):
-        for btn in self._check_ctrl_btn:
-            btn['state'] = 'normal'
+        set_button_disable_from_list(self._check_ctrl_btn, flat='normal')
 
     def set_all_btn_disable(self):
         self.__switch_to_no_user()  # 禁用所有操作性按钮
         self.hide_msg_rank()
-        for btn in self._user_btn:
-            btn['state'] = 'disable'
-        for btn in self._win_ctrl_button:
-            btn['state'] = 'disable'
+        set_button_disable_from_list(self._user_btn, flat='disable')
+        set_button_disable_from_list(self._win_ctrl_button, flat='disable')
         self._disable_all_btn = True
 
     def set_reset_all_btn(self):
-        for btn in self._user_btn:
-            btn['state'] = 'normal'
-        for btn in self._win_ctrl_button:
-            btn['state'] = 'normal'
+        set_button_disable_from_list(self._user_btn, flat='normal')
+        set_button_disable_from_list(self._win_ctrl_button, flat='normal')
         self.update_control()  # 位于_user_btn之后, 会自动设定detail按钮
         self._disable_all_btn = False
-
-    @staticmethod
-    def __make_font(family: str = 'noto', **kwargs):
-        return font.Font(family=conf.font_d[family], **kwargs)
 
     def mainloop(self):
         self._window.mainloop()

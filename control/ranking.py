@@ -1,10 +1,10 @@
 import abc
 import tkinter as tk
-import tkinter.font as font
 from PIL import Image, ImageTk
 
 import conf
 from tool.type_ import *
+from tool.tk import make_font
 from sql.db import DB
 
 
@@ -255,9 +255,9 @@ class RankingStation(RankingStationBase):
         self.show_rank_first()
 
     def __conf_rank(self):
-        title_font = self.__make_font(size=self._rank_font_title_size, weight="bold")
-        info_font = self.__make_font(size=self._rank_font_size)
-        btn_font = self.__make_font(size=self._rank_font_btn_size)
+        title_font = make_font(size=self._rank_font_title_size, weight="bold")
+        info_font = make_font(size=self._rank_font_size)
+        btn_font = make_font(size=self._rank_font_btn_size)
 
         height = self.height * 0.95
         width = height * (3 / 4)
@@ -342,10 +342,6 @@ class RankingStation(RankingStationBase):
             rely = self.rank_y_height[i][0]
             relheight = self.rank_y_height[i][1]
             self.rank_label[i].place(relx=0.04, rely=rely, relwidth=0.92, relheight=relheight)
-
-    @staticmethod
-    def __make_font(family: str = 'noto', **kwargs):
-        return font.Font(family=conf.font_d[family], **kwargs)
 
     def show_rank(self, rank_info: List[Tuple[int, uname_t, uid_t, score_t, score_t, Optional[str]]]):
         self.__set_rank_info(rank_info)

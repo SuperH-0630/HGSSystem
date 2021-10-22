@@ -978,7 +978,7 @@ class GarbageStation(GarbageStationBase):
         self._loading_title[0].place(relx=0.02, rely=0.00, relwidth=0.96, relheight=0.7)
 
         self._loading_pro['mode'] = 'indeterminate'
-        self._loading_pro['orient'] = tk.HORIZONTAL
+        self._loading_pro['orient'] = 'horizontal'
         self._loading_pro['maximum'] = 100
         self._loading_pro.place(relx=0.02, rely=0.73, relwidth=0.96, relheight=0.22)
 

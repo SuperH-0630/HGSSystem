@@ -184,12 +184,6 @@ class AdminStation(AdminStationBase):
         self._window.protocol("WM_DELETE_WINDOW", lambda: self.main_exit())
 
     def __conf_creak_tk(self):
-        self._win_ctrl_button: List[tk.Button, tk.Button, tk.Button] = [tk.Button(self._window),
-                                                                        tk.Button(self._window),
-                                                                        tk.Button(self._window),
-                                                                        tk.Button(self._window),
-                                                                        tk.Button(self._window)]
-
         self._menu_back = tk.Frame(self._window)
         self._menu_line = tk.Label(self._menu_back)  # 下划线
         self._menu_title: Tuple[tk.Label, tk.Variable] = tk.Label(self._menu_back), tk.StringVar()
@@ -199,6 +193,12 @@ class AdminStation(AdminStationBase):
         self._program_back = tk.Frame(self._window)
         self._program_title: Tuple[tk.Label, tk.Variable] = tk.Label(self._program_back), tk.StringVar()
         self._program_dict: Dict[str, tk_program.AdminProgram] = {}
+
+        self._win_ctrl_button: List[tk.Button, tk.Button, tk.Button] = [tk.Button(self._menu_back),
+                                                                        tk.Button(self._menu_back),
+                                                                        tk.Button(self._window),
+                                                                        tk.Button(self._window),
+                                                                        tk.Button(self._window)]
 
         self._msg_frame = tk.Frame(self._window)
         self._msg_label = tk.Label(self._msg_frame), tk.Label(self._msg_frame), tk.StringVar(), tk.StringVar()
@@ -227,24 +227,27 @@ class AdminStation(AdminStationBase):
 
     def __conf_win_ctrl_button(self):
         title_font = make_font(size=self._win_ctrl_font_size)
+        title_font_bold = make_font(size=self._win_ctrl_font_size, weight="bold")
 
         for bt in self._win_ctrl_button:
             bt: tk.Button
             bt['bg'] = conf.tk_btn_bg
             bt['font'] = title_font
 
-        rely = 0.02
-        bt_back: tk.Button = self._win_ctrl_button[0]
-        bt_back['text'] = 'Back'
-        bt_back['state'] = 'disable'
-        bt_back['command'] = lambda: self.__to_back_menu()
-        bt_back.place(relx=0.69, rely=rely, relwidth=0.05, relheight=0.05)
-
         bt_main: tk.Button = self._win_ctrl_button[1]
         bt_main['text'] = 'Main'
+        bt_main['font'] = title_font_bold
         bt_main['command'] = lambda: self.__to_main_menu()
-        bt_main.place(relx=0.75, rely=rely, relwidth=0.05, relheight=0.05)
+        bt_main.place(relx=0.02, rely=0.86, relwidth=0.96, relheight=0.06)
 
+        bt_back: tk.Button = self._win_ctrl_button[0]
+        bt_back['text'] = 'back'
+        bt_back['font'] = title_font_bold
+        bt_back['state'] = 'disable'
+        bt_back['command'] = lambda: self.__to_back_menu()
+        bt_back.place(relx=0.02, rely=0.93, relwidth=0.96, relheight=0.06)
+
+        rely = 0.02
         bt_help: tk.Button = self._win_ctrl_button[2]
         bt_help['text'] = 'Help'
         bt_help.place(relx=0.81, rely=rely, relwidth=0.05, relheight=0.05)
@@ -317,7 +320,7 @@ class AdminStation(AdminStationBase):
         self._menu_back.place(relx=0.02, rely=0.02, relwidth=0.20, relheight=0.96)
         self._menu_line.place(relx=0.06, rely=0.065, relwidth=0.88, height=1)  # 一个像素的高度即可
         self._menu_title[0].place(relx=0.02, rely=0.02, relwidth=0.96, relheight=0.03)
-        frame.place(relx=0.02, rely=0.07, relwidth=0.96, relheight=0.84)
+        frame.place(relx=0.02, rely=0.07, relwidth=0.96, relheight=0.79)
 
         self._menu_list.append(name)
         self._menu_now = name, frame, menu
@@ -378,14 +381,14 @@ class AdminStation(AdminStationBase):
 
     def __conf_loading(self):
         self._loading_pro['mode'] = 'indeterminate'
-        self._loading_pro['orient'] = tk.HORIZONTAL
+        self._loading_pro['orient'] = 'horizontal'
         self._loading_pro['maximum'] = 50
 
     def show_loading(self, _):
         self._is_loading = True
         self.set_all_btn_disable()
         self._loading_pro['value'] = 0
-        self._loading_pro.place(relx=0.30, rely=0.035, relwidth=0.35, relheight=0.03)
+        self._loading_pro.place(relx=0.30, rely=0.035, relwidth=0.48, relheight=0.03)
         self._loading_pro.start(50)
 
     def stop_loading(self):

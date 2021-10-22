@@ -104,22 +104,62 @@ class CreatMenu(AdminMenu):
 class DeleteMenu(AdminMenu):
     def __init__(self, station, win, color):
         super().__init__(station, win, color, "Delete")
-        self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(4)]
-        self.btn_name = ["User", "Users", "Garbage", "AllGarbage"]
+        self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(5)]
+        self.btn_name = ["User", "UserMore", "Garbage", "GarbageMore", "AllGarbage"]
 
     def conf_gui(self, color: str, n: int = 1):
         super().conf_gui(color, n)
+        self.btn[0]['command'] = lambda: self.del_user()
+        self.btn[1]['command'] = lambda: self.del_users()
+        self.btn[2]['command'] = lambda: self.del_garbage()
+        self.btn[3]['command'] = lambda: self.del_garbage_more()
+        self.btn[4]['command'] = lambda: self.del_all_garbage()
+
+    def del_user(self):
+        self.station.to_program("DeleteUser")
+
+    def del_users(self):
+        self.station.to_program("DeleteUsers")
+
+    def del_garbage(self):
+        self.station.to_program("DeleteGarbage")
+
+    def del_garbage_more(self):
+        self.station.to_program("DeleteGarbageMore")
+
+    def del_all_garbage(self):
+        self.station.to_program("DeleteAllGarbage")
 
 
 class SearchMenu(AdminMenu):
     def __init__(self, station, win, color):
         super().__init__(station, win, color, "Search")
         self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(6)]
-        self.btn_name = ["User", "User's phone", "Garbage", "User's garbage", "Checker's garbage", "Statistics"]
+        self.btn_name = ["User", "UserAdvanced", "Garbage", "GarbageAdvanced", "Advanced", "Statistics"]
 
     def conf_gui(self, color: str, n: int = 1):
         super().conf_gui(color, n)
+        self.btn[0]['command'] = lambda: self.user_command()
+        self.btn[1]['command'] = lambda: self.user_advanced_command()
+        self.btn[2]['command'] = lambda: self.garbage_command()
+        self.btn[3]['command'] = lambda: self.garbage_advanced_command()
+        self.btn[4]['command'] = lambda: self.advanced_command()
         self.btn[5]['command'] = lambda: self.statistics_command()
+
+    def user_command(self):
+        self.station.to_program("SearchUser")
+
+    def user_advanced_command(self):
+        self.station.to_program("SearchUserAdvanced")
+
+    def garbage_command(self):
+        self.station.to_program("SearchGarbage")
+
+    def garbage_advanced_command(self):
+        self.station.to_program("SearchGarbageAdvanced")
+
+    def advanced_command(self):
+        self.station.to_program("SearchAdvanced")
 
     def statistics_command(self):
         self.station.to_menu("Statistics")
@@ -128,18 +168,34 @@ class SearchMenu(AdminMenu):
 class UpdateMenu(AdminMenu):
     def __init__(self, station, win, color):
         super().__init__(station, win, color, "Update")
-        self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(5)]
-        self.btn_name = ["User's score", "User's reputation", "Garbage's type", "Garbage's check"]
+        self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(4)]
+        self.btn_name = ["Score", "Reputation", "GarbageType", "GarbageCheck"]
 
     def conf_gui(self, color: str, n: int = 1):
         super().conf_gui(color, n)
+        self.btn[0]['command'] = lambda: self.update_score_command()
+        self.btn[1]['command'] = lambda: self.update_reputation_command()
+        self.btn[2]['command'] = lambda: self.update_garbage_type_command()
+        self.btn[3]['command'] = lambda: self.update_garbage_result_command()
+
+    def update_reputation_command(self):
+        self.station.to_program("UpdateReputation")
+
+    def update_score_command(self):
+        self.station.to_program("UpdateScore")
+
+    def update_garbage_type_command(self):
+        self.station.to_program("UpdateGarbageType")
+
+    def update_garbage_result_command(self):
+        self.station.to_program("UpdateGarbageCheckResult")
 
 
 class StatisticsMenu(AdminMenu):
     def __init__(self, station, win, color):
         super().__init__(station, win, color, "Statistics")
-        self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(6)]
-        self.btn_name = ["System", "Time", "Score", "Reputation", "BlackUser", "PassingRate"]
+        self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(5)]
+        self.btn_name = ["Time", "Score", "Reputation", "BlackUser", "PassingRate"]
 
     def conf_gui(self, color: str, n: int = 1):
         super().conf_gui(color, n)

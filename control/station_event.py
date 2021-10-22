@@ -9,7 +9,7 @@ from core.garbage import GarbageBag
 
 from sql.db import DB
 
-from tk_event import TkThreading, TkEventBase
+from event import TkThreading, TkEventBase
 import station as tk_station
 
 

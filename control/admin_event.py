@@ -4,7 +4,7 @@ from tool.type_ import *
 from sql.db import DB
 from sql.user import find_user_by_name
 
-from tk_event import TkEventBase, TkThreading, TkEventException
+from event import TkEventBase, TkThreading, TkEventException
 import admin
 
 

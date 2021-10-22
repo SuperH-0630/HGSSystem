@@ -17,7 +17,7 @@ from equipment.scan_garbage import write_gid_qr
 from core.user import User
 from core.garbage import GarbageBag
 
-from tk_event import TkEventMain
+from event import TkEventMain
 
 
 class AdminStationException(Exception):

@@ -22,7 +22,7 @@ from sql.garbage import update_garbage
 
 from equipment.scan import HGSCapture, HGSQRCoder
 
-from tk_event import TkEventMain
+from event import TkEventMain
 
 
 class GarbageStationException(Exception):

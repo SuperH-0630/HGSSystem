@@ -3,6 +3,7 @@ from tkinter import ttk
 from tkinter import messagebox as msg
 import tkinter.font as font
 import abc
+import time
 
 import conf
 from tool.type_ import *
@@ -33,9 +34,9 @@ class CreatUserError(AdminStationException):
 
 
 class AdminEventBase(TkEventBase):
-    def __init__(self, station, db: DB, title: str = 'unknown'):
+    def __init__(self, station, title: str = 'unknown'):
         self.station: AdminStationBase = station
-        self._db: DB = db
+        self._db: DB = station.get_db()
         self._title = title
 
     def get_title(self) -> str:
@@ -53,6 +54,9 @@ class AdminStationBase(TkEventMain, metaclass=abc.ABCMeta):
         self._admin: Optional[User] = None
         self._db = db
         super(AdminStationBase, self).__init__()
+
+    def get_db(self):
+        return self._db
 
     def creat_garbage(self, path: str, num: int = 1) -> List[tuple[str, Optional[GarbageBag]]]:
         re = []
@@ -148,12 +152,20 @@ class AdminStation(AdminStationBase):
 
         self._win_height = int(self._sys_height * (2 / 3))
         self._win_width = int(self._sys_width * (2 / 3))
-
-        self._full_screen = False
         self.__conf_windows()
 
+        self._full_screen = False
+        self._is_loading = False
+        self._disable_all_btn = False
+        self._now_program: Optional[Tuple[str, tk.Frame, AdminProgram]] = None
+
         self.__conf_font_size()
-        self.__show_login_window()
+        self.__conf_creak_tk()
+        self.__conf_creak_menu()
+        self.__conf_creak_program()
+        self.__conf_tk()
+        # self.__show_login_window()
+
         self.__conf_set_after_run()
 
     def __conf_windows(self):
@@ -164,20 +176,260 @@ class AdminStation(AdminStationBase):
         self._window.protocol("WM_DELETE_WINDOW", lambda: self.main_exit())
 
     def __conf_creak_tk(self):
-        self._frame_list: List[AdminMenu] = []
-        self._program_frame: List[AdminProgram] = []
+        self._win_ctrl_button: List[tk.Button, tk.Button, tk.Button] = [tk.Button(self._window),
+                                                                        tk.Button(self._window),
+                                                                        tk.Button(self._window),
+                                                                        tk.Button(self._window),
+                                                                        tk.Button(self._window)]
+
+        self._menu_back = tk.Frame(self._window)
+        self._menu_line = tk.Label(self._menu_back)  # 下划线
+        self._menu_title: Tuple[tk.Label, tk.Variable] = tk.Label(self._menu_back), tk.StringVar()
+        self._menu_dict: Dict[str, AdminMenu] = {}
+        self._menu_list: List[str] = []  # 菜单回溯
+
+        self._program_back = tk.Frame(self._window)
+        self._program_title: Tuple[tk.Label, tk.Variable] = tk.Label(self._program_back), tk.StringVar()
+        self._program_dict: Dict[str, AdminProgram] = {}
 
         self._msg_frame = tk.Frame(self._window)
         self._msg_label = tk.Label(self._msg_frame), tk.Label(self._msg_frame), tk.StringVar(), tk.StringVar()
         self._msg_hide = tk.Button(self._msg_frame)
 
-        self._loading_frame = tk.Frame(self._window)
-        self._loading_title: Tuple[tk.Label, tk.Variable] = tk.Label(self._loading_frame), tk.StringVar()
-        self._loading_pro = ttk.Progressbar(self._loading_frame)
+        self._loading_pro = ttk.Progressbar(self._window)
 
     def __conf_font_size(self, n: int = 1):
         self._login_title_font_size = int(12 * n)
         self._login_btn_font_size = int(11 * n)
+        self._win_ctrl_font_size = int(15 * n)
+        self._menu_title_font_size = int(17 * n)
+        self._program_title_font_size = int(14 * n)
+        self._msg_font_size = int(20 * n)
+
+    def __conf_tk(self, n: int = 1):
+        self.__conf_win_ctrl_button()
+        self.__conf_menu_title()
+        self.__conf_menu(n)
+        self.__conf_program_title()
+        self.__conf_program(n)
+        self.__conf_loading()
+        self.__conf_msg()
+        self.to_menu()  # 显示主页面
+        self.to_program()
+
+    def __conf_win_ctrl_button(self):
+        title_font = self.make_font(size=self._win_ctrl_font_size)
+
+        for bt in self._win_ctrl_button:
+            bt: tk.Button
+            bt['bg'] = "#B0C4DE"  # 浅钢青
+            bt['font'] = title_font
+
+        rely = 0.02
+        bt_help: tk.Button = self._win_ctrl_button[0]
+        bt_help['text'] = 'Back'
+        bt_help['bg'] = '#DCDCDC'
+        bt_help.place(relx=0.69, rely=rely, relwidth=0.05, relheight=0.05)
+
+        bt_about: tk.Button = self._win_ctrl_button[1]
+        bt_about['text'] = 'Main'
+        bt_about['bg'] = '#DCDCDC'
+        bt_about.place(relx=0.75, rely=rely, relwidth=0.05, relheight=0.05)
+
+        bt_help: tk.Button = self._win_ctrl_button[2]
+        bt_help['text'] = 'Help'
+        bt_help['bg'] = '#DCDCDC'
+        bt_help.place(relx=0.81, rely=rely, relwidth=0.05, relheight=0.05)
+
+        bt_about: tk.Button = self._win_ctrl_button[3]
+        bt_about['text'] = 'About'
+        bt_about['bg'] = '#DCDCDC'
+        bt_about.place(relx=0.87, rely=rely, relwidth=0.05, relheight=0.05)
+
+        bt_exit: tk.Button = self._win_ctrl_button[4]
+        bt_exit['text'] = 'Exit'
+        bt_exit['bg'] = '#DCDCDC'
+        bt_exit['command'] = lambda: self.main_exit()
+        bt_exit.place(relx=0.93, rely=rely, relwidth=0.05, relheight=0.05)
+
+    def __conf_creak_menu(self):
+        frame_list = [
+            MainMenu(self, self._menu_back, '#fffffb')
+        ]
+
+        for i in frame_list:
+            name, _ = i.get_menu_frame()
+            self._menu_dict[name] = i
+
+    def __conf_menu(self, n: int = 1):
+        for i in self._menu_dict:
+            menu = self._menu_dict[i]
+            menu.conf_gui("#DCDCDC", n)
+
+    def __conf_menu_title(self):
+        self._menu_back['bg'] = "#fffffb"
+        self._menu_back['bd'] = 5
+        self._menu_back['relief'] = "ridge"
+
+        title_font = self.make_font(size=self._menu_title_font_size, weight="bold")
+        self._menu_title[0]['bg'] = '#fffffb'
+        self._menu_title[0]['font'] = title_font
+        self._menu_title[0]['textvariable'] = self._menu_title[1]
+
+        self._menu_line['bg'] = '#000000'
+        # 不立即显示
+
+    def to_menu(self, name: str = "Main"):
+        menu = self._menu_dict.get(name)
+        if menu is None:
+            ...
+        name, frame = menu.get_menu_frame()
+        self._menu_title[1].set(name)
+
+        self._menu_back.place(relx=0.02, rely=0.02, relwidth=0.20, relheight=0.96)
+        self._menu_line.place(relx=0.06, rely=0.065, relwidth=0.88, height=1)  # 一个像素的高度即可
+        self._menu_title[0].place(relx=0.02, rely=0.02, relwidth=0.96, relheight=0.03)
+        frame.place(relx=0.02, rely=0.07, relwidth=0.96, relheight=0.84)
+
+        self._menu_list.append(name)
+
+    def __conf_program_title(self):
+        self._program_back['bg'] = "#fffffb"
+        self._program_back['relief'] = "ridge"
+        self._program_back['bd'] = 5
+
+        title_font = self.make_font(size=self._program_title_font_size, weight="bold")
+        self._program_title[0]['bg'] = '#2468a2'
+        self._program_title[0]['fg'] = "#F0F8FF"
+        self._program_title[0]['font'] = title_font
+        self._program_title[0]['anchor'] = 'w'
+        self._program_title[0]['textvariable'] = self._program_title[1]
+
+        # 不立即显示
+
+    def __conf_creak_program(self):
+        program_list = [
+            WelcomeProgram(self, self._program_back, '#fffffb')
+        ]
+
+        for i in program_list:
+            name, _ = i.get_program_frame()
+            self._program_dict[name] = i
+
+    def __conf_program(self, n: int = 1):
+        for i in self._program_dict:
+            program = self._program_dict[i]
+            program.conf_gui(n)
+
+    def to_program(self, name: str = "Welcome"):
+        program = self._program_dict.get(name)
+        if program is None:
+            ...
+        name, frame = program.get_program_frame()
+
+        self.__show_program()
+
+        self._program_title[1].set(f' {name}')
+        self._program_title[0].place(relx=0.00, rely=0.00, relwidth=1, relheight=0.05)
+
+        frame.place(relx=0.02, rely=0.12, relwidth=0.96, relheight=0.86)
+
+        self._now_program = name, frame, program
+
+    def __show_program(self):
+        self._program_back.place(relx=0.26, rely=0.1, relwidth=0.68, relheight=0.84)
+
+    def __hide_program(self):
+        self._program_back.place_forget()
+
+    def __conf_loading(self):
+        self._loading_pro['mode'] = 'indeterminate'
+        self._loading_pro['orient'] = tk.HORIZONTAL
+        self._loading_pro['maximum'] = 50
+
+    def show_loading(self, _):
+        self._is_loading = True
+        self.set_all_btn_disable()
+        self._loading_pro['value'] = 0
+        self._loading_pro.place(relx=0.30, rely=0.035, relwidth=0.35, relheight=0.03)
+        self._loading_pro.start(50)
+
+    def stop_loading(self):
+        self._is_loading = False
+        self._loading_pro.place_forget()
+        self._loading_pro.stop()
+        self.set_reset_all_btn()
+
+    def __conf_msg(self):
+        title_font = self.make_font(size=self._msg_font_size + 1, weight="bold")
+        info_font = self.make_font(size=self._msg_font_size - 1)
+
+        self._msg_frame['bg'] = "#fffffb"
+        self._msg_frame['bd'] = 5
+        self._msg_frame['relief'] = "ridge"
+        # frame 不会立即显示
+
+        self._msg_label[0]['font'] = title_font
+        self._msg_label[0]['bg'] = "#fffffb"
+        self._msg_label[0]['anchor'] = 'w'
+        self._msg_label[0]['textvariable'] = self._msg_label[2]
+
+        self._msg_label[1]['font'] = info_font
+        self._msg_label[1]['bg'] = "#fffffb"
+        self._msg_label[1]['anchor'] = 'nw'
+        self._msg_label[1]['textvariable'] = self._msg_label[3]
+        self._msg_label[1]['justify'] = 'left'
+
+        self._msg_label[0].place(relx=0.05, rely=0.05, relwidth=0.9, relheight=0.1)
+        self._msg_label[1].place(relx=0.075, rely=0.2, relwidth=0.85, relheight=0.58)
+
+        self._msg_hide['font'] = info_font
+        self._msg_hide['text'] = 'close'
+        self._msg_hide['bg'] = "#DCDCDC"
+        self._msg_hide['command'] = lambda: self.hide_msg()
+        self._msg_hide.place(relx=0.375, rely=0.80, relwidth=0.25, relheight=0.13)
+
+    def show_msg(self, title, info, msg_type='info'):
+        assert not self._is_loading  # loading 时不显示msg
+
+        self.set_all_btn_disable()
+        self._msg_label[2].set(f'{msg_type}: {title}')
+        self._msg_label[3].set(f'{info}')
+
+        frame_width = self._win_width * 0.50
+        self._msg_label[1]['wraplength'] = frame_width * 0.85 - 5  # 设定自动换行的像素
+
+        self._msg_frame.place(relx=0.30, rely=0.25, relwidth=0.55, relheight=0.50)
+        self.__hide_program()
+
+    def hide_msg(self):
+        self.set_reset_all_btn()
+        self._msg_frame.place_forget()
+        self.__show_program()
+
+    def set_all_btn_disable(self):
+        for btn in self._win_ctrl_button[:-1]:  # Exit 不设置disable
+            btn['state'] = 'disable'
+
+        if self._menu_list != 0:
+            menu = self._menu_dict.get(self._menu_list[-1], None)
+            assert menu is not None
+            menu.set_disable()
+
+        if self._now_program is not None:
+            self._now_program[2].set_disable()
+
+    def set_reset_all_btn(self):
+        for btn in self._win_ctrl_button[:-1]:
+            btn['state'] = 'normal'
+
+        if self._menu_list != 0:
+            menu = self._menu_dict.get(self._menu_list[-1], None)
+            assert menu is not None
+            menu.reset_disable()
+
+        if self._now_program is not None:
+            self._now_program[2].reset_disable()
 
     def __show_login_window(self):
         self.login_window: Optional[tk.Toplevel] = tk.Toplevel()
@@ -202,8 +454,8 @@ class AdminStation(AdminStationBase):
         self.hide_main()
 
     def __conf_login_window(self):
-        title_font = self.__make_font(size=self._login_title_font_size, weight="bold")
-        btn_font = self.__make_font(size=self._login_btn_font_size, weight="bold")
+        title_font = self.make_font(size=self._login_title_font_size, weight="bold")
+        btn_font = self.make_font(size=self._login_btn_font_size, weight="bold")
 
         for lb, text in zip([self._login_name[0], self._login_passwd[0]], ["User:", "Passwd:"]):
             lb['bg'] = "#d1d9e0"  # 蜜瓜绿
@@ -235,8 +487,7 @@ class AdminStation(AdminStationBase):
         self._login_btn[1].place(relx=0.70, rely=0.70, relwidth=0.16, relheight=0.15)
 
     def login_call(self):
-        event = LoginEvent(self, self._db).start(self._login_name[2].get(),
-                                                 self._login_passwd[2].get())
+        event = LoginEvent(self).start(self._login_name[2].get(), self._login_passwd[2].get())
         self.push_event(event)
 
     def login(self, user: User):
@@ -268,15 +519,14 @@ class AdminStation(AdminStationBase):
         self._window.update()
         self._window.deiconify()
 
-    def show_loading(self, title: str):
-        ...
-
-    def stop_loading(self):
-        ...
+    @staticmethod
+    def make_font(family: str = 'noto', **kwargs):
+        return font.Font(family=conf.font_d[family], **kwargs)
 
     @staticmethod
-    def __make_font(family: str = 'noto', **kwargs):
-        return font.Font(family=conf.font_d[family], **kwargs)
+    def set_button_disable_from_list(btn_list: List[tk.Button], flat: str = 'disable'):
+        for btn in btn_list:
+            btn['state'] = flat
 
     def mainloop(self):
         self._window.mainloop()
@@ -286,8 +536,8 @@ class AdminStation(AdminStationBase):
 
 
 class LoginEvent(AdminEventBase):
-    def __init__(self, station: AdminStationBase, db: DB):
-        super().__init__(station, db, "Ranking")
+    def __init__(self, station: AdminStationBase):
+        super().__init__(station, "Ranking")
         self.thread: Optional[TkThreading] = None
 
     def login(self, name, passwd):
@@ -304,16 +554,153 @@ class LoginEvent(AdminEventBase):
         self.station.login(self.thread.wait_event())
 
 
+class TestProgressEvent(AdminEventBase):
+    @staticmethod
+    def func(sleep_time):
+        time.sleep(sleep_time)
+
+    def __init__(self, station, db):
+        super(TestProgressEvent, self).__init__(station, db)
+        self.thread = TkThreading(self.func, 5)
+
+    def is_end(self) -> bool:
+        return not self.thread.is_alive()
+
+    def done_after_event(self):
+        ...
+
+
 class AdminMenu(metaclass=abc.ABCMeta):
+    def __init__(self, station: AdminStation, win: Union[tk.Frame, tk.Toplevel, tk.Tk], color: str):
+        self.station = station
+        self.win = win
+        self.color = color
+
     @abc.abstractmethod
-    def get_menu_frame(self, station: AdminStation) -> tk.Frame:
+    def set_disable(self):
+        ...
+
+    @abc.abstractmethod
+    def reset_disable(self):
+        ...
+
+    @abc.abstractmethod
+    def conf_gui(self, color: str, n: int = 1):
+        ...
+
+    @abc.abstractmethod
+    def get_menu_frame(self) -> Tuple[str, tk.Frame]:
         ...
 
 
 class AdminProgram(metaclass=abc.ABCMeta):
+    def __init__(self, station: AdminStation, win: Union[tk.Frame, tk.Toplevel, tk.Tk], color: str):
+        self.station = station
+        self.win = win
+        self.color = color
+
     @abc.abstractmethod
-    def get_admin_frame(self, station: AdminStation) -> tk.Frame:
+    def set_disable(self):
         ...
+
+    @abc.abstractmethod
+    def reset_disable(self):
+        ...
+
+    @abc.abstractmethod
+    def conf_gui(self, n: int = 1):
+        ...
+
+    @abc.abstractmethod
+    def get_program_frame(self) -> tk.Frame:
+        ...
+
+
+class MainMenu(AdminMenu):
+    def __init__(self, station, win, color):
+        super(MainMenu, self).__init__(station, win, color)
+        self.frame = tk.Frame(self.win)
+        self.frame['bg'] = color
+
+        self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(5)]
+        self.__conf_font()
+
+    def __conf_font(self, n: int = 1):
+        self.btn_font_size = int(16 * n)
+
+    def conf_gui(self, color: str, n: int = 1):
+        self.__conf_font(n)
+
+        btn_font = self.station.make_font(size=self.btn_font_size, weight="bold")
+        height = 0.02
+        for btn, text in zip(self.btn, ["Creat", "Delete", "Search", "Update", "Logout"]):
+            btn['font'] = btn_font
+            btn['text'] = text
+            btn['bg'] = color
+            btn.place(relx=0.02, rely=height, relwidth=0.96, relheight=0.1)
+            height += 0.1 + 0.02
+
+    def get_menu_frame(self) -> Tuple[str, tk.Frame]:
+        return "Main", self.frame
+
+    def set_disable(self):
+        self.station.set_button_disable_from_list(self.btn)
+
+    def reset_disable(self):
+        self.station.set_button_disable_from_list(self.btn, flat='normal')
+
+
+class WelcomeProgram(AdminProgram):
+    def __init__(self, station, win, color):
+        super(WelcomeProgram, self).__init__(station, win, color)
+        self.frame = tk.Frame(self.win)
+        self.frame['bg'] = color
+
+        self.title = tk.Label(self.frame)
+        self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(2)]
+        self.__conf_font()
+
+    def __conf_font(self, n: int = 1):
+        self.title_font_size = int(25 * n)
+        self.btn_font_size = int(14 * n)
+
+    def conf_gui(self, n: int = 1):
+        self.__conf_font(n)
+
+        title_font = self.station.make_font(size=self.title_font_size, weight="bold")
+        btn_font = self.station.make_font(size=self.btn_font_size)
+
+        for btn, text in zip(self.btn, ["TestMSG", "TestProgress"]):
+            btn['font'] = btn_font
+            btn['text'] = text
+            btn['bg'] = '#d3d7d4'
+
+        self.title['text'] = 'Welcome to HGSSystem Manager'
+        self.title['font'] = title_font
+        self.title['bg'] = self.color
+
+        self.btn[0]['command'] = lambda: self.test_msg()
+        self.btn[1]['command'] = lambda: self.test_progress()
+
+        self.title.place(relx=0.1, rely=0.3, relwidth=0.8, relheight=0.2)
+        self.btn[0].place(relx=0.2, rely=0.7, relwidth=0.2, relheight=0.1)
+        self.btn[1].place(relx=0.6, rely=0.7, relwidth=0.2, relheight=0.1)
+
+    def test_progress(self):
+        event = TestProgressEvent(self.station, "Sleep(5)")
+        self.station.push_event(event)
+
+    def test_msg(self):
+        self.station.show_msg("Test Msg", "test msg")
+
+    def get_program_frame(self) -> Tuple[str, tk.Frame]:
+        return "Welcome", self.frame
+
+    def set_disable(self):
+        self.station.set_button_disable_from_list(self.btn)
+
+    def reset_disable(self):
+        self.station.set_button_disable_from_list(self.btn, flat='normal')
 
 
 if __name__ == '__main__':

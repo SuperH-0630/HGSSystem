@@ -48,9 +48,9 @@ class RankingUserError(GarbageStationException):
 
 
 class StationEventBase(TkEventBase):
-    def __init__(self, gb_station, db: DB, title: str = 'unknown'):
+    def __init__(self, gb_station, title: str = 'unknown'):
         self.station: GarbageStationBase = gb_station
-        self._db: DB = db
+        self._db: DB = gb_station.get_db()
         self._title = title
 
     def get_title(self) -> str:
@@ -94,6 +94,9 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
         self.rank = None
         self.rank_index = 0
         super(GarbageStationBase, self).__init__()
+
+    def get_db(self):
+        return self._db
 
     def update_user_time(self):
         if self.check_user():
@@ -223,7 +226,7 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
             self.show_warning("Operation Fail", "You should login first and scan the QR code of the trash bag")
             return
 
-        event = ThrowGarbageEvent(self, self._db).start(self._garbage, garbage_type)
+        event = ThrowGarbageEvent(self).start(self._garbage, garbage_type)
         self.push_event(event)
         self._flat = GarbageStationBase.status_normal
         self._garbage = None
@@ -234,7 +237,7 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
             self.show_warning("Operation Fail", "You should login first and scan the QR code of the trash bag")
             return
 
-        event = CheckGarbageEvent(self, self._db).start(self._garbage, check)
+        event = CheckGarbageEvent(self).start(self._garbage, check)
         self.push_event(event)
         self._flat = GarbageStationBase.status_normal
         self._garbage = None
@@ -383,11 +386,11 @@ The function has not yet been implemented.
         if qr_code is None:
             return GarbageStationBase.scan_no_to_done, None
 
-        user_scan_event = ScanUserEvent(self, self._db).start(qr_code)
+        user_scan_event = ScanUserEvent(self).start(qr_code)
         self.push_event(user_scan_event)
 
     def get_show_rank(self):
-        event = RankingEvent(self, self._db)
+        event = RankingEvent(self)
         self.push_event(event)
 
     @abc.abstractmethod
@@ -479,6 +482,7 @@ class GarbageStation(GarbageStationBase):
         self._msg_time: Optional[float] = None  # msg 显示时间累计
         self._disable_all_btn: bool = False  # 禁用所有按钮和操作
 
+        self.__conf_font_size()
         self.__creat_tk()
         self.__conf_tk()
 
@@ -487,12 +491,10 @@ class GarbageStation(GarbageStationBase):
         self.__switch_to_no_user()
 
     def __creat_tk(self):
-        self.__conf_font_size()
         self._title_label = tk.Label(self._window)
-
-        self._win_ctrl_button: Tuple[tk.Button, tk.Button, tk.Button] = (tk.Button(self._window),
-                                                                         tk.Button(self._window),
-                                                                         tk.Button(self._window))
+        self._win_ctrl_button: List[tk.Button, tk.Button, tk.Button] = [tk.Button(self._window),
+                                                                        tk.Button(self._window),
+                                                                        tk.Button(self._window)]
 
         win_info_type = Tuple[tk.Label, tk.Label, tk.Variable, str]
         self._user_frame = tk.Frame(self._window)
@@ -1177,8 +1179,8 @@ class ScanUserEvent(StationEventBase):
     def func(qr: QRCode, db: DB):
         return scan_user(qr, db)
 
-    def __init__(self, gb_station: GarbageStationBase, db: DB):
-        super().__init__(gb_station, db, "Scan User")
+    def __init__(self, gb_station: GarbageStationBase):
+        super().__init__(gb_station, "Scan User")
 
         self._user: User = gb_station.get_user()
         self._qr_code: Optional[QRCode] = None
@@ -1198,7 +1200,7 @@ class ScanUserEvent(StationEventBase):
             self.station.switch_user(self.thread.result)
             self.station.update_control()
         else:
-            event = ScanGarbageEvent(self.station, self._db).start(self._qr_code)
+            event = ScanGarbageEvent(self.station).start(self._qr_code)
             self.station.push_event(event)
 
 
@@ -1207,8 +1209,8 @@ class ScanGarbageEvent(StationEventBase):
     def func(qr: QRCode, db: DB):
         return scan_garbage(qr, db)
 
-    def __init__(self, gb_station: GarbageStationBase, db: DB):
-        super().__init__(gb_station, db, "Scan Garbage")
+    def __init__(self, gb_station: GarbageStationBase):
+        super().__init__(gb_station, "Scan Garbage")
 
         self._user: User = gb_station.get_user()
         self._qr_code: Optional[QRCode] = None
@@ -1249,8 +1251,8 @@ class RankingEvent(StationEventBase):
             return []
         return list(cur.fetchall())
 
-    def __init__(self, gb_station: GarbageStationBase, db: DB):
-        super().__init__(gb_station, db, "Ranking")
+    def __init__(self, gb_station: GarbageStationBase):
+        super().__init__(gb_station, "Ranking")
         self.thread = TkThreading(self.func, self._db)
 
     def is_end(self) -> bool:
@@ -1272,8 +1274,8 @@ class ThrowGarbageEvent(StationEventBase):
         else:
             return True
 
-    def __init__(self, gb_station: GarbageStationBase, db: DB):
-        super().__init__(gb_station, db, "ThrowGarbage")
+    def __init__(self, gb_station: GarbageStationBase):
+        super().__init__(gb_station, "ThrowGarbage")
 
         self.thread = None
 
@@ -1301,8 +1303,8 @@ class CheckGarbageEvent(StationEventBase):
         else:
             return True
 
-    def __init__(self, gb_station: GarbageStationBase, db: DB):
-        super().__init__(gb_station, db, "CheckGarbage")
+    def __init__(self, gb_station: GarbageStationBase):
+        super().__init__(gb_station, "CheckGarbage")
         self.thread = None
 
     def start(self, garbage: GarbageBag, garbage_check: bool):

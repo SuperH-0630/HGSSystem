@@ -87,6 +87,8 @@ class CreateMenu(AdminMenu):
         self.btn[1]['command'] = lambda: self.create_auto_user()
         self.btn[2]['command'] = lambda: self.create_manager_user()
         self.btn[3]['command'] = lambda: self.create_garbage()
+        self.btn[4]['command'] = lambda: self.export_user()
+        self.btn[5]['command'] = lambda: self.export_garbage()
 
     def create_normal_user(self):
         self.station.to_program("CreateNormalUser")
@@ -99,6 +101,12 @@ class CreateMenu(AdminMenu):
 
     def create_garbage(self):
         self.station.to_program("CreateGarbage")
+
+    def export_user(self):
+        self.station.to_program("ExportUser")
+
+    def export_garbage(self):
+        self.station.to_program("ExportGarbage")
 
 
 class DeleteMenu(AdminMenu):

@@ -67,7 +67,7 @@ def write_all_uid_qr(path: str, db: DB, name="nu", where: str = "") -> List[str]
     if len(where) > 0:
         where = f"WHERE {where}"
 
-    cur = db.search(f"SELECT uid, name FROM user {where};")
+    cur = db.search(f"SELECT UserID, name FROM user {where};")
     if cur is None:
         return []
 

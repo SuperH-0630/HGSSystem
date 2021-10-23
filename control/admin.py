@@ -6,7 +6,7 @@ from tkinter import ttk
 import conf
 from core.garbage import GarbageBag
 from core.user import User
-from equipment.scan_garbage import write_gid_qr
+from equipment.scan_garbage import write_gid_qr, write_all_gid_qr
 from equipment.scan_user import write_uid_qr, write_all_uid_qr
 from event import TkEventMain
 from sql.db import DB, search_from_garbage_checker_user
@@ -59,6 +59,12 @@ class AdminStationBase(TkEventMain, metaclass=abc.ABCMeta):
                 re.append(("", gar))
         return re
 
+    def export_garbage_by_gid(self, path: Optional[str], gid: gid_t) -> Tuple[str, Optional[GarbageBag]]:
+        return write_gid_qr(gid, path, self._db)
+
+    def export_garbage(self, path: Optional[str], where: str) -> List[Tuple[str]]:
+        return write_all_gid_qr(path, self._db, where=where)
+
     def create_user(self, name: uname_t, passwd: passwd_t, phone: str, manager: bool) -> Optional[User]:
         return create_new_user(name, passwd, phone, manager, self._db)
 
@@ -71,16 +77,10 @@ class AdminStationBase(TkEventMain, metaclass=abc.ABCMeta):
             re.append(user)
         return re
 
-    def get_gid_qrcode(self, gid: gid_t, path: str) -> Tuple[str, Optional[GarbageBag]]:
-        return write_gid_qr(gid, path, self._db)
-
-    def get_all_gid_qrcode(self, path: str, where: str = "") -> List[str]:
-        return write_all_uid_qr(path, self._db, where=where)
-
-    def get_uid_qrcode(self, uid: uid_t, path: str) -> Tuple[str, Optional[User]]:
+    def export_user_by_uid(self, path: str, uid: uid_t) -> Tuple[str, Optional[User]]:
         return write_uid_qr(uid, path, self._db)
 
-    def get_all_uid_qrcode(self, path: str, where: str = "") -> List[str]:
+    def export_user(self, path: str, where) -> List[str]:
         return write_all_uid_qr(path, self._db, where=where)
 
     def del_garbage_not_use(self, gid: gid_t) -> bool:

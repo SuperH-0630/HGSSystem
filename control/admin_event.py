@@ -90,6 +90,80 @@ class CreateGarbageEvent(AdminEventBase):
         self.station.show_msg("CreateGarbage", f"create {len(res)} garbage finished.")
 
 
+class ExportGarbageByIDEvent(AdminEventBase):
+    def func(self, path, gid):
+        return self.station.export_garbage_by_gid(path, gid)
+
+    def __init__(self, station):
+        super(ExportGarbageByIDEvent, self).__init__(station)
+        self._name = None
+
+    def start(self, path, gid):
+        self.thread = TkThreading(self.func, path, gid)
+        return self
+
+    def done_after_event(self):
+        res: tuple[str, Optional[GarbageBag]] = self.thread.wait_event()
+        if res[1] is None:
+            self.station.show_msg("ExportError", f"Export garbage error.")
+        else:
+            self.station.show_msg("ExportSuccess", f"Export garbage finished.")
+
+
+class ExportGarbageAdvancedEvent(AdminEventBase):
+    def func(self, path, where):
+        return self.station.export_garbage(path, where)
+
+    def __init__(self, station):
+        super(ExportGarbageAdvancedEvent, self).__init__(station)
+        self._name = None
+
+    def start(self, path, where):
+        self.thread = TkThreading(self.func, path, where)
+        return self
+
+    def done_after_event(self):
+        res: list[tuple[str]] = self.thread.wait_event()
+        self.station.show_msg("Export", f"Export {len(res)} garbage finished.")
+
+
+class ExportUserByIDEvent(AdminEventBase):
+    def func(self, path, uid):
+        return self.station.export_user_by_uid(path, uid)
+
+    def __init__(self, station):
+        super(ExportUserByIDEvent, self).__init__(station)
+        self._name = None
+
+    def start(self, path, uid):
+        self.thread = TkThreading(self.func, path, uid)
+        return self
+
+    def done_after_event(self):
+        res: tuple[str, Optional[GarbageBag]] = self.thread.wait_event()
+        if res[1] is None:
+            self.station.show_msg("ExportError", f"Export user error.")
+        else:
+            self.station.show_msg("ExportSuccess", f"Export user finished.")
+
+
+class ExportUserAdvancedEvent(AdminEventBase):
+    def func(self, path, where):
+        return self.station.export_user(path, where)
+
+    def __init__(self, station):
+        super(ExportUserAdvancedEvent, self).__init__(station)
+        self._name = None
+
+    def start(self, path, where):
+        self.thread = TkThreading(self.func, path, where)
+        return self
+
+    def done_after_event(self):
+        res: list[tuple[str]] = self.thread.wait_event()
+        self.station.show_msg("Export", f"Export {len(res)} user finished.")
+
+
 class DelUserEvent(AdminEventBase):
     def func(self, uid):
         return self.station.del_user(uid)

@@ -217,7 +217,7 @@ class CreateAutoNormalUserProgram(AdminProgram):
         self.enter_frame['bg'] = "#bce672"
         self.enter_frame['bd'] = 5
         self.enter_frame['relief'] = "ridge"
-        self.enter_frame.place(relx=0.2, rely=0.3, relwidth=0.6, relheight=0.10)
+        self.enter_frame.place(relx=0.2, rely=0.3, relwidth=0.6, relheight=0.12)
 
         self.title['font'] = title_font
         self.title['text'] = "Phone:"
@@ -227,8 +227,8 @@ class CreateAutoNormalUserProgram(AdminProgram):
         self.enter['font'] = title_font
         self.enter['textvariable'] = self.var
 
-        self.title.place(relx=0.02, rely=0.2, relwidth=0.25, relheight=0.48)
-        self.enter.place(relx=0.30, rely=0.2, relwidth=0.60, relheight=0.48)
+        self.title.place(relx=0.02, rely=0.25, relwidth=0.25, relheight=0.50)
+        self.enter.place(relx=0.30, rely=0.25, relwidth=0.60, relheight=0.50)
 
         self.btn['font'] = btn_font
         self.btn['text'] = "Create"
@@ -331,6 +331,158 @@ class CreateGarbageProgram(AdminProgram):
         self.create_btn['state'] = 'normal'
         self.file_btn['state'] = 'normal'
         set_tk_disable_from_list(self.enter, flat='normal')
+
+
+class ExportProgramBase(AdminProgram):
+    def __init__(self, station, win, color, title: str):
+        super().__init__(station, win, color, title)
+
+        self.gid_frame = tk.Frame(self.frame)
+        self.gid_title: List[tk.Label] = [tk.Label(self.gid_frame), tk.Label(self.gid_frame)]
+        self.gid_enter: List[tk.Entry] = [tk.Entry(self.gid_frame), tk.Entry(self.gid_frame)]
+        self.gid_var: List[tk.Variable] = [tk.StringVar(), tk.StringVar()]
+
+        self.where_frame = tk.Frame(self.frame)
+        self.where_title: List[tk.Label] = [tk.Label(self.where_frame), tk.Label(self.where_frame)]
+        self.where_enter: List[tk.Entry] = [tk.Entry(self.where_frame), tk.Entry(self.where_frame)]
+        self.where_var: List[tk.Variable] = [tk.StringVar(), tk.StringVar()]
+
+        self.create_btn: List[tk.Button] = [tk.Button(self.frame), tk.Button(self.frame)]
+        self.file_btn: List[tk.Button] = [tk.Button(self.frame), tk.Button(self.frame)]
+
+        self._conf("", [], [], [])
+        self.__conf_font()
+
+    def _conf(self, bg_color: str, title_id, title_where, title_command):
+        self.bg_color = bg_color
+        self.title_id = title_id
+        self.title_where = title_where
+        self.title_command = title_command
+
+    def __conf_font(self, n: int = 1):
+        self.title_font_size = int(16 * n)
+        self.btn_font_size = int(14 * n)
+
+    def conf_gui(self, n: int = 1):
+        self.__conf_font(n)
+
+        title_font = make_font(size=self.title_font_size)
+        btn_font = make_font(size=self.btn_font_size)
+
+        self.where_frame['bg'] = self.bg_color
+        self.where_frame['bd'] = 5
+        self.where_frame['relief'] = "ridge"
+        self.where_frame.place(relx=0.2, rely=0.2, relwidth=0.6, relheight=0.17)
+
+        self.gid_frame['bg'] = self.bg_color
+        self.gid_frame['bd'] = 5
+        self.gid_frame['relief'] = "ridge"
+        self.gid_frame.place(relx=0.2, rely=0.6, relwidth=0.6, relheight=0.17)
+
+        height = 0.1
+        for lb, text, enter, var, lb_w, text_w, enter_w, var_w in zip(
+                self.gid_title, self.title_id, self.gid_enter, self.gid_var,
+                self.where_title, self.title_where, self.where_enter, self.where_var):
+            lb['font'] = title_font
+            lb['text'] = text
+            lb['bg'] = self.bg_color
+            lb['anchor'] = 'e'
+
+            lb_w['font'] = title_font
+            lb_w['text'] = text_w
+            lb_w['bg'] = self.bg_color
+            lb_w['anchor'] = 'e'
+
+            enter['textvariable'] = var
+            enter['font'] = title_font
+
+            enter_w['textvariable'] = var_w
+            enter_w['font'] = title_font
+
+            lb.place(relx=0.01, rely=height, relwidth=0.30, relheight=0.35)
+            enter.place(relx=0.35, rely=height, relwidth=0.60, relheight=0.35)
+
+            lb_w.place(relx=0.01, rely=height, relwidth=0.30, relheight=0.35)
+            enter_w.place(relx=0.35, rely=height, relwidth=0.60, relheight=0.35)
+
+            height += 0.43
+
+        for btn, text in zip(self.create_btn + self.file_btn, self.title_command):
+            btn['font'] = btn_font
+            btn['text'] = text
+            btn['bg'] = conf.tk_btn_bg
+
+        self.create_btn[1]['command'] = self.export_where
+        self.create_btn[0]['command'] = self.export_id
+        self.create_btn[1].place(relx=0.2, rely=0.39, relwidth=0.25, relheight=0.08)
+        self.create_btn[0].place(relx=0.2, rely=0.79, relwidth=0.25, relheight=0.08)
+
+        self.file_btn[1]['command'] = self.choose_file_where
+        self.file_btn[0]['command'] = self.choose_file_id
+        self.file_btn[1].place(relx=0.6, rely=0.39, relwidth=0.2, relheight=0.08)
+        self.file_btn[0].place(relx=0.6, rely=0.79, relwidth=0.2, relheight=0.08)
+
+    def choose_file_id(self):
+        path = askdirectory(title='path to save qr code')
+        self.gid_var[1].set(path)
+
+    def choose_file_where(self):
+        path = askdirectory(title='path to save qr code')
+        self.where_var[1].set(path)
+
+    def export_id(self):
+        ...
+
+    def export_where(self):
+        ...
+
+    def set_disable(self):
+        set_tk_disable_from_list(self.gid_enter)
+        set_tk_disable_from_list(self.create_btn)
+        set_tk_disable_from_list(self.file_btn)
+
+    def reset_disable(self):
+        set_tk_disable_from_list(self.gid_enter, flat='normal')
+        set_tk_disable_from_list(self.create_btn, flat='normal')
+        set_tk_disable_from_list(self.file_btn, flat='normal')
+
+
+class ExportGarbageProgram(ExportProgramBase):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "ExportGarbage")
+        self._conf("#afdfe4", ["GarbageID:", "Export:"], ["Where:", "Export:"],
+                   ["Export By GarbageID", "Export Advanced", "ChoosePath", "ChoosePath"])
+
+    def export_id(self):
+        gid = self.gid_var[0].get()
+        path = self.gid_var[1].get()
+        event = tk_event.ExportGarbageByIDEvent(self.station).start(path, gid)
+        self.station.push_event(event)
+
+    def export_where(self):
+        where = self.where_var[0].get()
+        path = self.where_var[1].get()
+        event = tk_event.ExportGarbageAdvancedEvent(self.station).start(path, where)
+        self.station.push_event(event)
+
+
+class ExportUserProgram(ExportProgramBase):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "ExportUser")
+        self._conf("#f69c9f", ["UserID:", "Export:"], ["Where:", "Export:"],
+                   ["Export By UserID", "Export Advanced", "ChoosePath", "ChoosePath"])
+
+    def export_id(self):
+        uid = self.gid_var[0].get()
+        path = self.gid_var[1].get()
+        event = tk_event.ExportUserByIDEvent(self.station).start(path, uid)
+        self.station.push_event(event)
+
+    def export_where(self):
+        where = self.where_var[0].get()
+        path = self.where_var[1].get()
+        event = tk_event.ExportUserAdvancedEvent(self.station).start(path, where)
+        self.station.push_event(event)
 
 
 class DeleteUserProgram(AdminProgram):
@@ -1407,4 +1559,5 @@ all_program = [WelcomeProgram, CreateNormalUserProgram, CreateManagerUserProgram
                CreateGarbageProgram, DeleteUserProgram, DeleteUsersProgram, DeleteGarbageProgram,
                DeleteGarbageMoreProgram, DeleteAllGarbageProgram, SearchUserProgram, SearchUserAdvancedProgram,
                SearchGarbageProgram, SearchGarbageAdvancedProgram, SearchAdvancedProgram, UpdateUserScoreBase,
-               UpdateUserReputationBase, UpdateGarbageTypeProgram, UpdateGarbageCheckResultProgram]
+               UpdateUserReputationBase, UpdateGarbageTypeProgram, UpdateGarbageCheckResultProgram,
+               ExportGarbageProgram, ExportUserProgram]

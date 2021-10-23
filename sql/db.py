@@ -92,7 +92,6 @@ class DB:
             self._cursor.execute(sql)
         except pymysql.MySQLError:
             self._db.rollback()
-            raise
         finally:
             self._lock.release()
         return self._cursor
@@ -105,14 +104,26 @@ class DB:
             self._lock.release()
 
 
+def search_from_garbage_checker_user(columns, where, db: DB):
+    if len(where) > 0:
+        where = f"WHERE {where} "
+
+    column = ", ".join(columns)
+    cur = db.search(f"SELECT {column} FROM garbage_checker_user {where};")
+    if cur is None:
+        return None
+    res = cur.fetchall()
+    return res
+
+
 if __name__ == '__main__':
     # 测试程序
     mysql_db = DB()
     mysql_db.search("SELECT * FROM user;")
-    res = mysql_db.get_cursor().fetchall()
-    print(res)
+    res_ = mysql_db.get_cursor().fetchall()
+    print(res_)
 
     mysql_db.search("SELECT * FROM user WHERE uid = 0;")
-    res = mysql_db.get_cursor().fetchall()
-    print(res)
+    res_ = mysql_db.get_cursor().fetchall()
+    print(res_)
     mysql_db.close()

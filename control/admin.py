@@ -1,23 +1,29 @@
-import tkinter as tk
-from tkinter import ttk
-from tkinter import messagebox as msg
 import abc
+import tkinter as tk
+from tkinter import messagebox as msg
+from tkinter import ttk
 
 import conf
-from tool.type_ import *
-from tool.tk import make_font
-
-from sql.db import DB
-from sql.user import creat_new_user, del_user, del_user_from_where, del_user_from_where_scan
-from sql.garbage import creat_new_garbage, del_garbage_not_use, del_garbage_not_use_many, find_garbage
-
-from equipment.scan_user import write_uid_qr, write_all_uid_qr
-from equipment.scan_garbage import write_gid_qr
-
-from core.user import User
 from core.garbage import GarbageBag
-
+from core.user import User
+from equipment.scan_garbage import write_gid_qr
+from equipment.scan_user import write_uid_qr, write_all_uid_qr
 from event import TkEventMain
+from sql.db import DB, search_from_garbage_checker_user
+from sql.garbage import (creat_new_garbage, search_from_garbage_view,
+                         del_garbage, del_garbage_not_use, del_garbage_wait_check, del_garbage_has_check,
+
+                         del_garbage_where_scan_not_use, del_garbage_where_scan_wait_check,
+                         del_garbage_where_scan_has_check,
+
+                         del_garbage_where_not_use, del_garbage_where_wait_check, del_garbage_where_has_check,
+
+                         del_garbage_not_use_many, del_all_garbage, del_all_garbage_scan)
+
+from sql.user import (creat_new_user, del_user, del_user_from_where, del_user_from_where_scan,
+                      search_user_by_fields, search_from_user_view)
+from tool.tk import make_font
+from tool.type_ import *
 
 
 class AdminStationException(Exception):
@@ -78,8 +84,41 @@ class AdminStationBase(TkEventMain, metaclass=abc.ABCMeta):
     def get_all_uid_qrcode(self, path: str, where: str = "") -> List[str]:
         return write_all_uid_qr(path, self._db, where=where)
 
-    def del_garbage(self, gid: gid_t) -> bool:
+    def del_garbage_not_use(self, gid: gid_t) -> bool:
         return del_garbage_not_use(gid, self._db)
+
+    def del_garbage_wait_check(self, gid: gid_t) -> bool:
+        return del_garbage_wait_check(gid, self._db)
+
+    def del_garbage_has_check(self, gid: gid_t) -> bool:
+        return del_garbage_has_check(gid, self._db)
+
+    def del_garbage(self, gid: gid_t) -> bool:
+        return del_garbage(gid, self._db)
+
+    def del_garbage_where_not_use(self, where) -> int:
+        return del_garbage_where_not_use(where, self._db)
+
+    def del_garbage_where_wait_check(self, where) -> int:
+        return del_garbage_where_wait_check(where, self._db)
+
+    def del_garbage_where_has_check(self, where) -> int:
+        return del_garbage_where_has_check(where, self._db)
+
+    def del_garbage_where_scan_not_use(self, where) -> int:
+        return del_garbage_where_scan_not_use(where, self._db)
+
+    def del_garbage_where_scan_wait_check(self, where) -> int:
+        return del_garbage_where_scan_wait_check(where, self._db)
+
+    def del_garbage_where_scan_has_check(self, where) -> int:
+        return del_garbage_where_scan_has_check(where, self._db)
+
+    def del_all_garbage_scan(self) -> int:
+        return del_all_garbage_scan(self._db)
+
+    def del_all_garbage(self) -> int:
+        return del_all_garbage(self._db)
 
     def del_garbage_many(self, from_: gid_t, to_: gid_t) -> int:
         return del_garbage_not_use_many(from_, to_, self._db)
@@ -92,6 +131,18 @@ class AdminStationBase(TkEventMain, metaclass=abc.ABCMeta):
 
     def del_user_from_where(self, where: str) -> int:
         return del_user_from_where(where, self._db)
+
+    def search_user(self, columns, uid, name, phone):
+        return search_user_by_fields(columns, uid, name, phone, self._db)
+
+    def search_user_advanced(self, columns, sql):
+        return search_from_user_view(columns, sql, self._db)
+
+    def search_garbage_advanced(self, columns, sql):
+        return search_from_garbage_view(columns, sql, self._db)
+
+    def search_advanced(self, columns, sql):
+        return search_from_garbage_checker_user(columns, sql, self._db)
 
     @abc.abstractmethod
     def login_call(self):
@@ -174,9 +225,9 @@ class AdminStation(AdminStationBase):
         self._program_now: Optional[Tuple[str, tk.Frame, tk_program.AdminProgram]] = None
 
         self.__conf_font_size()
-        self.__conf_creak_tk()
-        self.__conf_creak_menu()
-        self.__conf_creak_program()
+        self.__conf_create_tk()
+        self.__conf_create_menu()
+        self.__conf_create_program()
         self.__conf_tk()
         # self.__show_login_window()
 
@@ -189,7 +240,7 @@ class AdminStation(AdminStationBase):
         self._window.resizable(False, False)
         self._window.protocol("WM_DELETE_WINDOW", lambda: self.main_exit())
 
-    def __conf_creak_tk(self):
+    def __conf_create_tk(self):
         self._menu_back = tk.Frame(self._window)
         self._menu_line = tk.Label(self._menu_back)  # 下划线
         self._menu_title: Tuple[tk.Label, tk.Variable] = tk.Label(self._menu_back), tk.StringVar()
@@ -283,7 +334,7 @@ class AdminStation(AdminStationBase):
         self._menu_list.pop()  # 弹出最后一个元素
         self.to_menu(self._menu_list.pop())  # 再弹出一个元素
 
-    def __conf_creak_menu(self):
+    def __conf_create_menu(self):
         frame_list = []
 
         for i in tk_menu.all_menu:
@@ -345,7 +396,7 @@ class AdminStation(AdminStationBase):
         self._program_title[0]['textvariable'] = self._program_title[1]
         # 不立即显示
 
-    def __conf_creak_program(self):
+    def __conf_create_program(self):
         program_list = []
         for i in tk_program.all_program:
             program_list.append(i(self, self._program_back, conf.tk_win_bg))

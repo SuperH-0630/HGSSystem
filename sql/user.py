@@ -3,7 +3,39 @@ from tool.type_ import *
 from tool.login import creat_uid, randomPassword
 from core.user import NormalUser, ManagerUser, User
 import conf
-from garbage import countGarbageByTime
+from garbage import count_garbage_by_time
+
+
+def search_user_by_fields(columns, uid: uid_t, name: uname_t, phone: phone_t, db: DB):
+    where = ""
+    if uid is not None:
+        where += f"UserID=‘{uid}’ AND "
+    if name is not None:
+        where += f"Name='{name}' AND "
+    if phone is not None:
+        where += f"Phone='{phone}' AND "
+
+    if len(where) != 0:
+        where = where[0:-4]  # 去除末尾的AND
+
+    return search_from_user_view(columns, where, db)
+
+
+def search_from_user_view(columns, where: str, db: DB):
+    if len(where) > 0:
+        where = f"WHERE {where} "
+
+    column = ", ".join(columns)
+    cur = db.search(f"SELECT {column} FROM user_view {where};")
+    if cur is None:
+        return None
+    result = cur.fetchall()
+    re = []
+    for res in result:
+        n = [res[a] for a in range(5)]
+        n.append("True" if res[5] == DBBit.BIT_1 else "False")
+        re.append(n)
+    return re
 
 
 def find_user_by_id(uid: uid_t, db: DB) -> Optional[User]:
@@ -23,7 +55,7 @@ def find_user_by_id(uid: uid_t, db: DB) -> Optional[User]:
     else:
         score: score_t = res[3]
         reputation: score_t = res[4]
-        rubbish: count_t = countGarbageByTime(uid, db)
+        rubbish: count_t = count_garbage_by_time(uid, db)
         return NormalUser(name, uid, reputation, rubbish, score)  # rubbish 实际计算
 
 
@@ -62,7 +94,8 @@ def update_user(user: User, db: DB) -> bool:
     return cur is not None
 
 
-def creat_new_user(name: Optional[uname_t], passwd: Optional[passwd_t], phone: phone_t, manager: bool, db: DB) -> Optional[User]:
+def creat_new_user(name: Optional[uname_t], passwd: Optional[passwd_t], phone: phone_t,
+                   manager: bool, db: DB) -> Optional[User]:
     if name is None:
         name = f'User-{phone[-6:]}'
 
@@ -111,7 +144,7 @@ def del_user_from_where_scan(where: str, db: DB) -> int:
 
 
 def del_user_from_where(where: str, db: DB) -> int:
-    cur = db.search(f"SELECT gid FROM garbage_user WHERE {where};")  # 确保没有引用
+    cur = db.search(f"SELECT gid FROM garbage_time WHERE {where};")  # 确保没有引用
     if cur is None or cur.rowcount != 0:
         return False
     cur = db.done(f"DELETE FROM user WHERE {where};")

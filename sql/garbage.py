@@ -10,7 +10,20 @@ class GarbageDBException(DBDataException):
     ...
 
 
-def countGarbageByTime(uid: uid_t, db: DB):
+def search_from_garbage_view(columns, where: str, db: DB):
+    if len(where) > 0:
+        where = f"WHERE {where} "
+
+    column = ", ".join(columns)
+    print(f"SELECT {column} FROM garbage_view {where};")
+    cur = db.search(f"SELECT {column} FROM garbage_view {where};")
+    if cur is None:
+        return None
+    res = cur.fetchall()
+    return res
+
+
+def count_garbage_by_time(uid: uid_t, db: DB):
     ti: time_t = time.time()
     start = ti - 3.5 * 24 * 60 * 60  # 前后3.5天
     end = ti + 3.5 * 24 * 60 * 60
@@ -144,8 +157,8 @@ def creat_new_garbage(db: DB) -> Optional[GarbageBag]:
     return GarbageBag(str(gid))
 
 
-def del_garbage_not_use(gid: gid_t, db: DB) -> bool:
-    cur = db.done(f"DELETE FROM garbage_n WHERE gid = {gid};")
+def del_garbage_core(gid: gid_t, db: DB, from_: str) -> bool:
+    cur = db.done(f"DELETE FROM {from_} WHERE gid = {gid};")
     if cur is None or cur.rowcount == 0:
         return False
     assert cur.rowcount == 1
@@ -154,6 +167,95 @@ def del_garbage_not_use(gid: gid_t, db: DB) -> bool:
         return False
     assert cur.rowcount == 1
     return True
+
+
+def del_garbage_not_use(gid: gid_t, db: DB) -> bool:
+    return del_garbage_core(gid, db, "garbage_n")
+
+
+def del_garbage_wait_check(gid: gid_t, db: DB) -> bool:
+    return del_garbage_core(gid, db, "garbage_c")
+
+
+def del_garbage_has_check(gid: gid_t, db: DB) -> bool:
+    return del_garbage_core(gid, db, "garbage_u")
+
+
+def del_garbage(gid, db: DB):
+    res = del_garbage_not_use(gid, db)
+    if res:
+        return True
+    res = del_garbage_wait_check(gid, db)
+    if res:
+        return True
+    return del_garbage_has_check(gid, db)
+
+
+def del_garbage_where_core(where, db: DB, from_: str, from_int: int) -> int:
+    cur = db.done_(f"DELETE FROM {from_} WHERE {where};")
+    if cur is None:
+        return -1
+    elif cur.rowcount == 0:
+        return 0
+
+    cur = db.done(f"DELETE FROM garbage WHERE flat={from_int} AND gid NOT IN (SELECT gid FROM {from_});")
+    if cur is None:
+        return -1
+    return cur.rowcount
+
+
+def del_garbage_where_not_use(where, db: DB) -> int:
+    return del_garbage_where_core(where, db, "garbage_n", 0)
+
+
+def del_garbage_where_wait_check(where, db: DB) -> int:
+    return del_garbage_where_core(where, db, "garbage_c", 1)
+
+
+def del_garbage_where_has_check(where, db: DB) -> int:
+    return del_garbage_where_core(where, db, "garbage_u", 2)
+
+
+def del_garbage_where_scan_core(where, db: DB, from_: str) -> int:
+    cur = db.done(f"SELECT gid FROM {from_} WHERE {where};")
+    if cur is None:
+        return -1
+    return cur.rowcount
+
+
+def del_garbage_where_scan_not_use(where, db: DB) -> int:
+    return del_garbage_where_scan_core(where, db, "garbage_n")
+
+
+def del_garbage_where_scan_wait_check(where, db: DB) -> int:
+    return del_garbage_where_scan_core(where, db, "garbage_c")
+
+
+def del_garbage_where_scan_has_check(where, db: DB) -> int:
+    return del_garbage_where_scan_core(where, db, "garbage_u")
+
+
+def del_all_garbage(db: DB) -> int:
+    cur = db.done(f"DELETE FROM garbage_u WHERE 1;")
+    if cur is None:
+        return -1
+    cur = db.done(f"DELETE FROM garbage_c WHERE 1;")
+    if cur is None:
+        return -1
+    cur = db.done(f"DELETE FROM garbage_n WHERE 1;")
+    if cur is None:
+        return -1
+    cur = db.done(f"DELETE FROM garbage WHERE 1;")
+    if cur is None:
+        return -1
+    return cur.rowcount
+
+
+def del_all_garbage_scan(db: DB) -> int:
+    cur = db.done(f"SELECT gid FROM garbage WHERE 1;")
+    if cur is None:
+        return -1
+    return cur.rowcount
 
 
 def del_garbage_not_use_many(gid_from: gid_t, gid_to: gid_t, db: DB) -> int:
@@ -185,4 +287,4 @@ if __name__ == '__main__':
     bag = find_garbage(bag.get_gid(), mysql_db)
     print(bag)
 
-    print(countGarbageByTime("1e1d30a1f9b78c8fa852d19b4cfaee79", mysql_db))
+    print(count_garbage_by_time("1e1d30a1f9b78c8fa852d19b4cfaee79", mysql_db))

@@ -11,6 +11,7 @@ import conf
 import admin
 import admin_event as tk_event
 
+from sql.user import find_user_by_name
 from core.garbage import GarbageType
 
 
@@ -520,15 +521,16 @@ class DeleteGarbageProgramBase(AdminProgram):
 
         self.int_var: tk.Variable = tk.IntVar()
         self.int_var.set(0)
-        self.radio: List[tk.Radiobutton] = [tk.Radiobutton(self.frame) for _ in range(4)]  # del, scan
-        self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(2)]  # del, scan
+        self.radio: List[tk.Radiobutton] = [tk.Radiobutton(self.frame) for _ in range(4)]
+        self.btn: tk.Button = tk.Button(self.frame)
 
         self.__conf_font()
         self._conf()
 
-    def _conf(self, title: str = "GarbageID:", color: str = "#b69968"):
+    def _conf(self, title: str = "GarbageID:", color: str = "#b69968", support_del_all: bool = True):
         self.frame_title = title
         self.frame_color = color
+        self.support_del_all = support_del_all
 
     def __conf_font(self, n: int = 1):
         self.title_font_size = int(16 * n)
@@ -565,24 +567,89 @@ class DeleteGarbageProgramBase(AdminProgram):
             radio['variable'] = self.int_var
             radio['anchor'] = 'w'
 
+        if not self.support_del_all:
+            self.int_var.set(1)
+            self.radio[0]['state'] = 'disable'
+
         self.radio[0].place(relx=0.20, rely=0.43, relwidth=0.20, relheight=0.1)
         self.radio[1].place(relx=0.60, rely=0.43, relwidth=0.20, relheight=0.1)
         self.radio[2].place(relx=0.20, rely=0.55, relwidth=0.20, relheight=0.1)
         self.radio[3].place(relx=0.60, rely=0.55, relwidth=0.20, relheight=0.1)
 
-        for btn, text, x in zip(self.btn, ["Delete", "Scan"], [0.2, 0.6]):
-            btn['font'] = btn_font
-            btn['text'] = text
-            btn['bg'] = conf.tk_btn_bg
-            btn.place(relx=x, rely=0.68, relwidth=0.2, relheight=0.08)
+        self.btn['font'] = btn_font
+        self.btn['text'] = 'Delete'
+        self.btn['bg'] = conf.tk_btn_bg
+        self.btn['command'] = lambda: self.delete_garbage()
+        self.btn.place(relx=0.4, rely=0.68, relwidth=0.2, relheight=0.08)
+
+    def delete_garbage(self):
+        ...
 
     def set_disable(self):
-        set_tk_disable_from_list(self.btn)
         self.enter['state'] = 'disable'
+        self.btn['state'] = 'disable'
 
     def reset_disable(self):
-        set_tk_disable_from_list(self.btn, flat='normal')
         self.enter['state'] = 'normal'
+        self.btn['state'] = 'normal'
+
+
+class DeleteGarbageProgram(DeleteGarbageProgramBase):
+    def __init__(self, station, win, color):
+        super(DeleteGarbageProgram, self).__init__(station, win, color, "DeleteGarbage")
+
+    def delete_garbage(self):
+        where = self.int_var.get()
+        assert where in [0, 1, 2, 3]
+
+        gid = self.var.get()
+        if len(gid) == 0:
+            self.station.show_msg("GarbageID Error", "You should enter the garbage id", "Warning")
+            return
+
+        event = tk_event.DelGarbageEvent(self.station).start(gid, where)
+        self.station.push_event(event)
+
+
+class DeleteGarbageMoreProgram(DeleteGarbageProgramBase):
+    def __init__(self, station, win, color):
+        super(DeleteGarbageMoreProgram, self).__init__(station, win, color, "DeleteGarbageMore")
+        self.scan_btn = tk.Button(self.frame)
+        self._conf("Where:", "#f58f98", False)
+
+    def conf_gui(self, n: int = 1):
+        super(DeleteGarbageMoreProgram, self).conf_gui(n)
+        self.btn.place_forget()
+        self.btn.place(relx=0.2, rely=0.68, relwidth=0.2, relheight=0.08)
+
+        self.scan_btn['font'] = make_font(size=self.btn_font_size)
+        self.scan_btn['text'] = 'Scan'
+        self.scan_btn['bg'] = conf.tk_btn_bg
+        self.scan_btn['command'] = lambda: self.delete_garbage(True)
+        self.scan_btn.place(relx=0.6, rely=0.68, relwidth=0.2, relheight=0.08)
+
+    def set_disable(self):
+        super(DeleteGarbageMoreProgram, self).set_disable()
+        self.scan_btn['state'] = 'disable'
+
+    def reset_disable(self):
+        super(DeleteGarbageMoreProgram, self).reset_disable()
+        self.scan_btn['state'] = 'normal'
+
+    def delete_garbage(self, is_scan: bool = False):
+        where = self.int_var.get()
+        assert where in [1, 2, 3]
+
+        where_sql = self.var.get()
+        if len(where_sql) == 0:
+            self.station.show_msg("`Where`Error", "`Where` must be SQL", "Warning")
+            return
+
+        if is_scan:
+            event = tk_event.DelGarbageWhereScanEvent(self.station).start(where, where_sql)
+        else:
+            event = tk_event.DelGarbageWhereEvent(self.station).start(where, where_sql)
+        self.station.push_event(event)
 
 
 class DeleteAllGarbageProgram(AdminProgram):
@@ -647,8 +714,28 @@ class DeleteAllGarbageProgram(AdminProgram):
 
         self.btn[0]['font'] = danger_btn_font
         self.btn[0]['bg'] = "#f20c00"
+        self.btn[0]['command'] = lambda: self.delete_garbage()
+
         self.btn[1]['font'] = btn_font
         self.btn[1]['bg'] = conf.tk_btn_bg
+        self.btn[1]['command'] = lambda: self.scan_garbage()
+
+    def scan_garbage(self):
+        event = tk_event.DelAllGarbageScanEvent(self.station)  # 不需要start
+        self.station.push_event(event)
+
+    def delete_garbage(self):
+        passwd = self.var.get()
+        if len(passwd) == 0:
+            self.station.show_msg("PassWordError", "Password error", "Warning")
+
+        user = find_user_by_name('admin', passwd, self.station.get_db())
+        if user is None or not user.is_manager():
+            self.station.show_msg("PassWordError", "Password error", "Warning")
+            return
+
+        event = tk_event.DelAllGarbageEvent(self.station)  # 不需要start
+        self.station.push_event(event)
 
     def set_disable(self):
         set_tk_disable_from_list(self.btn)
@@ -657,17 +744,6 @@ class DeleteAllGarbageProgram(AdminProgram):
     def reset_disable(self):
         set_tk_disable_from_list(self.btn, flat='normal')
         self.enter['state'] = 'normal'
-
-
-class DeleteGarbageProgram(DeleteGarbageProgramBase):
-    def __init__(self, station, win, color):
-        super(DeleteGarbageProgram, self).__init__(station, win, color, "DeleteGarbage")
-
-
-class DeleteGarbageMoreProgram(DeleteGarbageProgramBase):
-    def __init__(self, station, win, color):
-        super(DeleteGarbageMoreProgram, self).__init__(station, win, color, "DeleteGarbageMore")
-        self._conf("Where:", "#f58f98")
 
 
 class SearchBaseProgram(AdminProgram, metaclass=abc.ABCMeta):
@@ -717,6 +793,7 @@ class SearchUserProgram(SearchBaseProgram):
         self.check: List[Tuple[tk.Checkbutton, tk.Variable]] = [(tk.Checkbutton(self.enter_frame), tk.IntVar())
                                                                 for _ in range(3)]
         self.btn: tk.Button = tk.Button(self.frame)
+        self._columns = ["UserID", "Name", "Phone", "Score", "Reputation", "IsManager"]
         self.__conf_font()
 
     def __conf_font(self, n: int = 1):
@@ -760,10 +837,35 @@ class SearchUserProgram(SearchBaseProgram):
         self.btn['font'] = btn_font
         self.btn['text'] = "Search"
         self.btn['bg'] = conf.tk_btn_bg
+        self.btn['command'] = self.search_user
         self.btn.place(relx=0.4, rely=0.9, relwidth=0.2, relheight=0.08)
 
-        columns = ["UserID", "UserName", "Phone", "Score", "Reputation", "Rubbish"]
-        self.conf_view_gui(columns, relx=0.05, rely=0.32, relwidth=0.9, relheight=0.55)
+        self.conf_view_gui(self._columns, relx=0.05, rely=0.32, relwidth=0.9, relheight=0.55)
+
+    def search_user(self):
+        use_uid = self.check[0][1].get()
+        use_name = self.check[1][1].get()
+        use_phone = self.check[2][1].get()
+        uid = None
+        name = None
+        phone = None
+        if use_uid:
+            uid = self.var[0].get()
+            if len(uid) == 0:
+                uid = None
+
+        if use_name:
+            name = self.var[1].get()
+            if len(name) == 0:
+                name = None
+
+        if use_phone:
+            phone = self.var[2].get()
+            if len(phone) == 0:
+                phone = None
+
+        event = tk_event.SearchUserEvent(self.station).start(self._columns, uid, name, phone, self)
+        self.station.push_event(event)
 
     def set_disable(self):
         self.btn['state'] = 'disable'
@@ -774,7 +876,7 @@ class SearchUserProgram(SearchBaseProgram):
         set_tk_disable_from_list(self.enter, flat='normal')
 
 
-class SearchUserAdvancedProgramBase(SearchBaseProgram, metaclass=abc.ABCMeta):
+class SearchAdvancedProgramBase(SearchBaseProgram, metaclass=abc.ABCMeta):
     def __init__(self, station, win, color, title: str):
         super().__init__(station, win, color, title)
 
@@ -821,9 +923,13 @@ class SearchUserAdvancedProgramBase(SearchBaseProgram, metaclass=abc.ABCMeta):
         self.btn['text'] = "Search"
         self.btn['font'] = btn_font
         self.btn['bg'] = conf.tk_btn_bg
+        self.btn['command'] = self.search
         self.btn.place(relx=0.4, rely=0.9, relwidth=0.2, relheight=0.08)
 
         self.conf_view_gui(self._columns, relx=0.05, rely=0.12, relwidth=0.9, relheight=0.76)
+
+    def search(self):
+        ...
 
     def set_disable(self):
         self.btn['state'] = 'disable'
@@ -834,11 +940,16 @@ class SearchUserAdvancedProgramBase(SearchBaseProgram, metaclass=abc.ABCMeta):
         self.enter['state'] = 'normal'
 
 
-class SearchUserAdvancedProgram(SearchUserAdvancedProgramBase):
+class SearchUserAdvancedProgram(SearchAdvancedProgramBase):
     def __init__(self, station, win, color):
         super(SearchUserAdvancedProgram, self).__init__(station, win, color, "SearchUserAdvanced")
-        columns = ["UserID", "UserName", "Phone", "Score", "Reputation", "Rubbish"]
+        columns = ["UserID", "Name", "Phone", "Score", "Reputation", "IsManager"]
         self._conf(columns, '#48c0a3')
+
+    def search(self):
+        where = self.var.get()
+        event = tk_event.SearchUserAdvancedEvent(self.station).start(self._columns, where, self)
+        self.station.push_event(event)
 
 
 class SearchGarbageProgram(SearchBaseProgram):
@@ -910,19 +1021,30 @@ class SearchGarbageProgram(SearchBaseProgram):
         set_tk_disable_from_list(self.enter, flat='normal')
 
 
-class SearchGarbageAdvancedProgram(SearchUserAdvancedProgramBase):
+class SearchGarbageAdvancedProgram(SearchAdvancedProgramBase):
     def __init__(self, station, win, color):
         super(SearchGarbageAdvancedProgram, self).__init__(station, win, color, "SearchGarbageAdvanced")
-        columns = ["GarbageID", "UserID", "CheckerID", "UseTime", "Location", "GarbageType", "CheckResult"]
+        columns = ["GarbageID", "UserID", "CheckerID", "CreatTime", "UseTime", "Location", "GarbageType", "CheckResult"]
         self._conf(columns, '#d1923f')
 
+    def search(self):
+        where = self.var.get()
+        event = tk_event.SearchGarbageAdvancedEvent(self.station).start(self._columns, where, self)
+        self.station.push_event(event)
 
-class SearchAdvancedProgram(SearchUserAdvancedProgramBase):
+
+class SearchAdvancedProgram(SearchAdvancedProgramBase):
     def __init__(self, station, win, color):
         super(SearchAdvancedProgram, self).__init__(station, win, color, "SearchAdvanced")
-        columns = ["GarbageID", "UserID", "UserName", "Phone", "Score", "Reputation", "Rubbish",
-                   "CheckerID", "CheckerName", "CheckerPhone", "UseTime", "Location", "GarbageType", "CheckResult"]
+        columns = ["GarbageID", "UserID", "UserName", "UserPhone", "UserScore",
+                   "UserReputation", "CheckerID", "CheckerName", "CheckerPhone",
+                   "CreateTime", "UseTime", "Location", "GarbageType", "CheckResult"]
         self._conf(columns, '#426ab3')
+
+    def search(self):
+        where = self.var.get()
+        event = tk_event.SearchAdvancedEvent(self.station).start(self._columns, where, self)
+        self.station.push_event(event)
 
 
 class UpdateUserProgramBase(AdminProgram):

@@ -20,7 +20,8 @@ from sql.garbage import (create_new_garbage, search_garbage_by_fields, search_fr
 
 from sql.user import (create_new_user, del_user, del_user_from_where, del_user_from_where_scan,
                       search_user_by_fields, search_from_user_view,
-                      update_user_score, update_user_reputation)
+                      update_user_score, update_user_reputation,
+                      creat_user_from_csv, creat_auto_user_from_csv)
 from tool.tk import make_font
 from tool.type_ import *
 
@@ -68,14 +69,11 @@ class AdminStationBase(TkEventMain, metaclass=abc.ABCMeta):
     def create_user(self, name: uname_t, passwd: passwd_t, phone: str, manager: bool) -> Optional[User]:
         return create_new_user(name, passwd, phone, manager, self._db)
 
-    def create_user_from_list(self, user_list: List[Tuple[uname_t, passwd_t, str]], manager: bool) -> List[User]:
-        re = []
-        for i in user_list:
-            user = create_new_user(i[0], i[1], i[2], manager, self._db)
-            if user is None:
-                raise CreateUserError
-            re.append(user)
-        return re
+    def create_user_from_csv(self, path) -> List[User]:
+        return creat_user_from_csv(path, self._db)
+
+    def create_auto_user_from_csv(self, path) -> List[User]:
+        return creat_auto_user_from_csv(path, self._db)
 
     def export_user_by_uid(self, path: str, uid: uid_t) -> Tuple[str, Optional[User]]:
         return write_uid_qr(uid, path, self._db)

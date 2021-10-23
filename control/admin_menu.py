@@ -78,8 +78,9 @@ class MainMenu(AdminMenu):
 class CreateMenu(AdminMenu):
     def __init__(self, station, win, color):
         super().__init__(station, win, color, "Create")
-        self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(6)]
-        self.btn_name = ["NormalUser", "AutoNormalUser", "ManagerUser", "Garbage", "ExportUser", "ExportGarbage"]
+        self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(7)]
+        self.btn_name = ["NormalUser", "AutoNormalUser", "ManagerUser", "Garbage",
+                         "ExportUser", "ExportGarbage", "User From CSV"]
 
     def conf_gui(self, color: str, n: int = 1):
         super().conf_gui(color, n)
@@ -89,6 +90,7 @@ class CreateMenu(AdminMenu):
         self.btn[3]['command'] = lambda: self.create_garbage()
         self.btn[4]['command'] = lambda: self.export_user()
         self.btn[5]['command'] = lambda: self.export_garbage()
+        self.btn[6]['command'] = lambda: self.create_user_from_csv()
 
     def create_normal_user(self):
         self.station.to_program("CreateNormalUser")
@@ -107,6 +109,9 @@ class CreateMenu(AdminMenu):
 
     def export_garbage(self):
         self.station.to_program("ExportGarbage")
+
+    def create_user_from_csv(self):
+        self.station.to_program("CreateUserFromCSV")
 
 
 class DeleteMenu(AdminMenu):

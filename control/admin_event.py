@@ -164,6 +164,40 @@ class ExportUserAdvancedEvent(AdminEventBase):
         self.station.show_msg("Export", f"Export {len(res)} user finished.")
 
 
+class CreateUserFromCSVEvent(AdminEventBase):
+    def func(self, path):
+        return self.station.create_user_from_csv(path)
+
+    def __init__(self, station):
+        super(CreateUserFromCSVEvent, self).__init__(station)
+        self._name = None
+
+    def start(self, path):
+        self.thread = TkThreading(self.func, path)
+        return self
+
+    def done_after_event(self):
+        res: list[User] = self.thread.wait_event()
+        self.station.show_msg("Creat", f"Creat {len(res)} user finished.")
+
+
+class CreateAutoUserFromCSVEvent(AdminEventBase):
+    def func(self, path):
+        return self.station.create_auto_user_from_csv(path)
+
+    def __init__(self, station):
+        super(CreateAutoUserFromCSVEvent, self).__init__(station)
+        self._name = None
+
+    def start(self, path):
+        self.thread = TkThreading(self.func, path)
+        return self
+
+    def done_after_event(self):
+        res: list[User] = self.thread.wait_event()
+        self.station.show_msg("Creat", f"Creat {len(res)} auto user finished.")
+
+
 class DelUserEvent(AdminEventBase):
     def func(self, uid):
         return self.station.del_user(uid)

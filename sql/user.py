@@ -1,3 +1,5 @@
+import csv
+
 from db import DB, DBBit
 from tool.type_ import *
 from tool.login import create_uid, randomPassword
@@ -123,6 +125,9 @@ def create_new_user(name: Optional[uname_t], passwd: Optional[passwd_t], phone: 
     if passwd is None:
         passwd = randomPassword()
 
+    if len(phone) != 11:
+        return None
+
     uid = create_uid(name, passwd)
     if is_user_exists(uid, db):
         return None
@@ -172,6 +177,62 @@ def del_user_from_where(where: str, db: DB) -> int:
     if cur is None:
         return -1
     return cur.rowcount
+
+
+def creat_user_from_csv(path, db: DB) -> List[User]:
+    res = []
+    with open(path, "r") as f:
+        reader = csv.reader(f)
+        first = True
+        name_index = 0
+        passwd_index = 0
+        phone_index = 0
+        manager_index = 0
+        for item in reader:
+            if first:
+                try:
+                    name_index = item.index('Name')
+                    passwd_index = item.index('Passwd')
+                    phone_index = item.index('Phone')
+                    manager_index = item.index('Manager')
+                except (ValueError, TypeError):
+                    return []
+                first = False
+                continue
+            name = item[name_index]
+            passwd = item[passwd_index]
+            phone = item[phone_index]
+            if item[manager_index].upper() == "TRUE":
+                is_manager = True
+            elif item[manager_index].upper() == "FALSE":
+                is_manager = False
+            else:
+                continue
+            user = create_new_user(name, passwd, phone, is_manager, db)
+            if user is not None:
+                res.append(user)
+    return res
+
+
+def creat_auto_user_from_csv(path, db: DB) -> List[User]:
+    res = []
+    with open(path, "r") as f:
+        reader = csv.reader(f)
+        first = True
+        phone_index = 0
+        for item in reader:
+            if first:
+                try:
+                    phone_index = item.index('Phone')
+                except (ValueError, TypeError):
+                    return []
+                first = False
+                continue
+            phone = item[phone_index]
+            user = create_new_user(None, None, phone, False, db)
+            if user is not None:
+                res.append(user)
+    return res
 
 
 if __name__ == '__main__':

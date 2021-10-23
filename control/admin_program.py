@@ -1,7 +1,7 @@
 import abc
 import tkinter as tk
 import tkinter.ttk as ttk
-from tkinter.filedialog import askdirectory
+from tkinter.filedialog import askdirectory, askopenfilename
 
 from tool.type_ import *
 from tool.tk import make_font, set_tk_disable_from_list
@@ -483,6 +483,114 @@ class ExportUserProgram(ExportProgramBase):
         path = self.where_var[1].get()
         event = tk_event.ExportUserAdvancedEvent(self.station).start(path, where)
         self.station.push_event(event)
+
+
+class CreateUserFromCSVProgram(AdminProgram):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "CreateUserFromCSV")
+
+        self.auto_frame = tk.Frame(self.frame)
+        self.auto_title: tk.Label = tk.Label(self.auto_frame)
+        self.auto_enter: tk.Entry = tk.Entry(self.auto_frame)
+        self.auto_var: tk.Variable = tk.StringVar()
+
+        self.enter_frame = tk.Frame(self.frame)
+        self.path_title: tk.Label = tk.Label(self.enter_frame)
+        self.path_enter: tk.Entry = tk.Entry(self.enter_frame)
+        self.path_var: tk.Variable = tk.StringVar()
+
+        self.create_btn: List[tk.Button] = [tk.Button(self.frame), tk.Button(self.frame)]
+        self.file_btn: List[tk.Button] = [tk.Button(self.frame), tk.Button(self.frame)]
+
+        self.__conf_font()
+
+    def __conf_font(self, n: int = 1):
+        self.title_font_size = int(16 * n)
+        self.btn_font_size = int(14 * n)
+
+    def conf_gui(self, n: int = 1):
+        self.__conf_font(n)
+
+        title_font = make_font(size=self.title_font_size)
+        btn_font = make_font(size=self.btn_font_size)
+
+        self.enter_frame['bg'] = "#EEE8AA"
+        self.enter_frame['bd'] = 5
+        self.enter_frame['relief'] = "ridge"
+        self.enter_frame.place(relx=0.2, rely=0.2, relwidth=0.6, relheight=0.12)
+
+        self.auto_frame['bg'] = "#EEE8AA"
+        self.auto_frame['bd'] = 5
+        self.auto_frame['relief'] = "ridge"
+        self.auto_frame.place(relx=0.2, rely=0.6, relwidth=0.6, relheight=0.12)
+
+        self.auto_title['font'] = title_font
+        self.auto_title['text'] = "Path:"
+        self.auto_title['bg'] = "#EEE8AA"
+        self.auto_title['anchor'] = 'e'
+
+        self.path_title['font'] = title_font
+        self.path_title['text'] = "Path:"
+        self.path_title['bg'] = "#EEE8AA"
+        self.path_title['anchor'] = 'e'
+
+        self.auto_enter['textvariable'] = self.auto_var
+        self.auto_enter['font'] = title_font
+
+        self.path_enter['textvariable'] = self.path_var
+        self.path_enter['font'] = title_font
+
+        self.auto_title.place(relx=0.01, rely=0.25, relwidth=0.30, relheight=0.50)
+        self.auto_enter.place(relx=0.35, rely=0.25, relwidth=0.60, relheight=0.50)
+
+        self.path_title.place(relx=0.01, rely=0.25, relwidth=0.30, relheight=0.50)
+        self.path_enter.place(relx=0.35, rely=0.25, relwidth=0.60, relheight=0.50)
+
+        for btn, text in zip(self.create_btn + self.file_btn,
+                             ["Create User", "Create Auto User", "Choose CSV", "Choose CSV"]):
+            btn['font'] = btn_font
+            btn['text'] = text
+            btn['bg'] = conf.tk_btn_bg
+
+        self.create_btn[0]['command'] = self.create
+        self.create_btn[1]['command'] = self.create_auto
+        self.create_btn[0].place(relx=0.2, rely=0.34, relwidth=0.25, relheight=0.08)
+        self.create_btn[1].place(relx=0.2, rely=0.74, relwidth=0.25, relheight=0.08)
+
+        self.file_btn[0]['command'] = self.choose_file
+        self.file_btn[1]['command'] = self.choose_file_auto
+        self.file_btn[0].place(relx=0.6, rely=0.34, relwidth=0.2, relheight=0.08)
+        self.file_btn[1].place(relx=0.6, rely=0.74, relwidth=0.2, relheight=0.08)
+
+    def choose_file_auto(self):
+        path = askopenfilename(title='path of csv', filetypes=[("CSV", ".csv")])
+        self.auto_var.set(path)
+
+    def choose_file(self):
+        path = askopenfilename(title='path of csv', filetypes=[("CSV", ".csv")])
+        self.path_var.set(path)
+
+    def create_auto(self):
+        path = self.auto_var.get()
+        event = tk_event.CreateAutoUserFromCSVEvent(self.station).start(path)
+        self.station.push_event(event)
+
+    def create(self):
+        path = self.path_var.get()
+        event = tk_event.CreateUserFromCSVEvent(self.station).start(path)
+        self.station.push_event(event)
+
+    def set_disable(self):
+        self.auto_enter['state'] = 'disable'
+        self.path_enter['state'] = 'disable'
+        set_tk_disable_from_list(self.create_btn)
+        set_tk_disable_from_list(self.file_btn)
+
+    def reset_disable(self):
+        self.auto_enter['state'] = 'normal'
+        self.path_enter['state'] = 'normal'
+        set_tk_disable_from_list(self.create_btn, flat='normal')
+        set_tk_disable_from_list(self.file_btn, flat='normal')
 
 
 class DeleteUserProgram(AdminProgram):
@@ -1560,4 +1668,4 @@ all_program = [WelcomeProgram, CreateNormalUserProgram, CreateManagerUserProgram
                DeleteGarbageMoreProgram, DeleteAllGarbageProgram, SearchUserProgram, SearchUserAdvancedProgram,
                SearchGarbageProgram, SearchGarbageAdvancedProgram, SearchAdvancedProgram, UpdateUserScoreBase,
                UpdateUserReputationBase, UpdateGarbageTypeProgram, UpdateGarbageCheckResultProgram,
-               ExportGarbageProgram, ExportUserProgram]
+               ExportGarbageProgram, ExportUserProgram, CreateUserFromCSVProgram]

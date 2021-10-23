@@ -1,6 +1,6 @@
 from db import DB, DBBit
 from tool.type_ import *
-from tool.login import creat_uid, randomPassword
+from tool.login import create_uid, randomPassword
 from core.user import NormalUser, ManagerUser, User
 import conf
 from garbage import count_garbage_by_time
@@ -60,7 +60,7 @@ def find_user_by_id(uid: uid_t, db: DB) -> Optional[User]:
 
 
 def find_user_by_name(name: uname_t, passwd: passwd_t, db: DB) -> Optional[User]:
-    uid = creat_uid(name, passwd)
+    uid = create_uid(name, passwd)
     return find_user_by_id(uid, db)
 
 
@@ -94,15 +94,15 @@ def update_user(user: User, db: DB) -> bool:
     return cur is not None
 
 
-def creat_new_user(name: Optional[uname_t], passwd: Optional[passwd_t], phone: phone_t,
-                   manager: bool, db: DB) -> Optional[User]:
+def create_new_user(name: Optional[uname_t], passwd: Optional[passwd_t], phone: phone_t,
+                    manager: bool, db: DB) -> Optional[User]:
     if name is None:
         name = f'User-{phone[-6:]}'
 
     if passwd is None:
         passwd = randomPassword()
 
-    uid = creat_uid(name, passwd)
+    uid = create_uid(name, passwd)
     if is_user_exists(uid, db):
         return None
     is_manager = '1' if manager else '0'
@@ -158,7 +158,7 @@ if __name__ == '__main__':
     name_ = 'Huan12'
     usr = find_user_by_name(name_, "123", mysql_db)
     if usr is None:
-        usr = creat_new_user(name_, "123", "12345678900", False, mysql_db)
+        usr = create_new_user(name_, "123", "12345678900", False, mysql_db)
     print(usr)
 
     for i in range(9):

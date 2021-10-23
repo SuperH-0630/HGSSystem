@@ -10,7 +10,7 @@ from equipment.scan_garbage import write_gid_qr
 from equipment.scan_user import write_uid_qr, write_all_uid_qr
 from event import TkEventMain
 from sql.db import DB, search_from_garbage_checker_user
-from sql.garbage import (creat_new_garbage, search_from_garbage_view,
+from sql.garbage import (create_new_garbage, search_from_garbage_view,
                          del_garbage, del_garbage_not_use, del_garbage_wait_check, del_garbage_has_check,
 
                          del_garbage_where_scan_not_use, del_garbage_where_scan_wait_check,
@@ -20,7 +20,7 @@ from sql.garbage import (creat_new_garbage, search_from_garbage_view,
 
                          del_garbage_not_use_many, del_all_garbage, del_all_garbage_scan)
 
-from sql.user import (creat_new_user, del_user, del_user_from_where, del_user_from_where_scan,
+from sql.user import (create_new_user, del_user, del_user_from_where, del_user_from_where_scan,
                       search_user_by_fields, search_from_user_view)
 from tool.tk import make_font
 from tool.type_ import *
@@ -30,11 +30,11 @@ class AdminStationException(Exception):
     ...
 
 
-class CreatGarbageError(AdminStationException):
+class createGarbageError(AdminStationException):
     ...
 
 
-class CreatUserError(AdminStationException):
+class createUserError(AdminStationException):
     ...
 
 
@@ -47,12 +47,12 @@ class AdminStationBase(TkEventMain, metaclass=abc.ABCMeta):
     def get_db(self):
         return self._db
 
-    def creat_garbage(self, path: Optional[str], num: int = 1) -> List[tuple[str, Optional[GarbageBag]]]:
+    def create_garbage(self, path: Optional[str], num: int = 1) -> List[tuple[str, Optional[GarbageBag]]]:
         re = []
         for _ in range(num):
-            gar = creat_new_garbage(self._db)
+            gar = create_new_garbage(self._db)
             if gar is None:
-                raise CreatGarbageError
+                raise createGarbageError
             if path is not None:
                 res = write_gid_qr(gar.get_gid(), path, self._db)
                 re.append(res)
@@ -60,15 +60,15 @@ class AdminStationBase(TkEventMain, metaclass=abc.ABCMeta):
                 re.append(("", gar))
         return re
 
-    def creat_user(self, name: uname_t, passwd: passwd_t, phone: str, manager: bool) -> Optional[User]:
-        return creat_new_user(name, passwd, phone, manager, self._db)
+    def create_user(self, name: uname_t, passwd: passwd_t, phone: str, manager: bool) -> Optional[User]:
+        return create_new_user(name, passwd, phone, manager, self._db)
 
-    def creat_user_from_list(self, user_list: List[Tuple[uname_t, passwd_t, str]], manager: bool) -> List[User]:
+    def create_user_from_list(self, user_list: List[Tuple[uname_t, passwd_t, str]], manager: bool) -> List[User]:
         re = []
         for i in user_list:
-            user = creat_new_user(i[0], i[1], i[2], manager, self._db)
+            user = create_new_user(i[0], i[1], i[2], manager, self._db)
             if user is None:
-                raise CreatUserError
+                raise createUserError
             re.append(user)
         return re
 

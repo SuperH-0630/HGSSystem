@@ -468,14 +468,14 @@ class GarbageStation(GarbageStationBase):
         self._disable_all_btn: bool = False  # 禁用所有按钮和操作
 
         self.__conf_font_size()
-        self.__creat_tk()
+        self.__create_tk()
         self.__conf_tk()
 
         self.__conf_after()
         self.__conf_set_after_run()
         self.__switch_to_no_user()
 
-    def __creat_tk(self):
+    def __create_tk(self):
         self._title_label = tk.Label(self._window)
         self._win_ctrl_button: List[tk.Button, tk.Button, tk.Button] = [tk.Button(self._window),
                                                                         tk.Button(self._window),

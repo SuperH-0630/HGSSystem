@@ -50,12 +50,12 @@ class TestProgressEvent(AdminEventBase):
         self.thread = TkThreading(self.func, 5)
 
 
-class CreatUserEvent(AdminEventBase):
+class createUserEvent(AdminEventBase):
     def func(self, name, passwd, phone, is_manager):
-        return self.station.creat_user(name, passwd, phone, is_manager)
+        return self.station.create_user(name, passwd, phone, is_manager)
 
     def __init__(self, station):
-        super(CreatUserEvent, self).__init__(station)
+        super(createUserEvent, self).__init__(station)
         self._name = None
 
     def start(self, name, passwd, phone, is_manager):
@@ -66,18 +66,18 @@ class CreatUserEvent(AdminEventBase):
     def done_after_event(self):
         res: Optional[User] = self.thread.wait_event()
         if res is None:
-            self.station.show_msg("CreatUserError", f"Can't not creat user: {self._name}", "Warning")
+            self.station.show_msg("createUserError", f"Can't not create user: {self._name}", "Warning")
         else:
             name = res.get_name()
-            self.station.show_msg("CreatUser", f"Creat user {name} success")
+            self.station.show_msg("createUser", f"create user {name} success")
 
 
-class CreatGarbageEvent(AdminEventBase):
+class createGarbageEvent(AdminEventBase):
     def func(self, path, count):
-        return self.station.creat_garbage(path, count)
+        return self.station.create_garbage(path, count)
 
     def __init__(self, station):
-        super(CreatGarbageEvent, self).__init__(station)
+        super(createGarbageEvent, self).__init__(station)
         self._name = None
 
     def start(self, path, count):
@@ -86,7 +86,7 @@ class CreatGarbageEvent(AdminEventBase):
 
     def done_after_event(self):
         res: list[tuple[str, Optional[GarbageBag]]] = self.thread.wait_event()
-        self.station.show_msg("CreatGarbage", f"Creat {len(res)} garbage finished.")
+        self.station.show_msg("createGarbage", f"create {len(res)} garbage finished.")
 
 
 class DelUserEvent(AdminEventBase):

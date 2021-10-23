@@ -5,7 +5,7 @@ from tkinter.filedialog import askdirectory
 
 from tool.type_ import *
 from tool.tk import make_font, set_tk_disable_from_list
-from tool.login import creat_uid
+from tool.login import create_uid
 
 import conf
 import admin
@@ -88,7 +88,7 @@ class WelcomeProgram(AdminProgram):
         set_tk_disable_from_list(self.btn, flat='normal')
 
 
-class CreatUserProgramBase(AdminProgram):
+class createUserProgramBase(AdminProgram):
     def __init__(self, station, win, color, title: str):
         super().__init__(station, win, color, title)
 
@@ -96,7 +96,7 @@ class CreatUserProgramBase(AdminProgram):
         self.title: List[tk.Label] = [tk.Label(self.enter_frame) for _ in range(3)]
         self.enter: List[tk.Entry] = [tk.Entry(self.enter_frame) for _ in range(3)]
         self.var: List[tk.Variable] = [tk.StringVar() for _ in range(3)]
-        self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(2)]  # creat(生成用户) try(计算uid)
+        self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(2)]  # create(生成用户) try(计算uid)
 
         self._conf("#FA8072", False)  # 默认颜色
         self.__conf_font()
@@ -136,9 +136,9 @@ class CreatUserProgramBase(AdminProgram):
             height += 0.30
 
         for btn, text, x, func in zip(self.btn,
-                                      ["Creat", "GetUID"],
+                                      ["create", "GetUID"],
                                       [0.2, 0.6],
-                                      [lambda: self.creat_by_name(), lambda: self.get_uid()]):
+                                      [lambda: self.create_by_name(), lambda: self.get_uid()]):
             btn['font'] = btn_font
             btn['text'] = text
             btn['bg'] = conf.tk_btn_bg
@@ -156,12 +156,12 @@ class CreatUserProgramBase(AdminProgram):
 
         return name, passwd, phone
 
-    def creat_by_name(self):
+    def create_by_name(self):
         res = self.__get_info()
         if res is None:
             return
         name, passwd, phone = res
-        event = tk_event.CreatUserEvent(self.station).start(name, passwd, phone, self.is_manager)
+        event = tk_event.createUserEvent(self.station).start(name, passwd, phone, self.is_manager)
         self.station.push_event(event)
 
     def get_uid(self):
@@ -169,7 +169,7 @@ class CreatUserProgramBase(AdminProgram):
         if res is None:
             return
         name, passwd, phone = res
-        uid = creat_uid(name, passwd, phone)
+        uid = create_uid(name, passwd, phone)
         self.station.show_msg("UserID", f"UserName: {name}\nUserID: {uid}")
 
     def set_disable(self):
@@ -181,26 +181,26 @@ class CreatUserProgramBase(AdminProgram):
         set_tk_disable_from_list(self.enter, flat='normal')
 
 
-class CreatNormalUserProgram(CreatUserProgramBase):
+class createNormalUserProgram(createUserProgramBase):
     def __init__(self, station, win, color):
-        super(CreatNormalUserProgram, self).__init__(station, win, color, "CreatNormalUser")
+        super(createNormalUserProgram, self).__init__(station, win, color, "createNormalUser")
 
 
-class CreatManagerUserProgram(CreatUserProgramBase):
+class createManagerUserProgram(createUserProgramBase):
     def __init__(self, station, win, color):
-        super(CreatManagerUserProgram, self).__init__(station, win, color, "CreatManagerUser")
+        super(createManagerUserProgram, self).__init__(station, win, color, "createManagerUser")
         self._conf("#4b5cc4", True)
 
 
-class CreatAutoNormalUserProgram(AdminProgram):
+class createAutoNormalUserProgram(AdminProgram):
     def __init__(self, station, win, color):
-        super().__init__(station, win, color, "CreatAutoNormalUser")
+        super().__init__(station, win, color, "createAutoNormalUser")
 
         self.enter_frame = tk.Frame(self.frame)
         self.title: tk.Label = tk.Label(self.enter_frame)
         self.enter: tk.Entry = tk.Entry(self.enter_frame)
         self.var: tk.Variable = tk.StringVar()
-        self.btn: tk.Button = tk.Button(self.frame)  # creat(生成用户) try(计算uid)
+        self.btn: tk.Button = tk.Button(self.frame)  # create(生成用户) try(计算uid)
 
         self.__conf_font()
 
@@ -231,16 +231,16 @@ class CreatAutoNormalUserProgram(AdminProgram):
         self.enter.place(relx=0.30, rely=0.2, relwidth=0.60, relheight=0.48)
 
         self.btn['font'] = btn_font
-        self.btn['text'] = "Creat"
+        self.btn['text'] = "create"
         self.btn['bg'] = conf.tk_btn_bg
-        self.btn['command'] = lambda: self.creat_user()
+        self.btn['command'] = lambda: self.create_user()
         self.btn.place(relx=0.4, rely=0.7, relwidth=0.2, relheight=0.08)
 
-    def creat_user(self):
+    def create_user(self):
         phone = self.var.get()
         if len(phone) != 11:
             self.station.show_msg("UserInfoError", "Please, enter Phone(11)")
-        event = tk_event.CreatUserEvent(self.station).start(None, None, phone, False)
+        event = tk_event.createUserEvent(self.station).start(None, None, phone, False)
         self.station.push_event(event)
 
     def set_disable(self):
@@ -252,15 +252,15 @@ class CreatAutoNormalUserProgram(AdminProgram):
         self.enter['state'] = 'normal'
 
 
-class CreatGarbageProgram(AdminProgram):
+class createGarbageProgram(AdminProgram):
     def __init__(self, station, win, color):
-        super().__init__(station, win, color, "CreatGarbage")
+        super().__init__(station, win, color, "createGarbage")
 
         self.enter_frame = tk.Frame(self.frame)
         self.title: List[tk.Label] = [tk.Label(self.enter_frame), tk.Label(self.enter_frame)]
         self.enter: List[tk.Entry] = [tk.Entry(self.enter_frame), tk.Entry(self.enter_frame)]
         self.var: List[tk.Variable] = [tk.StringVar(), tk.StringVar()]
-        self.creat_btn: tk.Button = tk.Button(self.frame)
+        self.create_btn: tk.Button = tk.Button(self.frame)
         self.file_btn: tk.Button = tk.Button(self.frame)
 
         self.__conf_font()
@@ -294,10 +294,10 @@ class CreatGarbageProgram(AdminProgram):
             enter.place(relx=0.35, rely=height, relwidth=0.60, relheight=0.35)
             height += 0.43
 
-        for btn, text, x, func in zip([self.creat_btn, self.file_btn],
-                                      ["Creat", "ChoosePath"],
+        for btn, text, x, func in zip([self.create_btn, self.file_btn],
+                                      ["create", "ChoosePath"],
                                       [0.2, 0.6],
-                                      [lambda: self.creat_garbage(), lambda: self.choose_file()]):
+                                      [lambda: self.create_garbage(), lambda: self.choose_file()]):
             btn['font'] = btn_font
             btn['text'] = text
             btn['bg'] = conf.tk_btn_bg
@@ -308,7 +308,7 @@ class CreatGarbageProgram(AdminProgram):
         path = askdirectory(title='path to save qr code')
         self.var[1].set(path)
 
-    def creat_garbage(self):
+    def create_garbage(self):
         try:
             count = int(self.var[0].get())
             if count <= 0:
@@ -319,16 +319,16 @@ class CreatGarbageProgram(AdminProgram):
             path = self.var[1].get()
             if len(path) == 0:
                 path = None
-            event = tk_event.CreatGarbageEvent(self.station).start(path, count)
+            event = tk_event.createGarbageEvent(self.station).start(path, count)
             self.station.push_event(event)
 
     def set_disable(self):
-        self.creat_btn['state'] = 'disable'
+        self.create_btn['state'] = 'disable'
         self.file_btn['state'] = 'disable'
         set_tk_disable_from_list(self.enter)
 
     def reset_disable(self):
-        self.creat_btn['state'] = 'normal'
+        self.create_btn['state'] = 'normal'
         self.file_btn['state'] = 'normal'
         set_tk_disable_from_list(self.enter, flat='normal')
 
@@ -421,7 +421,7 @@ class DeleteUserProgram(AdminProgram):
         if len(name) == 0 or len(passwd) == 0:
             self.station.show_msg("UserName/Password Error", "You should enter UserName and Password", "Error")
             return
-        uid = creat_uid(name, passwd)
+        uid = create_uid(name, passwd)
         event = tk_event.DelUserEvent(self.station).start(uid)
         self.station.push_event(event)
 
@@ -1024,7 +1024,8 @@ class SearchGarbageProgram(SearchBaseProgram):
 class SearchGarbageAdvancedProgram(SearchAdvancedProgramBase):
     def __init__(self, station, win, color):
         super(SearchGarbageAdvancedProgram, self).__init__(station, win, color, "SearchGarbageAdvanced")
-        columns = ["GarbageID", "UserID", "CheckerID", "CreatTime", "UseTime", "Location", "GarbageType", "CheckResult"]
+        columns = ["GarbageID", "UserID", "CheckerID", "createTime", "UseTime", "Location", "GarbageType",
+                   "CheckResult"]
         self._conf(columns, '#d1923f')
 
     def search(self):
@@ -1322,8 +1323,8 @@ class UpdateGarbageCheckResultProgram(AdminProgram):
         self.where_enter['state'] = 'normal'
 
 
-all_program = [WelcomeProgram, CreatNormalUserProgram, CreatManagerUserProgram, CreatAutoNormalUserProgram,
-               CreatGarbageProgram, DeleteUserProgram, DeleteUsersProgram, DeleteGarbageProgram,
+all_program = [WelcomeProgram, createNormalUserProgram, createManagerUserProgram, createAutoNormalUserProgram,
+               createGarbageProgram, DeleteUserProgram, DeleteUsersProgram, DeleteGarbageProgram,
                DeleteGarbageMoreProgram, DeleteAllGarbageProgram, SearchUserProgram, SearchUserAdvancedProgram,
                SearchGarbageProgram, SearchGarbageAdvancedProgram, SearchAdvancedProgram, UpdateUserScoreBase,
                UpdateUserReputationBase, UpdateGarbageTypeProgram, UpdateGarbageCheckResultProgram]

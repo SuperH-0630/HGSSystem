@@ -4,12 +4,12 @@ import conf
 from random import randint
 
 
-def creat_uid(name: uname_t, passwd: passwd_t, salt: str = conf.passwd_salt) -> str:
+def create_uid(name: uname_t, passwd: passwd_t, salt: str = conf.passwd_salt) -> str:
     return hashlib.md5(f"HGSSystem-USER{name}-PASSWORD:{passwd}-{salt}-END".encode('utf-8')).hexdigest()
 
 
 def check_login(uid: uid_t, name: uname_t, passwd: passwd_t, salt: str = conf.passwd_salt) -> bool:
-    return uid == creat_uid(name, passwd, salt)
+    return uid == create_uid(name, passwd, salt)
 
 
 def randomPassword():

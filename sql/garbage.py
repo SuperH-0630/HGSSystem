@@ -15,7 +15,6 @@ def search_from_garbage_view(columns, where: str, db: DB):
         where = f"WHERE {where} "
 
     column = ", ".join(columns)
-    print(f"SELECT {column} FROM garbage_view {where};")
     cur = db.search(f"SELECT {column} FROM garbage_view {where};")
     if cur is None:
         return None
@@ -144,7 +143,7 @@ def update_garbage(garbage: GarbageBag, db: DB) -> bool:
     return True
 
 
-def creat_new_garbage(db: DB) -> Optional[GarbageBag]:
+def create_new_garbage(db: DB) -> Optional[GarbageBag]:
     cur = db.done("INSERT INTO garbage() VALUES ();")
     if cur is None:
         return None
@@ -271,7 +270,7 @@ def del_garbage_not_use_many(gid_from: gid_t, gid_to: gid_t, db: DB) -> int:
 
 if __name__ == '__main__':
     mysql_db = DB()
-    bag = creat_new_garbage(mysql_db)
+    bag = create_new_garbage(mysql_db)
     print(bag)
     bag.config_use(GarbageType.recyclable, HGSTime(), "1e1d30a1f9b78c8fa852d19b4cfaee79", "HuaDu")
     update_garbage(bag, mysql_db)

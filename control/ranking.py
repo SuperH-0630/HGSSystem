@@ -198,12 +198,12 @@ class RankingStation(RankingStationBase):
         self.prev_btn: bool = True
 
         self.__conf_font_size()
-        self.__creat_tk()
+        self.__create_tk()
         self.__conf_tk()
 
         self.show_rank_first()
 
-    def __creat_tk(self):
+    def __create_tk(self):
         self.rank_frame = tk.Frame(self.window)
         self.rank_title = tk.Label(self.rank_frame)
         self.rank_title_var = tk.StringVar()

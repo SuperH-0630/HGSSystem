@@ -552,11 +552,12 @@ class AdminStation(AdminStationBase):
             height = int(width / 2)
 
         self.login_window.geometry(f'{width}x{height}')
-        self.login_window['bg'] = "#d1d9e0"
+        self.login_window['bg'] = conf.tk_win_bg
         self.login_window.resizable(False, False)
         self.login_window.protocol("WM_DELETE_WINDOW", lambda: self.login_exit())
-        self._login_name = [tk.Label(self.login_window), tk.Entry(self.login_window), tk.StringVar()]
-        self._login_passwd = [tk.Label(self.login_window), tk.Entry(self.login_window), tk.StringVar()]
+        self._login_frame = tk.Frame(self.login_window)
+        self._login_name = [tk.Label(self._login_frame), tk.Entry(self._login_frame), tk.StringVar()]
+        self._login_passwd = [tk.Label(self._login_frame), tk.Entry(self._login_frame), tk.StringVar()]
         self._login_btn = [tk.Button(self.login_window), tk.Button(self.login_window)]
 
         self.__conf_login_window()
@@ -566,8 +567,13 @@ class AdminStation(AdminStationBase):
         title_font = make_font(size=self._login_title_font_size, weight="bold")
         btn_font = make_font(size=self._login_btn_font_size, weight="bold")
 
+        self._login_frame['bg'] = "#EEE8AA"
+        self._login_frame['bd'] = 5
+        self._login_frame['relief'] = "ridge"
+        self._login_frame.place(relx=0.1, rely=0.2, relwidth=0.8, relheight=0.45)
+
         for lb, text in zip([self._login_name[0], self._login_passwd[0]], ["User:", "Passwd:"]):
-            lb['bg'] = "#d1d9e0"  # 蜜瓜绿
+            lb['bg'] = "#EEE8AA"
             lb['font'] = title_font
             lb['text'] = text
             lb['anchor'] = 'e'
@@ -576,24 +582,24 @@ class AdminStation(AdminStationBase):
             lb['font'] = title_font
             lb['textvariable'] = var
 
-        self._login_name[0].place(relx=0.00, rely=0.20, relwidth=0.35, relheight=0.15)
-        self._login_passwd[0].place(relx=0.00, rely=0.40, relwidth=0.35, relheight=0.15)
+        self._login_name[0].place(relx=0.00, rely=0.13, relwidth=0.30, relheight=0.30)
+        self._login_passwd[0].place(relx=0.00, rely=0.53, relwidth=0.30, relheight=0.30)
 
-        self._login_name[1].place(relx=0.40, rely=0.20, relwidth=0.45, relheight=0.15)
+        self._login_name[1].place(relx=0.35, rely=0.13, relwidth=0.55, relheight=0.30)
         self._login_passwd[1]['show'] = "*"
-        self._login_passwd[1].place(relx=0.40, rely=0.40, relwidth=0.45, relheight=0.15)
+        self._login_passwd[1].place(relx=0.35, rely=0.53, relwidth=0.55, relheight=0.30)
 
-        self._login_btn[0]['bg'] = "#a1afc9"
+        self._login_btn[0]['bg'] = conf.tk_btn_bg
         self._login_btn[0]['font'] = btn_font
         self._login_btn[0]['text'] = 'Login'
         self._login_btn[0]['command'] = lambda: self.login_call()
-        self._login_btn[0].place(relx=0.50, rely=0.70, relwidth=0.16, relheight=0.15)
+        self._login_btn[0].place(relx=0.54, rely=0.70, relwidth=0.16, relheight=0.15)
 
-        self._login_btn[1]['bg'] = "#a1afc9"
+        self._login_btn[1]['bg'] = conf.tk_btn_bg
         self._login_btn[1]['font'] = btn_font
         self._login_btn[1]['text'] = 'Exit'
         self._login_btn[1]['command'] = lambda: self.login_exit()
-        self._login_btn[1].place(relx=0.70, rely=0.70, relwidth=0.16, relheight=0.15)
+        self._login_btn[1].place(relx=0.74, rely=0.70, relwidth=0.16, relheight=0.15)
 
     def login_call(self):
         event = tk_event.LoginEvent(self).start(self._login_name[2].get(), self._login_passwd[2].get())

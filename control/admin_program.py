@@ -88,7 +88,7 @@ class WelcomeProgram(AdminProgram):
         set_tk_disable_from_list(self.btn, flat='normal')
 
 
-class createUserProgramBase(AdminProgram):
+class CreateUserProgramBase(AdminProgram):
     def __init__(self, station, win, color, title: str):
         super().__init__(station, win, color, title)
 
@@ -136,7 +136,7 @@ class createUserProgramBase(AdminProgram):
             height += 0.30
 
         for btn, text, x, func in zip(self.btn,
-                                      ["create", "GetUID"],
+                                      ["Create", "GetUID"],
                                       [0.2, 0.6],
                                       [lambda: self.create_by_name(), lambda: self.get_uid()]):
             btn['font'] = btn_font
@@ -161,7 +161,7 @@ class createUserProgramBase(AdminProgram):
         if res is None:
             return
         name, passwd, phone = res
-        event = tk_event.createUserEvent(self.station).start(name, passwd, phone, self.is_manager)
+        event = tk_event.CreateUserEvent(self.station).start(name, passwd, phone, self.is_manager)
         self.station.push_event(event)
 
     def get_uid(self):
@@ -181,20 +181,20 @@ class createUserProgramBase(AdminProgram):
         set_tk_disable_from_list(self.enter, flat='normal')
 
 
-class createNormalUserProgram(createUserProgramBase):
+class CreateNormalUserProgram(CreateUserProgramBase):
     def __init__(self, station, win, color):
-        super(createNormalUserProgram, self).__init__(station, win, color, "createNormalUser")
+        super(CreateNormalUserProgram, self).__init__(station, win, color, "CreateNormalUser")
 
 
-class createManagerUserProgram(createUserProgramBase):
+class CreateManagerUserProgram(CreateUserProgramBase):
     def __init__(self, station, win, color):
-        super(createManagerUserProgram, self).__init__(station, win, color, "createManagerUser")
+        super(CreateManagerUserProgram, self).__init__(station, win, color, "CreateManagerUser")
         self._conf("#4b5cc4", True)
 
 
-class createAutoNormalUserProgram(AdminProgram):
+class CreateAutoNormalUserProgram(AdminProgram):
     def __init__(self, station, win, color):
-        super().__init__(station, win, color, "createAutoNormalUser")
+        super().__init__(station, win, color, "CreateAutoNormalUser")
 
         self.enter_frame = tk.Frame(self.frame)
         self.title: tk.Label = tk.Label(self.enter_frame)
@@ -231,7 +231,7 @@ class createAutoNormalUserProgram(AdminProgram):
         self.enter.place(relx=0.30, rely=0.2, relwidth=0.60, relheight=0.48)
 
         self.btn['font'] = btn_font
-        self.btn['text'] = "create"
+        self.btn['text'] = "Create"
         self.btn['bg'] = conf.tk_btn_bg
         self.btn['command'] = lambda: self.create_user()
         self.btn.place(relx=0.4, rely=0.7, relwidth=0.2, relheight=0.08)
@@ -240,7 +240,7 @@ class createAutoNormalUserProgram(AdminProgram):
         phone = self.var.get()
         if len(phone) != 11:
             self.station.show_msg("UserInfoError", "Please, enter Phone(11)")
-        event = tk_event.createUserEvent(self.station).start(None, None, phone, False)
+        event = tk_event.CreateUserEvent(self.station).start(None, None, phone, False)
         self.station.push_event(event)
 
     def set_disable(self):
@@ -252,9 +252,9 @@ class createAutoNormalUserProgram(AdminProgram):
         self.enter['state'] = 'normal'
 
 
-class createGarbageProgram(AdminProgram):
+class CreateGarbageProgram(AdminProgram):
     def __init__(self, station, win, color):
-        super().__init__(station, win, color, "createGarbage")
+        super().__init__(station, win, color, "CreateGarbage")
 
         self.enter_frame = tk.Frame(self.frame)
         self.title: List[tk.Label] = [tk.Label(self.enter_frame), tk.Label(self.enter_frame)]
@@ -295,7 +295,7 @@ class createGarbageProgram(AdminProgram):
             height += 0.43
 
         for btn, text, x, func in zip([self.create_btn, self.file_btn],
-                                      ["create", "ChoosePath"],
+                                      ["Create", "ChoosePath"],
                                       [0.2, 0.6],
                                       [lambda: self.create_garbage(), lambda: self.choose_file()]):
             btn['font'] = btn_font
@@ -319,7 +319,7 @@ class createGarbageProgram(AdminProgram):
             path = self.var[1].get()
             if len(path) == 0:
                 path = None
-            event = tk_event.createGarbageEvent(self.station).start(path, count)
+            event = tk_event.CreateGarbageEvent(self.station).start(path, count)
             self.station.push_event(event)
 
     def set_disable(self):
@@ -957,11 +957,13 @@ class SearchGarbageProgram(SearchBaseProgram):
         super().__init__(station, win, color, "SearchGarbage")
 
         self.enter_frame = tk.Frame(self.frame)
-        self.title: List[tk.Label] = [tk.Label(self.enter_frame) for _ in range(7)]
-        self.enter: List[tk.Entry] = [tk.Entry(self.enter_frame) for _ in range(7)]
-        self.var: List[tk.Variable] = [tk.StringVar() for _ in range(7)]
+        self.title: List[tk.Label] = [tk.Label(self.enter_frame) for _ in range(8)]
+        self.enter: List[tk.Entry] = [tk.Entry(self.enter_frame) for _ in range(8)]
+        self.var: List[tk.Variable] = [tk.StringVar() for _ in range(8)]
         self.check: List[Tuple[tk.Checkbutton, tk.Variable]] = [(tk.Checkbutton(self.enter_frame), tk.IntVar())
-                                                                for _ in range(7)]
+                                                                for _ in range(8)]
+        self._columns = ["GarbageID", "UserID", "CheckerID", "CreateTime", "UseTime", "Location", "GarbageType",
+                         "CheckResult"]
         self.btn: tk.Button = tk.Button(self.frame)
         self.__conf_font()
 
@@ -978,11 +980,11 @@ class SearchGarbageProgram(SearchBaseProgram):
         self.enter_frame['bg'] = "#7bbfea"
         self.enter_frame['bd'] = 5
         self.enter_frame['relief'] = "ridge"
-        self.enter_frame.place(relx=0.2, rely=0.0, relwidth=0.6, relheight=0.45)
+        self.enter_frame.place(relx=0.2, rely=0.0, relwidth=0.6, relheight=0.47)
 
         height = 0.02
         for lb, text, enter, var, check in zip(self.title,
-                                               ["GarbageID:", "UserID:", "CheckerID:", "UseTime:",
+                                               ["GarbageID:", "UserID:", "CheckerID:", "CreateTime:", "UseTime:",
                                                 "Location:", "GarbageType:", "CheckResult:"],
                                                self.enter, self.var, self.check):
             lb['font'] = title_font
@@ -999,18 +1001,33 @@ class SearchGarbageProgram(SearchBaseProgram):
             check[0]['variable'] = check[1]
             check[1].set(1)
 
-            lb.place(relx=0.01, rely=height, relwidth=0.30, relheight=0.12)
-            enter.place(relx=0.35, rely=height, relwidth=0.55, relheight=0.12)
-            check[0].place(relx=0.92, rely=height, relwidth=0.04, relheight=0.12)
-            height += 0.14
+            lb.place(relx=0.01, rely=height, relwidth=0.30, relheight=0.10)
+            enter.place(relx=0.35, rely=height, relwidth=0.55, relheight=0.10)
+            check[0].place(relx=0.92, rely=height, relwidth=0.04, relheight=0.10)
+            height += 0.121
 
         self.btn['font'] = btn_font
         self.btn['bg'] = conf.tk_btn_bg
         self.btn['text'] = "Search"
+        self.btn['command'] = self.search_user
         self.btn.place(relx=0.4, rely=0.9, relwidth=0.2, relheight=0.08)
 
-        columns = ["GarbageID", "UserID", "CheckerID", "UseTime", "Location", "GarbageType", "CheckResult"]
-        self.conf_view_gui(columns, relx=0.05, rely=0.47, relwidth=0.9, relheight=0.40, x_scroll=0.07)
+        self.conf_view_gui(self._columns, relx=0.05, rely=0.49, relwidth=0.9, relheight=0.38, x_scroll=0.07)
+
+    def search_user(self):
+        keys = ["gid", "uid", "cuid", "create_time", "use_time", "loc", "type_", "check"]
+        key_values = {}
+        for i, key in enumerate(keys):
+            ck = self.check[i][1].get()
+            if ck:
+                res = self.enter[i].get()
+                if len(res) > 0:
+                    key_values[key] = res
+                    continue
+            key_values[key] = None
+
+        event = tk_event.SearchGarbageEvent(self.station).start(self._columns, key_values, self)
+        self.station.push_event(event)
 
     def set_disable(self):
         self.btn['state'] = 'disable'
@@ -1024,7 +1041,7 @@ class SearchGarbageProgram(SearchBaseProgram):
 class SearchGarbageAdvancedProgram(SearchAdvancedProgramBase):
     def __init__(self, station, win, color):
         super(SearchGarbageAdvancedProgram, self).__init__(station, win, color, "SearchGarbageAdvanced")
-        columns = ["GarbageID", "UserID", "CheckerID", "createTime", "UseTime", "Location", "GarbageType",
+        columns = ["GarbageID", "UserID", "CheckerID", "CreateTime", "UseTime", "Location", "GarbageType",
                    "CheckResult"]
         self._conf(columns, '#d1923f')
 
@@ -1118,13 +1135,22 @@ class UpdateUserProgramBase(AdminProgram):
             enter_w.place(relx=0.35, rely=height, relwidth=0.60, relheight=0.35)
             height += 0.43
 
-        for btn, text in zip(self.btn, ["Update Advanced", "Update By UserID"]):
+        for btn, text, func in zip(self.btn,
+                                   ["Update Advanced", "Update By UserID"],
+                                   [self.update_by_where, self.update_by_uid]):
             btn['font'] = btn_font
             btn['text'] = text
             btn['bg'] = conf.tk_btn_bg
+            btn['command'] = func
 
         self.btn[0].place(relx=0.55, rely=0.40, relwidth=0.25, relheight=0.08)
         self.btn[1].place(relx=0.55, rely=0.78, relwidth=0.25, relheight=0.08)
+
+    def update_by_uid(self):
+        ...
+
+    def update_by_where(self):
+        ...
 
     def set_disable(self):
         set_tk_disable_from_list(self.btn)
@@ -1140,11 +1166,35 @@ class UpdateUserScoreBase(UpdateUserProgramBase):
         super(UpdateUserScoreBase, self).__init__(station, win, color, "UpdateScore")
         self._conf(["UserID:", "Score:"], "#afdfe4")
 
+    def update_by_uid(self):
+        uid = self.enter[0].get()
+        score = int(self.enter[1].get())
+        event = tk_event.UpdateUserScoreEvent(self.station).start(score, f"UserID='{uid}'")
+        self.station.push_event(event)
+
+    def update_by_where(self):
+        where = self.where_enter[0].get()
+        score = int(self.where_enter[1].get())
+        event = tk_event.UpdateUserScoreEvent(self.station).start(score, where)
+        self.station.push_event(event)
+
 
 class UpdateUserReputationBase(UpdateUserProgramBase):
     def __init__(self, station, win, color):
         super(UpdateUserReputationBase, self).__init__(station, win, color, "UpdateReputation")
         self._conf(["UserID:", "Reputation:"], "#f8aba6")
+
+    def update_by_uid(self):
+        uid = self.enter[0].get()
+        reputation = int(self.enter[1].get())
+        event = tk_event.UpdateUserReputationEvent(self.station).start(reputation, f"UserID='{uid}'")
+        self.station.push_event(event)
+
+    def update_by_where(self):
+        where = self.where_enter[0].get()
+        reputation = int(self.where_enter[1].get())
+        event = tk_event.UpdateUserReputationEvent(self.station).start(reputation, where)
+        self.station.push_event(event)
 
 
 class UpdateGarbageTypeProgram(AdminProgram):
@@ -1217,13 +1267,28 @@ class UpdateGarbageTypeProgram(AdminProgram):
             lb.place(relx=0.02, rely=0.2, relwidth=0.25, relheight=0.48)
             enter.place(relx=0.30, rely=0.2, relwidth=0.60, relheight=0.48)
 
-        for btn, text in zip(self.btn, ["Update Advanced", "Update By GarbageID"]):
+        for btn, text, func in zip(self.btn,
+                                   ["Update Advanced", "Update By GarbageID"],
+                                   [self.update_by_where, self.update_by_gid]):
             btn['font'] = btn_font
             btn['text'] = text
             btn['bg'] = conf.tk_btn_bg
+            btn['command'] = func
 
         self.btn[0].place(relx=0.55, rely=0.43, relwidth=0.25, relheight=0.08)
         self.btn[1].place(relx=0.55, rely=0.83, relwidth=0.25, relheight=0.08)
+
+    def update_by_gid(self):
+        gid = self.enter.get()
+        type_ = self.var[1].get()
+        event = tk_event.UpdateGarbageTypeEvent(self.station).start(type_, f"GarbageID={gid}")
+        self.station.push_event(event)
+
+    def update_by_where(self):
+        where = self.where_enter.get()
+        type_ = self.where_var[1].get()
+        event = tk_event.UpdateGarbageTypeEvent(self.station).start(type_, where)
+        self.station.push_event(event)
 
     def set_disable(self):
         set_tk_disable_from_list(self.btn)
@@ -1304,13 +1369,28 @@ class UpdateGarbageCheckResultProgram(AdminProgram):
             lb.place(relx=0.02, rely=0.2, relwidth=0.25, relheight=0.48)
             enter.place(relx=0.30, rely=0.2, relwidth=0.60, relheight=0.48)
 
-        for btn, text in zip(self.btn, ["Update Advanced", "Update By GarbageID"]):
+        for btn, text, func in zip(self.btn,
+                                   ["Update Advanced", "Update By GarbageID"],
+                                   [self.update_by_where, self.update_by_gid]):
             btn['font'] = btn_font
             btn['bg'] = conf.tk_btn_bg
             btn['text'] = text
+            btn['command'] = func
 
         self.btn[0].place(relx=0.55, rely=0.38, relwidth=0.25, relheight=0.08)
         self.btn[1].place(relx=0.55, rely=0.78, relwidth=0.25, relheight=0.08)
+
+    def update_by_gid(self):
+        gid = self.enter.get()
+        check = (self.var[1].get() == 1)
+        event = tk_event.UpdateGarbageCheckEvent(self.station).start(check, f"GarbageID={gid}")
+        self.station.push_event(event)
+
+    def update_by_where(self):
+        where = self.where_enter.get()
+        check = (self.where_var[1].get() == 1)
+        event = tk_event.UpdateGarbageCheckEvent(self.station).start(check, where)
+        self.station.push_event(event)
 
     def set_disable(self):
         set_tk_disable_from_list(self.btn)
@@ -1323,8 +1403,8 @@ class UpdateGarbageCheckResultProgram(AdminProgram):
         self.where_enter['state'] = 'normal'
 
 
-all_program = [WelcomeProgram, createNormalUserProgram, createManagerUserProgram, createAutoNormalUserProgram,
-               createGarbageProgram, DeleteUserProgram, DeleteUsersProgram, DeleteGarbageProgram,
+all_program = [WelcomeProgram, CreateNormalUserProgram, CreateManagerUserProgram, CreateAutoNormalUserProgram,
+               CreateGarbageProgram, DeleteUserProgram, DeleteUsersProgram, DeleteGarbageProgram,
                DeleteGarbageMoreProgram, DeleteAllGarbageProgram, SearchUserProgram, SearchUserAdvancedProgram,
                SearchGarbageProgram, SearchGarbageAdvancedProgram, SearchAdvancedProgram, UpdateUserScoreBase,
                UpdateUserReputationBase, UpdateGarbageTypeProgram, UpdateGarbageCheckResultProgram]

@@ -11,6 +11,7 @@ from event import TkEventBase, TkThreading
 import admin
 import admin_program
 
+
 class AdminEventBase(TkEventBase):
     def __init__(self, station):
         super(AdminEventBase, self).__init__()
@@ -50,12 +51,12 @@ class TestProgressEvent(AdminEventBase):
         self.thread = TkThreading(self.func, 5)
 
 
-class createUserEvent(AdminEventBase):
+class CreateUserEvent(AdminEventBase):
     def func(self, name, passwd, phone, is_manager):
         return self.station.create_user(name, passwd, phone, is_manager)
 
     def __init__(self, station):
-        super(createUserEvent, self).__init__(station)
+        super(CreateUserEvent, self).__init__(station)
         self._name = None
 
     def start(self, name, passwd, phone, is_manager):
@@ -66,18 +67,18 @@ class createUserEvent(AdminEventBase):
     def done_after_event(self):
         res: Optional[User] = self.thread.wait_event()
         if res is None:
-            self.station.show_msg("createUserError", f"Can't not create user: {self._name}", "Warning")
+            self.station.show_msg("CreateUserError", f"Can't not create user: {self._name}", "Warning")
         else:
             name = res.get_name()
-            self.station.show_msg("createUser", f"create user {name} success")
+            self.station.show_msg("CreateUser", f"create user {name} success")
 
 
-class createGarbageEvent(AdminEventBase):
+class CreateGarbageEvent(AdminEventBase):
     def func(self, path, count):
         return self.station.create_garbage(path, count)
 
     def __init__(self, station):
-        super(createGarbageEvent, self).__init__(station)
+        super(CreateGarbageEvent, self).__init__(station)
         self._name = None
 
     def start(self, path, count):
@@ -86,7 +87,7 @@ class createGarbageEvent(AdminEventBase):
 
     def done_after_event(self):
         res: list[tuple[str, Optional[GarbageBag]]] = self.thread.wait_event()
-        self.station.show_msg("createGarbage", f"create {len(res)} garbage finished.")
+        self.station.show_msg("CreateGarbage", f"create {len(res)} garbage finished.")
 
 
 class DelUserEvent(AdminEventBase):
@@ -304,6 +305,30 @@ class SearchUserAdvancedEvent(AdminEventBase):
             self.program.view.insert('', 'end', values=i)
 
 
+class SearchGarbageEvent(AdminEventBase):
+    def func(self, columns, key_values: dict):
+        return self.station.search_garbage(columns, key_values)
+
+    def __init__(self, station):
+        super(SearchGarbageEvent, self).__init__(station)
+        self.program: Optional[admin_program.SearchUserProgram] = None
+
+    def start(self, columns, key_values: dict, program):
+        self.thread = TkThreading(self.func, columns, key_values)
+        self.program = program
+        return self
+
+    def done_after_event(self):
+        res: list[list] = self.thread.wait_event()
+        if res is None or self.program is None:
+            self.station.show_msg("Search Garbage Error", f"Search error")
+            return
+        for i in self.program.view.get_children():
+            self.program.view.delete(i)
+        for i in res:
+            self.program.view.insert('', 'end', values=i)
+
+
 class SearchGarbageAdvancedEvent(AdminEventBase):
     def func(self, columns, sql):
         return self.station.search_garbage_advanced(columns, sql)
@@ -350,3 +375,79 @@ class SearchAdvancedEvent(AdminEventBase):
             self.program.view.delete(i)
         for i in res:
             self.program.view.insert('', 'end', values=i)
+
+
+class UpdateUserScoreEvent(AdminEventBase):
+    def func(self, score, where):
+        return self.station.update_user_score(score, where)
+
+    def __init__(self, station):
+        super(UpdateUserScoreEvent, self).__init__(station)
+
+    def start(self, score, where):
+        self.thread = TkThreading(self.func, score, where)
+        return self
+
+    def done_after_event(self):
+        res: int = self.thread.wait_event()
+        if res == -1:
+            self.station.show_msg("UpdateError", f"Update user score error")
+        else:
+            self.station.show_msg("Update", f"Update {res} user score success")
+
+
+class UpdateUserReputationEvent(AdminEventBase):
+    def func(self, reputation, where):
+        return self.station.update_user_reputation(reputation, where)
+
+    def __init__(self, station):
+        super(UpdateUserReputationEvent, self).__init__(station)
+
+    def start(self, reputation, where):
+        self.thread = TkThreading(self.func, reputation, where)
+        return self
+
+    def done_after_event(self):
+        res: int = self.thread.wait_event()
+        if res == -1:
+            self.station.show_msg("UpdateError", f"Update user reputation error")
+        else:
+            self.station.show_msg("Update", f"Update {res} user reputation success")
+
+
+class UpdateGarbageTypeEvent(AdminEventBase):
+    def func(self, type_, where):
+        return self.station.update_garbage_type(type_, where)
+
+    def __init__(self, station):
+        super(UpdateGarbageTypeEvent, self).__init__(station)
+
+    def start(self, type_, where):
+        self.thread = TkThreading(self.func, type_, where)
+        return self
+
+    def done_after_event(self):
+        res: int = self.thread.wait_event()
+        if res == -1:
+            self.station.show_msg("UpdateError", f"Update garbage type error")
+        else:
+            self.station.show_msg("Update", f"Update {res} garbage type success")
+
+
+class UpdateGarbageCheckEvent(AdminEventBase):
+    def func(self, check, where):
+        return self.station.update_garbage_check(check, where)
+
+    def __init__(self, station):
+        super(UpdateGarbageCheckEvent, self).__init__(station)
+
+    def start(self, check, where):
+        self.thread = TkThreading(self.func, check, where)
+        return self
+
+    def done_after_event(self):
+        res: int = self.thread.wait_event()
+        if res == -1:
+            self.station.show_msg("UpdateError", f"Update garbage check result error")
+        else:
+            self.station.show_msg("Update", f"Update {res} garbage check result success")

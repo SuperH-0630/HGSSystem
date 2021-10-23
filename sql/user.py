@@ -1,9 +1,30 @@
 from db import DB, DBBit
 from tool.type_ import *
 from tool.login import create_uid, randomPassword
+from tool.time_ import mysql_time
 from core.user import NormalUser, ManagerUser, User
 import conf
 from garbage import count_garbage_by_time
+
+
+def update_user_score(where: str, score: score_t, db: DB) -> int:
+    if len(where) == 0 or score < 0:
+        return -1
+
+    cur = db.done(f"UPDATE user SET Score={score} WHERE {where};")
+    if cur is None:
+        return -1
+    return cur.rowcount
+
+
+def update_user_reputation(where: str, reputation: score_t, db: DB) -> int:
+    if len(where) == 0 or reputation <= 1 or reputation >= 1000:
+        return -1
+
+    cur = db.done(f"UPDATE user SET Reputation={reputation} WHERE {where};")
+    if cur is None:
+        return -1
+    return cur.rowcount
 
 
 def search_user_by_fields(columns, uid: uid_t, name: uname_t, phone: phone_t, db: DB):
@@ -26,7 +47,7 @@ def search_from_user_view(columns, where: str, db: DB):
         where = f"WHERE {where} "
 
     column = ", ".join(columns)
-    cur = db.search(f"SELECT {column} FROM user_view {where};")
+    cur = db.search(f"SELECT {column} FROM user {where};")
     if cur is None:
         return None
     result = cur.fetchall()
@@ -39,7 +60,7 @@ def search_from_user_view(columns, where: str, db: DB):
 
 
 def find_user_by_id(uid: uid_t, db: DB) -> Optional[User]:
-    cur = db.search(f"SELECT uid, name, manager, score, reputation FROM user WHERE uid = '{uid}';")
+    cur = db.search(f"SELECT UserID, Name, IsManager, Score, Reputation FROM user WHERE UserID = '{uid}';")
     if cur is None or cur.rowcount == 0:
         return None
     assert cur.rowcount == 1
@@ -65,7 +86,7 @@ def find_user_by_name(name: uname_t, passwd: passwd_t, db: DB) -> Optional[User]
 
 
 def is_user_exists(uid: uid_t, db: DB) -> bool:
-    cur = db.search(f"SELECT uid FROM user WHERE uid = '{uid}';")
+    cur = db.search(f"SELECT UserID FROM user WHERE UserID = '{uid}';")
     if cur is None or cur.rowcount == 0:
         return False
     assert cur.rowcount == 1
@@ -81,16 +102,16 @@ def update_user(user: User, db: DB) -> bool:
     is_manager = info['manager']
     if is_manager == '1':
         cur = db.done(f"UPDATE user "
-                      f"SET manager = {is_manager} "
-                      f"WHERE uid = '{uid}';")
+                      f"SET IsManager = {is_manager} "
+                      f"WHERE UserID = '{uid}';")
     else:
         score = info['score']
         reputation = info['reputation']
         cur = db.done(f"UPDATE user "
-                      f"SET manager = {is_manager},"
-                      f"    score = {score},"
-                      f"    reputation = {reputation} "
-                      f"WHERE uid = '{uid}';")
+                      f"SET IsManager = {is_manager},"
+                      f"    Score = {score},"
+                      f"    Reputation = {reputation} "
+                      f"WHERE UserID = '{uid}';")
     return cur is not None
 
 
@@ -106,9 +127,9 @@ def create_new_user(name: Optional[uname_t], passwd: Optional[passwd_t], phone: 
     if is_user_exists(uid, db):
         return None
     is_manager = '1' if manager else '0'
-    cur = db.done(f"INSERT INTO user(uid, name, manager, phone, score, reputation) "
+    cur = db.done(f"INSERT INTO user(UserID, Name, IsManager, Phone, Score, Reputation, CreateTime) "
                   f"VALUES ('{uid}', '{name}', {is_manager}, '{phone}', {conf.default_score}, "
-                  f"{conf.default_reputation});")
+                  f"{conf.default_reputation}, {mysql_time()});")
     if cur is None:
         return None
     if is_manager:
@@ -117,7 +138,7 @@ def create_new_user(name: Optional[uname_t], passwd: Optional[passwd_t], phone: 
 
 
 def get_user_phone(uid: uid_t, db: DB) -> Optional[str]:
-    cur = db.done(f"SELECT phone FROM user WHERE uid = {uid};")
+    cur = db.done(f"SELECT Phone FROM user WHERE UserID = '{uid}';")
     if cur is None or cur.rowcount == 0:
         return None
     assert cur.rowcount == 1
@@ -125,10 +146,10 @@ def get_user_phone(uid: uid_t, db: DB) -> Optional[str]:
 
 
 def del_user(uid: uid_t, db: DB) -> bool:
-    cur = db.search(f"SELECT gid FROM garbage_time WHERE uid = '{uid}';")  # 确保没有引用
+    cur = db.search(f"SELECT GarbageID FROM garbage_time WHERE UserID = '{uid}';")  # 确保没有引用
     if cur is None or cur.rowcount != 0:
         return False
-    cur = db.done(f"DELETE FROM user WHERE uid = '{uid}';")
+    cur = db.done(f"DELETE FROM user WHERE UserID = '{uid}';")
     if cur is None or cur.rowcount == 0:
         return False
     assert cur.rowcount == 1
@@ -136,15 +157,15 @@ def del_user(uid: uid_t, db: DB) -> bool:
 
 
 def del_user_from_where_scan(where: str, db: DB) -> int:
-    cur = db.search(f"SELECT uid FROM user WHERE {where};")
-    print(f"SELECT uid FROM user WHERE {where};")
+    cur = db.search(f"SELECT UserID FROM user WHERE {where};")
+    print(f"SELECT UserID FROM user WHERE {where};")
     if cur is None:
         return -1
     return cur.rowcount
 
 
 def del_user_from_where(where: str, db: DB) -> int:
-    cur = db.search(f"SELECT gid FROM garbage_time WHERE {where};")  # 确保没有引用
+    cur = db.search(f"SELECT GarbageID FROM garbage_time WHERE {where};")  # 确保没有引用
     if cur is None or cur.rowcount != 0:
         return False
     cur = db.done(f"DELETE FROM user WHERE {where};")

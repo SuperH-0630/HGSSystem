@@ -91,7 +91,7 @@ class TkThreading(threading.Thread):
         try:
             self.result = self.func(*self.args)
         except:
-            ...
+            traceback.print_exc()
         finally:
             del self.func, self.args
 

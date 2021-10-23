@@ -17,4 +17,15 @@ class HGSTime:
         return time.time() > self._time
 
 
+def mysql_time(t=None) -> str:
+    if t is None:
+        t = time.time()
+    return f'from_unixtime({t})'
+
+
+def time_from_mysql(t) -> float:
+    t_struct = time.strptime(t, '%Y-%m-%d %H:%M:%S')
+    return time.mktime(t_struct)
+
+
 hgs_time_t = Union[HGSTime, time_t]

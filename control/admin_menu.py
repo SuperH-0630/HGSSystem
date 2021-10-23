@@ -49,7 +49,7 @@ class MainMenu(AdminMenu):
     def __init__(self, station, win, color):
         super().__init__(station, win, color, "Main")
         self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(5)]
-        self.btn_name = ["create", "Delete", "Search", "Update", "Logout"]
+        self.btn_name = ["Create", "Delete", "Search", "Update", "Logout"]
 
     def conf_gui(self, color: str, n: int = 1):
         super().conf_gui(color, n)
@@ -60,7 +60,7 @@ class MainMenu(AdminMenu):
         self.btn[4]['command'] = lambda: self.logout_command()
 
     def create_command(self):
-        self.station.to_menu("create")
+        self.station.to_menu("Create")
 
     def delete_command(self):
         self.station.to_menu("Delete")
@@ -75,11 +75,11 @@ class MainMenu(AdminMenu):
         self.station.logout()
 
 
-class createMenu(AdminMenu):
+class CreateMenu(AdminMenu):
     def __init__(self, station, win, color):
-        super().__init__(station, win, color, "create")
-        self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(4)]
-        self.btn_name = ["NormalUser", "AutoNormalUser", "ManagerUser", "Garbage"]
+        super().__init__(station, win, color, "Create")
+        self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(6)]
+        self.btn_name = ["NormalUser", "AutoNormalUser", "ManagerUser", "Garbage", "ExportUser", "ExportGarbage"]
 
     def conf_gui(self, color: str, n: int = 1):
         super().conf_gui(color, n)
@@ -89,16 +89,16 @@ class createMenu(AdminMenu):
         self.btn[3]['command'] = lambda: self.create_garbage()
 
     def create_normal_user(self):
-        self.station.to_program("createNormalUser")
+        self.station.to_program("CreateNormalUser")
 
     def create_auto_user(self):
-        self.station.to_program("createAutoNormalUser")
+        self.station.to_program("CreateAutoNormalUser")
 
     def create_manager_user(self):
-        self.station.to_program("createManagerUser")
+        self.station.to_program("CreateManagerUser")
 
     def create_garbage(self):
-        self.station.to_program("createGarbage")
+        self.station.to_program("CreateGarbage")
 
 
 class DeleteMenu(AdminMenu):
@@ -201,4 +201,4 @@ class StatisticsMenu(AdminMenu):
         super().conf_gui(color, n)
 
 
-all_menu = [MainMenu, createMenu, DeleteMenu, SearchMenu, UpdateMenu, StatisticsMenu]
+all_menu = [MainMenu, CreateMenu, DeleteMenu, SearchMenu, UpdateMenu, StatisticsMenu]

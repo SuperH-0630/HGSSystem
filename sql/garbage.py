@@ -1,8 +1,7 @@
 import time
-from decimal import Decimal
 from db import DB, DBBit, DBDataException, DBDoneException
 from tool.type_ import *
-from tool.time_ import HGSTime
+from tool.time_ import HGSTime, mysql_time, time_from_mysql
 from core.garbage import GarbageBag, GarbageType
 
 
@@ -10,12 +9,115 @@ class GarbageDBException(DBDataException):
     ...
 
 
+def update_garbage_type(where: str, type_: int, db: DB) -> int:
+    if len(where) == 0:
+        return -1
+
+    cur = db.done(f"UPDATE garbage SET GarbageType={type_} WHERE {where};")
+    if cur is None:
+        return -1
+    return cur.rowcount
+
+
+def update_garbage_check(where: str, check_: bool, db: DB) -> int:
+    if len(where) == 0:
+        return -1
+
+    i = 1 if check_ else 0
+    cur = db.done(f"UPDATE garbage SET CheckResult={i} WHERE {where};")
+    if cur is None:
+        return -1
+    return cur.rowcount
+
+
+def __get_time(time_str: str) -> float:
+    if time_str == 'now':
+        return time.time()
+    if time_str.startswith("Date:") and len(time_str) >= 5:
+        return time_from_mysql(time_str[5:])
+    return float(time_str)
+
+
+def __get_time_diff(time_str: str) -> float:
+    if time_str.endswith("s") and len(time_str) >= 2:
+        return float(time_str[:-1])
+    elif time_str.endswith("ms") and len(time_str) >= 3:
+        return float(time_str[:-1]) / 1000
+    elif time_str.endswith("min") and len(time_str) >= 4:
+        return float(time_str[:-1]) * 60
+    elif time_str.endswith("h") and len(time_str) >= 2:
+        return float(time_str[:-1]) * 60 * 60
+    elif time_str.endswith("d") and len(time_str) >= 2:
+        return float(time_str[:-1]) * 24 * 60 * 60
+    return float(time_str)
+
+
+def __search_fields_time(time_: str, time_name: str) -> str:
+    if time_ == '<=now':
+        return f"{time_name}<={mysql_time()} AND"
+    sp = time_.split(',')
+    if len(sp) == 2:
+        try:
+            time_list = __get_time(sp[0]), __get_time(sp[1])
+            a = min(time_list)
+            b = max(time_list)
+        except (TypeError, ValueError):
+            return ""
+        else:
+            return f"({time_name} BETWEEN {mysql_time(a)} AND {mysql_time(b)}) AND"
+    sp = time_.split(';')
+    if len(sp) == 2:
+        try:
+            time_list = __get_time(sp[0]), __get_time_diff(sp[1])
+            a = time_list[0] - time_list[1]
+            b = time_list[0] + time_list[1]
+        except (TypeError, ValueError):
+            return ""
+        else:
+            return f"({time_name} BETWEEN {mysql_time(a)} AND {mysql_time(b)}) AND"
+    try:
+        t = __get_time(time_)
+    except (TypeError, ValueError):
+        return ""
+    else:
+        return f"({time_name}={mysql_time(t)} AND"
+
+
+def search_garbage_by_fields(columns, gid, uid, cuid, create_time, use_time, loc, type_, check, db: DB):
+    where = ""
+    if gid is not None:
+        where += f"GarbageID={gid} AND "
+    if uid is not None:
+        where += f"UserID=‘{uid}’ AND "
+    if cuid is not None:
+        where += f"CheckerID='{cuid}' AND "
+    if loc is not None:
+        where += f"Location='{loc}' AND "
+    if check is not None:
+        if check == "False":
+            where += f"CheckResult=0 AND "
+        else:
+            where += f"CheckResult=1 AND "
+    if type_ is not None and type_ in GarbageType.GarbageTypeStrList:
+        res = GarbageType.GarbageTypeStrList.index(type_)
+        where += f"Phone={res} AND "
+    if create_time is not None:
+        where += __search_fields_time(create_time, "CreateTime")
+    if use_time is not None:
+        where += __search_fields_time(use_time, "UseTime")
+
+    if len(where) != 0:
+        where = where[0:-4]  # 去除末尾的AND
+
+    return search_from_garbage_view(columns, where, db)
+
+
 def search_from_garbage_view(columns, where: str, db: DB):
     if len(where) > 0:
         where = f"WHERE {where} "
 
     column = ", ".join(columns)
-    cur = db.search(f"SELECT {column} FROM garbage_view {where};")
+    cur = db.search(f"SELECT {column} FROM garbage {where};")
     if cur is None:
         return None
     res = cur.fetchall()
@@ -26,7 +128,9 @@ def count_garbage_by_time(uid: uid_t, db: DB):
     ti: time_t = time.time()
     start = ti - 3.5 * 24 * 60 * 60  # 前后3.5天
     end = ti + 3.5 * 24 * 60 * 60
-    cur = db.search(f"SELECT gid FROM garbage_time WHERE uid = '{uid}' AND use_time BETWEEN {start} AND {end};")
+    cur = db.search(f"SELECT GarbageID "
+                    f"FROM garbage_time "
+                    f"WHERE UserID = '{uid}' AND UseTime BETWEEN {mysql_time(start)} AND {mysql_time(end)};")
     if cur is None:
         return -1
     return cur.rowcount
@@ -43,18 +147,20 @@ def __find_garbage(sql: str, res_len, db: DB):
 
 
 def find_not_use_garbage(gid: gid_t, db: DB) -> Union[GarbageBag, None]:
-    return __find_garbage(f"SELECT gid FROM garbage_n WHERE gid = {gid};", 1, db)[0]
+    return __find_garbage(f"SELECT GarbageID FROM garbage_n WHERE GarbageID = {gid};", 1, db)[0]
 
 
 def find_wait_garbage(gid: gid_t, db: DB) -> Union[GarbageBag, None]:
-    res: Tuple[int, bytes, Decimal, str, str]
+    res: Tuple[int, bytes, str, str, str]
     gb: GarbageBag
-    gb, res = __find_garbage(f"SELECT gid, type, use_time, uid, loc FROM garbage_c WHERE gid = {gid};", 5, db)
+    gb, res = __find_garbage(f"SELECT GarbageID, GarbageType, UseTime, UserID, Location "
+                             f"FROM garbage_c "
+                             f"WHERE GarbageID = {gid};", 5, db)
     if gb is None:
         return None
 
     garbage_type: enum = int(res[1].decode())
-    use_time: time_t = float(res[2])
+    use_time: time_t = time_from_mysql(res[2])
     uid: uid_t = res[3]
     loc: location_t = res[4]
 
@@ -63,15 +169,16 @@ def find_wait_garbage(gid: gid_t, db: DB) -> Union[GarbageBag, None]:
 
 
 def find_use_garbage(gid: gid_t, db: DB) -> Union[GarbageBag, None]:
-    res: Tuple[int, bytes, Decimal, str, str, bytes]
+    res: Tuple[int, bytes, str, str, str, bytes]
     gb: GarbageBag
-    gb, res = __find_garbage(f"SELECT gid, type, use_time, uid, loc, right_use, check_uid "
-                             f"FROM garbage_u WHERE gid = {gid};", 7, db)
+    gb, res = __find_garbage(f"SELECT GarbageID, GarbageType, UseTime, UserID, Location, CheckResult, CheckerID "
+                             f"FROM garbage_u "
+                             f"WHERE GarbageID = {gid};", 7, db)
     if gb is None:
         return None
 
     garbage_type: enum = int(res[1].decode())
-    use_time: time_t = float(res[2])
+    use_time: time_t = time_from_mysql(res[2])
     uid: uid_t = res[3]
     loc: location_t = res[4]
     check: bool = res[5] == DBBit.BIT_1
@@ -99,7 +206,7 @@ def find_garbage(gid: gid_t, db: DB) -> Union[GarbageBag, None]:
 
 
 def is_garbage_exists(gid: gid_t, db: DB) -> Tuple[bool, int]:
-    cur = db.search(f"SELECT gid, flat FROM garbage WHERE gid = {gid};")
+    cur = db.search(f"SELECT GarbageID, Flat FROM garbage WHERE GarbageID = {gid};")
     if cur is None or cur.rowcount == 0:
         return False, 0
     assert cur.rowcount == 1
@@ -122,20 +229,36 @@ def update_garbage(garbage: GarbageBag, db: DB) -> bool:
     info = garbage.get_info()
 
     try:
-        db.done_(f"DELETE FROM garbage_n WHERE gid = {gid};")
-        db.done_(f"DELETE FROM garbage_c WHERE gid = {gid};")
-        db.done_(f"DELETE FROM garbage_u WHERE gid = {gid};")
-
         if garbage.is_check()[0]:
-            db.done_(f"UPDATE garbage SET flat = 2 WHERE gid = {gid};")
-            db.done_(f"INSERT INTO garbage_u(gid, uid, use_time, type, loc, right_use, check_uid) "
-                     f"VALUES ({info['gid']} , '{info['user']}'  , {info['use_time']}, {info['type']}, "
-                     f"       '{info['loc']}', {info['check']}, '{info['checker']}');")
+            db.done_(f"UPDATE garbage SET "
+                     f"Flat = 2,"
+                     f"UserID = '{info['user']}',"
+                     f"UseTime = {time_from_mysql(info['use_time'])},"
+                     f"GarbageType = {info['type']},"
+                     f"Location = '{info['loc']}',"
+                     f"CheckResult = {info['check']},"
+                     f"CheckerID = '{info['checker']}',"
+                     f"WHERE GarbageID = {gid};")
+        elif garbage.is_use():
+            db.done_(f"UPDATE garbage SET "
+                     f"Flat = 1,"
+                     f"UserID = '{info['user']}',"
+                     f"UseTime = {time_from_mysql(info['use_time'])},"
+                     f"GarbageType = {info['type']},"
+                     f"Location = '{info['loc']}',"
+                     f"CheckResult = NULL,"
+                     f"CheckerID = NULL,"
+                     f"WHERE GarbageID = {gid};")
         else:
-            db.done_(f"UPDATE garbage SET flat = 1 WHERE gid = {gid};")
-            db.done_(f"INSERT INTO garbage_c(gid, uid, use_time, type, loc) "
-                     f"VALUES ({info['gid']} , '{info['user']}', {info['use_time']}, {info['type']}, "
-                     f"       '{info['loc']}');")
+            db.done_(f"UPDATE garbage SET "
+                     f"Flat = 0,"
+                     f"UserID = NULL,"
+                     f"UseTime = NULL,"
+                     f"GarbageType = NULL,"
+                     f"Location = NULL,"
+                     f"CheckResult = NULL,"
+                     f"CheckerID = NULL,"
+                     f"WHERE GarbageID = {gid};")
     except DBDoneException:
         return False
     finally:
@@ -144,106 +267,89 @@ def update_garbage(garbage: GarbageBag, db: DB) -> bool:
 
 
 def create_new_garbage(db: DB) -> Optional[GarbageBag]:
-    cur = db.done("INSERT INTO garbage() VALUES ();")
+    cur = db.done(f"INSERT INTO garbage(CreateTime, Flat) VALUES ({mysql_time()}, 0);")
     if cur is None:
         return None
     assert cur.rowcount == 1
     gid = cur.lastrowid
-    cur = db.done(f"INSERT INTO garbage_n(gid) VALUES ({gid});")
-    if cur is None:
-        return None
-    assert cur.rowcount == 1
     return GarbageBag(str(gid))
 
 
-def del_garbage_core(gid: gid_t, db: DB, from_: str) -> bool:
-    cur = db.done(f"DELETE FROM {from_} WHERE gid = {gid};")
-    if cur is None or cur.rowcount == 0:
-        return False
-    assert cur.rowcount == 1
-    cur = db.done(f"DELETE FROM garbage WHERE gid = {gid};")
+def del_garbage_not_use(gid: gid_t, db: DB) -> bool:
+    cur = db.done(f"DELETE FROM garbage_n WHERE GarbageID = {gid};")
     if cur is None or cur.rowcount == 0:
         return False
     assert cur.rowcount == 1
     return True
 
 
-def del_garbage_not_use(gid: gid_t, db: DB) -> bool:
-    return del_garbage_core(gid, db, "garbage_n")
-
-
 def del_garbage_wait_check(gid: gid_t, db: DB) -> bool:
-    return del_garbage_core(gid, db, "garbage_c")
+    cur = db.done(f"DELETE FROM garbage_c WHERE GarbageID = {gid};")
+    if cur is None or cur.rowcount == 0:
+        return False
+    assert cur.rowcount == 1
+    return True
 
 
 def del_garbage_has_check(gid: gid_t, db: DB) -> bool:
-    return del_garbage_core(gid, db, "garbage_u")
+    cur = db.done(f"DELETE FROM garbage_u WHERE GarbageID = {gid};")
+    if cur is None or cur.rowcount == 0:
+        return False
+    assert cur.rowcount == 1
+    return True
 
 
 def del_garbage(gid, db: DB):
-    res = del_garbage_not_use(gid, db)
-    if res:
-        return True
-    res = del_garbage_wait_check(gid, db)
-    if res:
-        return True
-    return del_garbage_has_check(gid, db)
+    cur = db.done(f"DELETE FROM garbage WHERE GarbageID = {gid};")
+    if cur is None or cur.rowcount == 0:
+        return False
+    assert cur.rowcount == 1
+    return True
 
 
-def del_garbage_where_core(where, db: DB, from_: str, from_int: int) -> int:
-    cur = db.done_(f"DELETE FROM {from_} WHERE {where};")
-    if cur is None:
-        return -1
-    elif cur.rowcount == 0:
-        return 0
-
-    cur = db.done(f"DELETE FROM garbage WHERE flat={from_int} AND gid NOT IN (SELECT gid FROM {from_});")
+def del_garbage_where_not_use(where, db: DB) -> int:
+    cur = db.done_(f"DELETE FROM garbage_n WHERE {where};")
     if cur is None:
         return -1
     return cur.rowcount
 
 
-def del_garbage_where_not_use(where, db: DB) -> int:
-    return del_garbage_where_core(where, db, "garbage_n", 0)
-
-
 def del_garbage_where_wait_check(where, db: DB) -> int:
-    return del_garbage_where_core(where, db, "garbage_c", 1)
+    cur = db.done_(f"DELETE FROM garbage_c WHERE {where};")
+    if cur is None:
+        return -1
+    return cur.rowcount
 
 
 def del_garbage_where_has_check(where, db: DB) -> int:
-    return del_garbage_where_core(where, db, "garbage_u", 2)
-
-
-def del_garbage_where_scan_core(where, db: DB, from_: str) -> int:
-    cur = db.done(f"SELECT gid FROM {from_} WHERE {where};")
+    cur = db.done_(f"DELETE FROM garbage_u WHERE {where};")
     if cur is None:
         return -1
     return cur.rowcount
 
 
 def del_garbage_where_scan_not_use(where, db: DB) -> int:
-    return del_garbage_where_scan_core(where, db, "garbage_n")
+    cur = db.done(f"SELECT GarbageID FROM garbage_n WHERE {where};")
+    if cur is None:
+        return -1
+    return cur.rowcount
 
 
 def del_garbage_where_scan_wait_check(where, db: DB) -> int:
-    return del_garbage_where_scan_core(where, db, "garbage_c")
+    cur = db.done(f"SELECT GarbageID FROM garbage_c WHERE {where};")
+    if cur is None:
+        return -1
+    return cur.rowcount
 
 
 def del_garbage_where_scan_has_check(where, db: DB) -> int:
-    return del_garbage_where_scan_core(where, db, "garbage_u")
+    cur = db.done(f"SELECT GarbageID FROM garbage_u WHERE {where};")
+    if cur is None:
+        return -1
+    return cur.rowcount
 
 
 def del_all_garbage(db: DB) -> int:
-    cur = db.done(f"DELETE FROM garbage_u WHERE 1;")
-    if cur is None:
-        return -1
-    cur = db.done(f"DELETE FROM garbage_c WHERE 1;")
-    if cur is None:
-        return -1
-    cur = db.done(f"DELETE FROM garbage_n WHERE 1;")
-    if cur is None:
-        return -1
     cur = db.done(f"DELETE FROM garbage WHERE 1;")
     if cur is None:
         return -1
@@ -251,20 +357,9 @@ def del_all_garbage(db: DB) -> int:
 
 
 def del_all_garbage_scan(db: DB) -> int:
-    cur = db.done(f"SELECT gid FROM garbage WHERE 1;")
+    cur = db.done(f"SELECT GarbageID FROM garbage WHERE 1;")
     if cur is None:
         return -1
-    return cur.rowcount
-
-
-def del_garbage_not_use_many(gid_from: gid_t, gid_to: gid_t, db: DB) -> int:
-    cur = db.done(f"DELETE FROM garbage "
-                  f"WHERE gid IN (SELECT gid FROM garbage_n WHERE gid BETWEEN {gid_from} and {gid_to});")
-    if cur is None or cur.rowcount == 0:
-        return 0
-    cur = db.done(f"DELETE FROM garbage WHERE gid BETWEEN {gid_from} and {gid_to};")
-    if cur is None or cur.rowcount == 0:
-        return 0
     return cur.rowcount
 
 

@@ -10,18 +10,17 @@ from equipment.scan_garbage import write_gid_qr
 from equipment.scan_user import write_uid_qr, write_all_uid_qr
 from event import TkEventMain
 from sql.db import DB, search_from_garbage_checker_user
-from sql.garbage import (create_new_garbage, search_from_garbage_view,
+from sql.garbage import (create_new_garbage, search_garbage_by_fields, search_from_garbage_view,
                          del_garbage, del_garbage_not_use, del_garbage_wait_check, del_garbage_has_check,
-
                          del_garbage_where_scan_not_use, del_garbage_where_scan_wait_check,
                          del_garbage_where_scan_has_check,
-
                          del_garbage_where_not_use, del_garbage_where_wait_check, del_garbage_where_has_check,
-
-                         del_garbage_not_use_many, del_all_garbage, del_all_garbage_scan)
+                         del_all_garbage, del_all_garbage_scan,
+                         update_garbage_check, update_garbage_type)
 
 from sql.user import (create_new_user, del_user, del_user_from_where, del_user_from_where_scan,
-                      search_user_by_fields, search_from_user_view)
+                      search_user_by_fields, search_from_user_view,
+                      update_user_score, update_user_reputation)
 from tool.tk import make_font
 from tool.type_ import *
 
@@ -30,11 +29,11 @@ class AdminStationException(Exception):
     ...
 
 
-class createGarbageError(AdminStationException):
+class CreateGarbageError(AdminStationException):
     ...
 
 
-class createUserError(AdminStationException):
+class CreateUserError(AdminStationException):
     ...
 
 
@@ -52,7 +51,7 @@ class AdminStationBase(TkEventMain, metaclass=abc.ABCMeta):
         for _ in range(num):
             gar = create_new_garbage(self._db)
             if gar is None:
-                raise createGarbageError
+                raise CreateGarbageError
             if path is not None:
                 res = write_gid_qr(gar.get_gid(), path, self._db)
                 re.append(res)
@@ -68,7 +67,7 @@ class AdminStationBase(TkEventMain, metaclass=abc.ABCMeta):
         for i in user_list:
             user = create_new_user(i[0], i[1], i[2], manager, self._db)
             if user is None:
-                raise createUserError
+                raise CreateUserError
             re.append(user)
         return re
 
@@ -120,9 +119,6 @@ class AdminStationBase(TkEventMain, metaclass=abc.ABCMeta):
     def del_all_garbage(self) -> int:
         return del_all_garbage(self._db)
 
-    def del_garbage_many(self, from_: gid_t, to_: gid_t) -> int:
-        return del_garbage_not_use_many(from_, to_, self._db)
-
     def del_user(self, uid: uid_t) -> bool:
         return del_user(uid, self._db)
 
@@ -138,11 +134,32 @@ class AdminStationBase(TkEventMain, metaclass=abc.ABCMeta):
     def search_user_advanced(self, columns, sql):
         return search_from_user_view(columns, sql, self._db)
 
+    def search_garbage(self, columns, key_values: dict):
+        return search_garbage_by_fields(columns, **key_values, db=self._db)
+
     def search_garbage_advanced(self, columns, sql):
         return search_from_garbage_view(columns, sql, self._db)
 
     def search_advanced(self, columns, sql):
         return search_from_garbage_checker_user(columns, sql, self._db)
+
+    def update_user_score(self, score: score_t, where: str) -> int:
+        return update_user_score(where, score, self._db)
+
+    def update_user_reputation(self, reputation: score_t, where: str) -> int:
+        return update_user_reputation(where, reputation, self._db)
+
+    def update_garbage_type(self, type_: int, where: str):
+        return update_garbage_type(where, type_, self._db)
+
+    def update_garbage_check(self, check_: str, where: str):
+        if check_ == 'pass':
+            check = True
+        elif check_ == 'fail':
+            check = False
+        else:
+            return -1
+        return update_garbage_check(where, check, self._db)
 
     @abc.abstractmethod
     def login_call(self):
@@ -298,7 +315,7 @@ class AdminStation(AdminStationBase):
         bt_main.place(relx=0.02, rely=0.86, relwidth=0.96, relheight=0.06)
 
         bt_back: tk.Button = self._win_ctrl_button[0]
-        bt_back['text'] = 'back'
+        bt_back['text'] = 'Back'
         bt_back['font'] = title_font_bold
         bt_back['state'] = 'disable'
         bt_back['command'] = lambda: self.__to_back_menu()

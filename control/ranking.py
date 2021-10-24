@@ -21,6 +21,11 @@ class RankingPageError(RankingStationException):
 
 
 class RankingStationBase(metaclass=abc.ABCMeta):
+    """
+    RankingStation基类
+    封装排行榜相关操作
+    """
+
     def __init__(self, db: DB):
         self._db = db
         self.rank = [[]]
@@ -29,13 +34,18 @@ class RankingStationBase(metaclass=abc.ABCMeta):
         self.rank_count = 1
 
         self.offset = 0
-        self.limit_n = 2
+        self.limit_n = 2  # 一次性获取的数据 (页数, 行数=limit_n * rank_count)
 
         self.auto: bool = False
         self.auto_to_next: bool = True  # auto的移动方向
         self.auto_time: int = 5000  # 5s
 
     def get_rank(self, offset: int = 0) -> Tuple[bool, list]:
+        """
+        获取数据
+        :param offset: 位移 (相对于当前位置移动的页数)
+        :return: 成功, 排行榜数据
+        """
         limit = self.rank_count * self.limit_n
         offset = self.offset + limit * offset  # offset为0表示不移动, 1表示向前, -1表示向后
         cur = self._db.search((f"SELECT UserID, Name, Score, Reputation "
@@ -65,6 +75,10 @@ class RankingStationBase(metaclass=abc.ABCMeta):
         return True, rank
 
     def rank_page_to_next(self):
+        """
+        显示排行榜下一页数据
+        :return:
+        """
         if self.rank_index == len(self.rank) - 1:
             self.set_next_btn(True)  # 当 rank_index为最后一项时, 该函数不应该被调用(除非数据库被外部改动)
             return
@@ -87,6 +101,10 @@ class RankingStationBase(metaclass=abc.ABCMeta):
             self.set_run_after_now(self.auto_time, self.update_rank_auto)
 
     def rank_page_to_prev(self):
+        """
+        显示排行榜上一页数据
+        :return:
+        """
         if self.rank_index == 0:  # 当 rank_index为最后一项时, 该函数不应该被调用(除非数据库被外部改动)
             self.set_prev_btn(True)
             return
@@ -106,6 +124,10 @@ class RankingStationBase(metaclass=abc.ABCMeta):
             self.set_run_after_now(self.auto_time, self.update_rank_auto)
 
     def show_rank_first(self):
+        """
+        第一次显示排行榜数据
+        :return:
+        """
         self.rank_index = 0
         self.offset = 0
         self.rank_count = self.rank_count
@@ -120,6 +142,11 @@ class RankingStationBase(metaclass=abc.ABCMeta):
             self.set_next_btn(False)
 
     def rank_auto(self, auto):
+        """
+        启用或关闭自动显示
+        :param auto: True-启用自动显示, False-关闭
+        :return:
+        """
         if auto:
             self.auto = True
             self.disable_btn()
@@ -129,6 +156,10 @@ class RankingStationBase(metaclass=abc.ABCMeta):
             self.able_btn()
 
     def update_rank_auto(self):
+        """
+        自动显示
+        :return:
+        """
         if not self.auto:
             return
 
@@ -181,6 +212,12 @@ class RankingStationBase(metaclass=abc.ABCMeta):
 
 
 class RankingStation(RankingStationBase):
+    """
+        RankingStation 排行榜系统
+        使用tkinter作为GUI
+        派生自 GarbageStation
+        """
+
     def __init__(self, db: DB):
         self.init_after_run_list: List[Tuple[int, Callable, Tuple]] = []
         super(RankingStation, self).__init__(db)
@@ -194,7 +231,7 @@ class RankingStation(RankingStationBase):
         self._full_screen = False
         self.__conf_windows()
 
-        self.next_btn: bool = True  # 表示开关是否启用
+        self.next_btn: bool = True  # 表示按键是否启用
         self.prev_btn: bool = True
 
         self.__conf_font_size()
@@ -207,7 +244,7 @@ class RankingStation(RankingStationBase):
         self.rank_frame = tk.Frame(self.window)
         self.rank_title = tk.Label(self.rank_frame)
         self.rank_title_var = tk.StringVar()
-        self.rank_count = 7
+        self.rank_count = 7  # 一页显示的行数
         self.rank_label = [tk.Label(self.rank_frame) for _ in range(self.rank_count)]
         self.rank_y_height: List[Tuple[float, float]] = []  # rank 标签的y坐标信息
         self.rank_var = [tk.StringVar() for _ in range(self.rank_count)]
@@ -216,7 +253,7 @@ class RankingStation(RankingStationBase):
     def __conf_font_size(self, n: Union[int, float] = 1):
         self._rank_font_title_size = int(24 * n)
         self._rank_font_size = int(16 * n)
-        self._rank_font_btn_size = int(20 * n)
+        self._rank_font_btn_size = int(16 * n)
 
     def __conf_tk(self):
         self.__conf_windows_bg()
@@ -281,7 +318,7 @@ class RankingStation(RankingStationBase):
         self.rank_title['bg'] = conf.tk_win_bg
         self.rank_title['textvariable'] = self.rank_title_var
         self.rank_title.place(relx=0.02, rely=0.00, relwidth=0.96, relheight=0.1)
-        self.rank_title_var.set("Ranking.loading...")
+        self.rank_title_var.set("排行榜加载中...")
 
         """
         标签所拥有的总高度为0.82
@@ -310,10 +347,10 @@ class RankingStation(RankingStationBase):
             height += height_l + height_s
 
         for btn, text, x in zip(self.rank_btn,
-                                ("prev", "manual" if self.auto else "auto", "next"), (0.050, 0.375, 0.700)):
+                                ("前一页", "手动" if self.auto else "自动", "下一页"), (0.050, 0.375, 0.700)):
             btn['font'] = btn_font
             btn['text'] = text
-            btn['bg'] = "#00CED1"
+            btn['bg'] = conf.tk_btn_bg
             btn.place(relx=x, rely=0.93, relwidth=0.25, relheight=0.06)
 
         self.rank_btn[0]['command'] = lambda: self.rank_page_to_prev()
@@ -332,8 +369,9 @@ class RankingStation(RankingStationBase):
 
         for i, info in enumerate(rank_info):
             no, name, uid, score, eval_, color = info
-            self.rank_var[i].set(f"NO.{no}  {name}\nUID: {uid[0:conf.ranking_tk_show_uid_len]}\n"
-                                 f"Score: {score} Reputation: {eval_}")
+            self.rank_var[i].set(f"NO.{no}  {name}\n\n"  # 中间空一行 否则中文字体显得很窄
+                                 f"ID: {uid[0:conf.ranking_tk_show_uid_len]}  "
+                                 f"信用: {eval_} 积分: {score}")
             if color is None:
                 self.rank_label[i]['bg'] = "#F5FFFA"
             else:
@@ -345,16 +383,16 @@ class RankingStation(RankingStationBase):
 
     def show_rank(self, rank_info: List[Tuple[int, uname_t, uid_t, score_t, score_t, Optional[str]]]):
         self.__set_rank_info(rank_info)
-        self.rank_title_var.set("Ranking")
+        self.rank_title_var.set("排行榜")
 
     def rank_auto(self, auto):
         super(RankingStation, self).rank_auto(auto)
         if auto:
             self.rank_btn[1]['command'] = lambda: self.rank_auto(False)
-            self.rank_btn[1]['text'] = 'manual'
+            self.rank_btn[1]['text'] = '手动'
         else:
             self.rank_btn[1]['command'] = lambda: self.rank_auto(True)
-            self.rank_btn[1]['text'] = 'auto'
+            self.rank_btn[1]['text'] = '自动'
 
     def set_next_btn(self, disable: False):
         if disable or self.auto:  # auto 模式令btn失效

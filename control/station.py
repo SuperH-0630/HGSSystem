@@ -45,10 +45,17 @@ class RankingUserError(GarbageStationException):
 
 
 class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
+    """
+    GarbageStation基类
+    封装GarbageStation的相关操作
+    """
+
+    # 操作状态
     status_normal = 1
     status_get_garbage_type = 2
     status_get_garbage_check = 3
 
+    # 扫码状态
     scan_switch_user = 1
     scan_throw_garbage = 2
     scan_check_garbage = 3

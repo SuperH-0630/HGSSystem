@@ -14,7 +14,7 @@ import station as tk_station
 
 
 class StationEventBase(TkEventBase):
-    def __init__(self, station: tk_station.GarbageStationBase, title: str = 'unknown'):
+    def __init__(self, station: tk_station.GarbageStationBase, title: str = '未知'):
         super(StationEventBase, self).__init__()
         self.station: tk_station.GarbageStationBase = station
         self._db: DB = station.get_db()
@@ -30,7 +30,7 @@ class ScanUserEvent(StationEventBase):
         return scan_user(qr, db)
 
     def __init__(self, gb_station):
-        super().__init__(gb_station, "Scan User")
+        super().__init__(gb_station, "扫码用户")
 
         self._user: User = gb_station.get_user()
         self._qr_code: Optional[QRCode] = None
@@ -60,7 +60,7 @@ class ScanGarbageEvent(StationEventBase):
         return scan_garbage(qr, db)
 
     def __init__(self, gb_station):
-        super().__init__(gb_station, "Scan Garbage")
+        super().__init__(gb_station, "扫码垃圾袋")
 
         self._user: User = gb_station.get_user()
         self._qr_code: Optional[QRCode] = None
@@ -78,7 +78,7 @@ class ScanGarbageEvent(StationEventBase):
         self.thread.join()
         if self.thread.result is not None:
             if self._user is None:
-                self.station.show_warning("Operation Fail", "The garbage bags have been used.")
+                self.station.show_warning("操作失败", "垃圾袋已经被使用")
             elif self._user.is_manager():
                 self.station.to_get_garbage_check(self.thread.result)
                 self.station.show_garbage_info()  # 显示信息
@@ -102,7 +102,7 @@ class RankingEvent(StationEventBase):
         return list(cur.fetchall())
 
     def __init__(self, gb_station):
-        super().__init__(gb_station, "Ranking")
+        super().__init__(gb_station, "排行榜")
         self.thread = TkThreading(self.func, self._db)
 
     def is_end(self) -> bool:
@@ -113,7 +113,7 @@ class RankingEvent(StationEventBase):
         if res is not None:
             self.station.thread_show_rank(res)
         else:
-            self.station.show_warning("RankError", f'Unable to get leaderboard data')
+            self.station.show_warning("排行榜错误", f'无法获得排行榜数据')
 
 
 class ThrowGarbageEvent(StationEventBase):
@@ -121,13 +121,12 @@ class ThrowGarbageEvent(StationEventBase):
         try:
             self.station.throw_garbage_core(garbage, garbage_type)
         except (tk_station.ThrowGarbageError, UserNotSupportError, tk_station.ControlNotLogin):
-            self.station.show_warning("Operation Fail", "The garbage bags have been used.")
             return False
         else:
             return True
 
     def __init__(self, gb_station):
-        super().__init__(gb_station, "ThrowGarbage")
+        super().__init__(gb_station, "垃圾投放")
 
         self.thread = None
 
@@ -142,7 +141,7 @@ class ThrowGarbageEvent(StationEventBase):
     def done_after_event(self):
         self.thread.join()
         if not self.thread.result:
-            self.station.show_warning("Operation Fail", "The garbage bag throw error")
+            self.station.show_warning("操作失败", "垃圾袋投放失败")
 
 
 class CheckGarbageEvent(StationEventBase):
@@ -151,13 +150,12 @@ class CheckGarbageEvent(StationEventBase):
             self.station.check_garbage_core(garbage, check)
         except (tk_station.ThrowGarbageError, UserNotSupportError,
                 tk_station.ControlNotLogin, tk_station.CheckGarbageError):
-            self.station.show_warning("Operation Fail", "The garbage bag has been checked")
             return False
         else:
             return True
 
     def __init__(self, gb_station):
-        super().__init__(gb_station, "CheckGarbage")
+        super().__init__(gb_station, "检测垃圾袋")
         self.thread = None
 
     def start(self, garbage: GarbageBag, garbage_check: bool):
@@ -170,4 +168,4 @@ class CheckGarbageEvent(StationEventBase):
     def done_after_event(self):
         self.thread.join()
         if not self.thread.result:
-            self.station.show_warning("Operation Fail", "The garbage bag check error")
+            self.station.show_warning("操作失败", "垃圾袋检测失败")

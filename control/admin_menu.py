@@ -47,9 +47,9 @@ class AdminMenu(metaclass=abc.ABCMeta):
 
 class MainMenu(AdminMenu):
     def __init__(self, station, win, color):
-        super().__init__(station, win, color, "Main")
+        super().__init__(station, win, color, "主页")
         self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(5)]
-        self.btn_name = ["Create", "Delete", "Search", "Update", "Logout"]
+        self.btn_name = ["创建", "删除", "搜索", "更新", "退出登录"]
 
     def conf_gui(self, color: str, n: int = 1):
         super().conf_gui(color, n)
@@ -60,16 +60,16 @@ class MainMenu(AdminMenu):
         self.btn[4]['command'] = lambda: self.logout_command()
 
     def create_command(self):
-        self.station.to_menu("Create")
+        self.station.to_menu("创建")
 
     def delete_command(self):
-        self.station.to_menu("Delete")
+        self.station.to_menu("删除")
 
     def search_command(self):
-        self.station.to_menu("Search")
+        self.station.to_menu("搜索")
 
     def update_command(self):
-        self.station.to_menu("Update")
+        self.station.to_menu("更新")
 
     def logout_command(self):
         self.station.logout()
@@ -77,10 +77,10 @@ class MainMenu(AdminMenu):
 
 class CreateMenu(AdminMenu):
     def __init__(self, station, win, color):
-        super().__init__(station, win, color, "Create")
+        super().__init__(station, win, color, "创建")
         self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(7)]
-        self.btn_name = ["NormalUser", "AutoNormalUser", "ManagerUser", "Garbage",
-                         "ExportUser", "ExportGarbage", "User From CSV"]
+        self.btn_name = ["普通用户", "自动创建", "管理员用户", "垃圾袋",
+                         "导出用户二维码", "导出垃圾袋二维码", "从CSV导入用户"]
 
     def conf_gui(self, color: str, n: int = 1):
         super().conf_gui(color, n)
@@ -93,32 +93,32 @@ class CreateMenu(AdminMenu):
         self.btn[6]['command'] = lambda: self.create_user_from_csv()
 
     def create_normal_user(self):
-        self.station.to_program("CreateNormalUser")
+        self.station.to_program("创建普通用户")
 
     def create_auto_user(self):
-        self.station.to_program("CreateAutoNormalUser")
+        self.station.to_program("创建自动用户")
 
     def create_manager_user(self):
-        self.station.to_program("CreateManagerUser")
+        self.station.to_program("创建管理员")
 
     def create_garbage(self):
-        self.station.to_program("CreateGarbage")
+        self.station.to_program("创建垃圾袋")
 
     def export_user(self):
-        self.station.to_program("ExportUser")
+        self.station.to_program("导出用户二维码")
 
     def export_garbage(self):
-        self.station.to_program("ExportGarbage")
+        self.station.to_program("导出垃圾袋二维码")
 
     def create_user_from_csv(self):
-        self.station.to_program("CreateUserFromCSV")
+        self.station.to_program("从CSV导入用户")
 
 
 class DeleteMenu(AdminMenu):
     def __init__(self, station, win, color):
-        super().__init__(station, win, color, "Delete")
+        super().__init__(station, win, color, "删除")
         self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(5)]
-        self.btn_name = ["User", "UserMore", "Garbage", "GarbageMore", "AllGarbage"]
+        self.btn_name = ["用户", "多个用户", "垃圾袋", "多个垃圾袋", "所有垃圾袋"]
 
     def conf_gui(self, color: str, n: int = 1):
         super().conf_gui(color, n)
@@ -129,26 +129,26 @@ class DeleteMenu(AdminMenu):
         self.btn[4]['command'] = lambda: self.del_all_garbage()
 
     def del_user(self):
-        self.station.to_program("DeleteUser")
+        self.station.to_program("删除用户")
 
     def del_users(self):
-        self.station.to_program("DeleteUsers")
+        self.station.to_program("删除多个用户")
 
     def del_garbage(self):
-        self.station.to_program("DeleteGarbage")
+        self.station.to_program("删除垃圾袋")
 
     def del_garbage_more(self):
-        self.station.to_program("DeleteGarbageMore")
+        self.station.to_program("删除多个垃圾袋")
 
     def del_all_garbage(self):
-        self.station.to_program("DeleteAllGarbage")
+        self.station.to_program("删除所有垃圾袋")
 
 
 class SearchMenu(AdminMenu):
     def __init__(self, station, win, color):
-        super().__init__(station, win, color, "Search")
+        super().__init__(station, win, color, "搜索")
         self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(6)]
-        self.btn_name = ["User", "UserAdvanced", "Garbage", "GarbageAdvanced", "Advanced", "Statistics"]
+        self.btn_name = ["用户", "高级搜索-用户", "垃圾袋", "高级搜索-垃圾袋", "高级搜索", "数据分析"]
 
     def conf_gui(self, color: str, n: int = 1):
         super().conf_gui(color, n)
@@ -160,29 +160,29 @@ class SearchMenu(AdminMenu):
         self.btn[5]['command'] = lambda: self.statistics_command()
 
     def user_command(self):
-        self.station.to_program("SearchUser")
+        self.station.to_program("搜索用户")
 
     def user_advanced_command(self):
-        self.station.to_program("SearchUserAdvanced")
+        self.station.to_program("高级搜索-用户")
 
     def garbage_command(self):
-        self.station.to_program("SearchGarbage")
+        self.station.to_program("搜索垃圾袋")
 
     def garbage_advanced_command(self):
-        self.station.to_program("SearchGarbageAdvanced")
+        self.station.to_program("高级搜索-垃圾袋")
 
     def advanced_command(self):
-        self.station.to_program("SearchAdvanced")
+        self.station.to_program("高级搜索")
 
     def statistics_command(self):
-        self.station.to_menu("Statistics")
+        self.station.to_menu("数据分析")
 
 
 class UpdateMenu(AdminMenu):
     def __init__(self, station, win, color):
-        super().__init__(station, win, color, "Update")
+        super().__init__(station, win, color, "更新")
         self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(4)]
-        self.btn_name = ["Score", "Reputation", "GarbageType", "GarbageCheck"]
+        self.btn_name = ["用户-积分", "用户-累计分类信用", "垃圾袋-垃圾类型", "垃圾袋-检测结果"]
 
     def conf_gui(self, color: str, n: int = 1):
         super().conf_gui(color, n)
@@ -192,23 +192,23 @@ class UpdateMenu(AdminMenu):
         self.btn[3]['command'] = lambda: self.update_garbage_result_command()
 
     def update_reputation_command(self):
-        self.station.to_program("UpdateReputation")
+        self.station.to_program("更新用户-垃圾分类信用")
 
     def update_score_command(self):
-        self.station.to_program("UpdateScore")
+        self.station.to_program("更新用户-积分")
 
     def update_garbage_type_command(self):
-        self.station.to_program("UpdateGarbageType")
+        self.station.to_program("更新垃圾袋-垃圾类型")
 
     def update_garbage_result_command(self):
-        self.station.to_program("UpdateGarbageCheckResult")
+        self.station.to_program("更新垃圾袋-检测结果")
 
 
 class StatisticsMenu(AdminMenu):
     def __init__(self, station, win, color):
-        super().__init__(station, win, color, "Statistics")
+        super().__init__(station, win, color, "数据分析")
         self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(5)]
-        self.btn_name = ["Time", "Score", "Reputation", "BlackUser", "PassingRate"]
+        self.btn_name = ["时间分析", "积分分析", "信用分析", "失信用户", "通过率"]
 
     def conf_gui(self, color: str, n: int = 1):
         super().conf_gui(color, n)

@@ -11,34 +11,42 @@ class TkEventException(Exception):
 
 
 class TkEventBase(metaclass=abc.ABCMeta):
-    def __init__(self):
-        self.thread: Optional[TkThreading] = None
+    """
+    Tkinter 子线程任务
+    """
 
-    def is_end(self) -> bool:
+    def __init__(self):
+        self.thread: Optional[TkThreading] = None  # 子线程
+
+    def is_end(self) -> bool:  # 判断子线程是否结束
         if self.thread is not None and not self.thread.is_alive():
             return True
         return False
 
     @abc.abstractmethod
-    def get_title(self) -> str:
+    def get_title(self) -> str:  # 获取任务名字
         ...
 
-    def done_after_event(self):
+    def done_after_event(self):  # 子线程结束后, 在GUI线程执行的代码
         if self.thread is not None:
             self.thread.wait_event()
 
 
 class TkEventMain(metaclass=abc.ABCMeta):
+    """
+    Tkinter 处理子线程基类
+    """
+
     def __init__(self):
         self._event_list: List[TkEventBase] = []
         self.set_after_run(conf.tk_refresh_delay, lambda: self.run_event())
 
-    def push_event(self, event: TkEventBase):
+    def push_event(self, event: TkEventBase):  # 添加子线程
         self._event_list.append(event)
         self.show_loading(event.get_title())
         self.run_event()
 
-    def run_event(self):
+    def run_event(self):  # 定时任务, 检测子线程是否结束, 并运行 done_after_event
         if len(self._event_list) == 0:
             return
 
@@ -61,11 +69,11 @@ class TkEventMain(metaclass=abc.ABCMeta):
         self.set_after_run_now(conf.tk_refresh_delay, self.run_event)
 
     @abc.abstractmethod
-    def show_loading(self, title: str):
+    def show_loading(self, title: str):  # 有子线程时显示加载
         ...
 
     @abc.abstractmethod
-    def stop_loading(self):
+    def stop_loading(self):  # 子线程运行完成后关闭加载
         ...
 
     @abc.abstractmethod
@@ -78,7 +86,16 @@ class TkEventMain(metaclass=abc.ABCMeta):
 
 
 class TkThreading(threading.Thread):
+    """
+    tkinter 子线程
+    """
+
     def __init__(self, func, *args, start_now: bool = True):
+        """
+        :param func: 子线程函数
+        :param args: 子线程参数
+        :param start_now: 是否马上运行 (否则要回调.start函数)
+        """
         threading.Thread.__init__(self)
         self.func = func
         self.args = args
@@ -95,6 +112,10 @@ class TkThreading(threading.Thread):
         finally:
             del self.func, self.args
 
-    def wait_event(self):
+    def wait_event(self) -> any:
+        """
+        等待线程结束
+        :return: 线程函数的返回值
+        """
         self.join()
         return self.result

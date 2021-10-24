@@ -311,11 +311,11 @@ class RankingStation(RankingStationBase):
 
         self.rank_frame['relief'] = "ridge"
         self.rank_frame['bd'] = 5
-        self.rank_frame['bg'] = conf.tk_win_bg
+        self.rank_frame['bg'] = conf.tk_second_win_bg
         self.rank_frame.place(relx=relx, rely=rely, relwidth=relwidth, relheight=relheight)
 
         self.rank_title['font'] = title_font
-        self.rank_title['bg'] = conf.tk_win_bg
+        self.rank_title['bg'] = conf.tk_second_win_bg
         self.rank_title['textvariable'] = self.rank_title_var
         self.rank_title.place(relx=0.02, rely=0.00, relwidth=0.96, relheight=0.1)
         self.rank_title_var.set("排行榜加载中...")

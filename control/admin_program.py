@@ -42,7 +42,7 @@ class AdminProgram(metaclass=abc.ABCMeta):
 
 class WelcomeProgram(AdminProgram):
     def __init__(self, station, win, color):
-        super().__init__(station, win, color, "Welcome")
+        super().__init__(station, win, color, "欢迎页")
 
         self.title = tk.Label(self.frame)
         self.info = tk.Label(self.frame)
@@ -60,7 +60,7 @@ class WelcomeProgram(AdminProgram):
 
         self.title['font'] = title_font
         self.title['bg'] = self.color
-        self.title['text'] = 'Welcome to HGSSystem Manager\n[Help Page]'
+        self.title['text'] = '欢迎使用 HGSSystem 管理员系统\n[帮助]'
 
         self.info['bg'] = self.color
         self.info['font'] = info_font
@@ -69,13 +69,13 @@ class WelcomeProgram(AdminProgram):
         self.info['text'] = (f'''
 HGSSystem 管理者界面:
   1) 点击菜单按钮进入子菜单或程序
-  2) Creat 菜单包含创建类的程序
-  3) Delete 菜单包含删除类的程序
-  4) Search 菜单包含数据分析类的程序
-  5) Update 菜单包含数据更新类的程序
-  6）当离开操作系统时请退出登录以确保安全
-  7）只能使用具有管理员权限的账号登陆系统
-  8）只有admin用户可以完成危险操作(例如删除所有垃圾袋数据)
+  2) 创建 菜单包含创建类的程序
+  3) 删除 菜单包含删除类的程序
+  4) 搜索 菜单包含数据分析类的程序
+  5) 更新 菜单包含数据更新类的程序
+  6) 当离开操作系统时请退出登录以确保安全
+  7) 只能使用具有管理员权限的账号登陆系统
+  8) 只有admin用户可以完成危险操作(例如删除所有垃圾袋数据)
 
 程序的运行:
   1) 在菜单中选中程序后，根据程序界面提示完成操作
@@ -100,11 +100,10 @@ HGSSystem 管理者界面:
 
 class AboutProgram(AdminProgram):
     def __init__(self, station, win, color):
-        super().__init__(station, win, color, "About")
+        super().__init__(station, win, color, "关于")
 
         self.title = tk.Label(self.frame)
         self.info = tk.Label(self.frame)
-        self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(2)]
         self.__conf_font()
 
     def __conf_font(self, n: int = 1):
@@ -119,7 +118,7 @@ class AboutProgram(AdminProgram):
 
         self.title['font'] = title_font
         self.title['bg'] = self.color
-        self.title['text'] = 'About HGSSystem Manager\n[About Page]'
+        self.title['text'] = '关于 HGSSystem 管理员系统'
 
         self.info['bg'] = self.color
         self.info['font'] = info_font
@@ -130,18 +129,11 @@ class AboutProgram(AdminProgram):
         self.title.place(relx=0.1, rely=0.0, relwidth=0.8, relheight=0.2)
         self.info.place(relx=0.05, rely=0.21, relwidth=0.90, relheight=0.75)
 
-    def test_progress(self):
-        event = tk_event.TestProgressEvent(self.station)
-        self.station.push_event(event)
-
-    def test_msg(self):
-        self.station.show_msg("Test Msg", "test msg")
-
     def set_disable(self):
-        set_tk_disable_from_list(self.btn)
+        pass
 
     def reset_disable(self):
-        set_tk_disable_from_list(self.btn, flat='normal')
+        pass
 
 
 class CreateUserProgramBase(AdminProgram):
@@ -152,7 +144,7 @@ class CreateUserProgramBase(AdminProgram):
         self.title: List[tk.Label] = [tk.Label(self.enter_frame) for _ in range(3)]
         self.enter: List[tk.Entry] = [tk.Entry(self.enter_frame) for _ in range(3)]
         self.var: List[tk.Variable] = [tk.StringVar() for _ in range(3)]
-        self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(2)]  # create(生成用户) try(计算uid)
+        self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(2)]
 
         self._conf("#FA8072", False)  # 默认颜色
         self.__conf_font()
@@ -178,7 +170,7 @@ class CreateUserProgramBase(AdminProgram):
         self.enter_frame.place(relx=0.2, rely=0.3, relwidth=0.6, relheight=0.30)
 
         height = 0.1
-        for lb, text, enter, var in zip(self.title, ["UserName:", "PassWord:", "Phone:"], self.enter, self.var):
+        for lb, text, enter, var in zip(self.title, ["用户名:", "用户密码:", "手机号:"], self.enter, self.var):
             lb['font'] = title_font
             lb['text'] = text
             lb['bg'] = self.bg_color
@@ -192,7 +184,7 @@ class CreateUserProgramBase(AdminProgram):
             height += 0.30
 
         for btn, text, x, func in zip(self.btn,
-                                      ["Create", "GetUID"],
+                                      ["创建用户", "获取用户ID"],
                                       [0.2, 0.6],
                                       [lambda: self.create_by_name(), lambda: self.get_uid()]):
             btn['font'] = btn_font
@@ -207,7 +199,7 @@ class CreateUserProgramBase(AdminProgram):
         phone: str = self.var[2].get()
 
         if len(name) == 0 or len(passwd) == 0 or len(phone) != 11:
-            self.station.show_msg("UserInfoError", "Please, enter UserName/Passwd/Phone(11)")
+            self.station.show_msg("用户创建失败", "请再次尝试, 输入用户名, 用户密码和11位手机号")
             return None
 
         return name, passwd, phone
@@ -226,7 +218,7 @@ class CreateUserProgramBase(AdminProgram):
             return
         name, passwd, phone = res
         uid = create_uid(name, passwd, phone)
-        self.station.show_msg("UserID", f"UserName: {name}\nUserID: {uid}")
+        self.station.show_msg("获取用户ID", f"用户名: {name}\n用户ID: {uid}")
 
     def set_disable(self):
         set_tk_disable_from_list(self.btn)
@@ -239,18 +231,18 @@ class CreateUserProgramBase(AdminProgram):
 
 class CreateNormalUserProgram(CreateUserProgramBase):
     def __init__(self, station, win, color):
-        super(CreateNormalUserProgram, self).__init__(station, win, color, "CreateNormalUser")
+        super(CreateNormalUserProgram, self).__init__(station, win, color, "创建普通用户")
 
 
 class CreateManagerUserProgram(CreateUserProgramBase):
     def __init__(self, station, win, color):
-        super(CreateManagerUserProgram, self).__init__(station, win, color, "CreateManagerUser")
+        super(CreateManagerUserProgram, self).__init__(station, win, color, "创建管理员")
         self._conf("#4b5cc4", True)
 
 
 class CreateAutoNormalUserProgram(AdminProgram):
     def __init__(self, station, win, color):
-        super().__init__(station, win, color, "CreateAutoNormalUser")
+        super().__init__(station, win, color, "创建自动用户")
 
         self.enter_frame = tk.Frame(self.frame)
         self.title: tk.Label = tk.Label(self.enter_frame)
@@ -276,7 +268,7 @@ class CreateAutoNormalUserProgram(AdminProgram):
         self.enter_frame.place(relx=0.2, rely=0.3, relwidth=0.6, relheight=0.12)
 
         self.title['font'] = title_font
-        self.title['text'] = "Phone:"
+        self.title['text'] = "手机号:"
         self.title['bg'] = "#bce672"
         self.title['anchor'] = 'e'
 
@@ -287,7 +279,7 @@ class CreateAutoNormalUserProgram(AdminProgram):
         self.enter.place(relx=0.30, rely=0.25, relwidth=0.60, relheight=0.50)
 
         self.btn['font'] = btn_font
-        self.btn['text'] = "Create"
+        self.btn['text'] = "创建用户"
         self.btn['bg'] = conf.tk_btn_bg
         self.btn['command'] = lambda: self.create_user()
         self.btn.place(relx=0.4, rely=0.7, relwidth=0.2, relheight=0.08)
@@ -310,7 +302,7 @@ class CreateAutoNormalUserProgram(AdminProgram):
 
 class CreateGarbageProgram(AdminProgram):
     def __init__(self, station, win, color):
-        super().__init__(station, win, color, "CreateGarbage")
+        super().__init__(station, win, color, "创建垃圾袋")
 
         self.enter_frame = tk.Frame(self.frame)
         self.title: List[tk.Label] = [tk.Label(self.enter_frame), tk.Label(self.enter_frame)]
@@ -337,7 +329,7 @@ class CreateGarbageProgram(AdminProgram):
         self.enter_frame.place(relx=0.2, rely=0.3, relwidth=0.6, relheight=0.17)
 
         height = 0.1
-        for lb, text, enter, var in zip(self.title, ["Count:", "Export:"], self.enter, self.var):
+        for lb, text, enter, var in zip(self.title, ["数量:", "二维码导出位置:"], self.enter, self.var):
             lb['font'] = title_font
             lb['text'] = text
             lb['bg'] = "#b69968"
@@ -351,7 +343,7 @@ class CreateGarbageProgram(AdminProgram):
             height += 0.43
 
         for btn, text, x, func in zip([self.create_btn, self.file_btn],
-                                      ["Create", "ChoosePath"],
+                                      ["创建垃圾袋", "选择目录"],
                                       [0.2, 0.6],
                                       [lambda: self.create_garbage(), lambda: self.choose_file()]):
             btn['font'] = btn_font
@@ -361,7 +353,7 @@ class CreateGarbageProgram(AdminProgram):
             btn.place(relx=x, rely=0.7, relwidth=0.2, relheight=0.08)
 
     def choose_file(self):
-        path = askdirectory(title='path to save qr code')
+        path = askdirectory(title='选择二维码导出位置')
         self.var[1].set(path)
 
     def create_garbage(self):
@@ -370,7 +362,7 @@ class CreateGarbageProgram(AdminProgram):
             if count <= 0:
                 raise ValueError
         except (ValueError, TypeError):
-            self.station.show_msg("TypeError", "Count must be number > 1")
+            self.station.show_msg("类型错误", "数量必须为大于0的数字")
         else:
             path = self.var[1].get()
             if len(path) == 0:
@@ -479,11 +471,11 @@ class ExportProgramBase(AdminProgram):
         self.file_btn[0].place(relx=0.6, rely=0.79, relwidth=0.2, relheight=0.08)
 
     def choose_file_id(self):
-        path = askdirectory(title='path to save qr code')
+        path = askdirectory(title='选择二维码导出位置')
         self.gid_var[1].set(path)
 
     def choose_file_where(self):
-        path = askdirectory(title='path to save qr code')
+        path = askdirectory(title='选择二维码导出位置')
         self.where_var[1].set(path)
 
     def export_id(self):
@@ -505,9 +497,9 @@ class ExportProgramBase(AdminProgram):
 
 class ExportGarbageProgram(ExportProgramBase):
     def __init__(self, station, win, color):
-        super().__init__(station, win, color, "ExportGarbage")
-        self._conf("#afdfe4", ["GarbageID:", "Export:"], ["Where:", "Export:"],
-                   ["Export By GarbageID", "Export Advanced", "ChoosePath", "ChoosePath"])
+        super().__init__(station, win, color, "导出垃圾袋二维码")
+        self._conf("#afdfe4", ["垃圾袋ID:", "导出位置:"], ["条件:", "导出位置:"],
+                   ["根据垃圾袋ID导出", "根据条件导出", "选择目录", "选择目录"])
 
     def export_id(self):
         gid = self.gid_var[0].get()
@@ -524,9 +516,9 @@ class ExportGarbageProgram(ExportProgramBase):
 
 class ExportUserProgram(ExportProgramBase):
     def __init__(self, station, win, color):
-        super().__init__(station, win, color, "ExportUser")
-        self._conf("#f69c9f", ["UserID:", "Export:"], ["Where:", "Export:"],
-                   ["Export By UserID", "Export Advanced", "ChoosePath", "ChoosePath"])
+        super().__init__(station, win, color, "导出用户二维码")
+        self._conf("#f69c9f", ["用户ID:", "导出位置:"], ["条件:", "导出位置:"],
+                   ["根据用户ID导出", "根据条件导出", "选择目录", "选择目录"])
 
     def export_id(self):
         uid = self.gid_var[0].get()
@@ -543,7 +535,7 @@ class ExportUserProgram(ExportProgramBase):
 
 class CreateUserFromCSVProgram(AdminProgram):
     def __init__(self, station, win, color):
-        super().__init__(station, win, color, "CreateUserFromCSV")
+        super().__init__(station, win, color, "从CSV导入用户")
 
         self.auto_frame = tk.Frame(self.frame)
         self.auto_title: tk.Label = tk.Label(self.auto_frame)
@@ -581,12 +573,12 @@ class CreateUserFromCSVProgram(AdminProgram):
         self.auto_frame.place(relx=0.2, rely=0.6, relwidth=0.6, relheight=0.12)
 
         self.auto_title['font'] = title_font
-        self.auto_title['text'] = "Path:"
+        self.auto_title['text'] = "CSV文件:"
         self.auto_title['bg'] = "#EEE8AA"
         self.auto_title['anchor'] = 'e'
 
         self.path_title['font'] = title_font
-        self.path_title['text'] = "Path:"
+        self.path_title['text'] = "CSV文件:"
         self.path_title['bg'] = "#EEE8AA"
         self.path_title['anchor'] = 'e'
 
@@ -603,7 +595,7 @@ class CreateUserFromCSVProgram(AdminProgram):
         self.path_enter.place(relx=0.35, rely=0.25, relwidth=0.60, relheight=0.50)
 
         for btn, text in zip(self.create_btn + self.file_btn,
-                             ["Create User", "Create Auto User", "Choose CSV", "Choose CSV"]):
+                             ["创建用户", "创建自动用户", "选择CSV", "选择CSV"]):
             btn['font'] = btn_font
             btn['text'] = text
             btn['bg'] = conf.tk_btn_bg
@@ -619,11 +611,11 @@ class CreateUserFromCSVProgram(AdminProgram):
         self.file_btn[1].place(relx=0.6, rely=0.74, relwidth=0.2, relheight=0.08)
 
     def choose_file_auto(self):
-        path = askopenfilename(title='path of csv', filetypes=[("CSV", ".csv")])
+        path = askopenfilename(title='选择CSV文件', filetypes=[("CSV", ".csv")])
         self.auto_var.set(path)
 
     def choose_file(self):
-        path = askopenfilename(title='path of csv', filetypes=[("CSV", ".csv")])
+        path = askopenfilename(title='选择CSV文件', filetypes=[("CSV", ".csv")])
         self.path_var.set(path)
 
     def create_auto(self):
@@ -651,7 +643,7 @@ class CreateUserFromCSVProgram(AdminProgram):
 
 class DeleteUserProgram(AdminProgram):
     def __init__(self, station, win, color):
-        super().__init__(station, win, color, "DeleteUser")
+        super().__init__(station, win, color, "删除用户")
 
         self.uid_frame = tk.Frame(self.frame)
         self.uid_title: tk.Label = tk.Label(self.uid_frame)
@@ -688,7 +680,7 @@ class DeleteUserProgram(AdminProgram):
         self.name_frame.place(relx=0.2, rely=0.48, relwidth=0.6, relheight=0.25)
 
         height = 0.17
-        for lb, text, enter, var in zip(self.name_title, ["UserName:", "PassWord:"], self.name_enter, self.name_var):
+        for lb, text, enter, var in zip(self.name_title, ["用户名:", "密码:"], self.name_enter, self.name_var):
             lb['font'] = title_font
             lb['text'] = text
             lb['bg'] = "#FA8072"
@@ -702,7 +694,7 @@ class DeleteUserProgram(AdminProgram):
             height += 0.45
 
         self.uid_title['font'] = title_font
-        self.uid_title['text'] = "UserID:"
+        self.uid_title['text'] = "用户ID:"
         self.uid_title['bg'] = "#FA8072"
         self.uid_title['anchor'] = 'e'
 
@@ -713,7 +705,7 @@ class DeleteUserProgram(AdminProgram):
         self.uid_enter.place(relx=0.35, rely=0.25, relwidth=0.60, relheight=0.50)
 
         for btn, text, func in zip(self.btn,
-                                   ["Delete By Uid", "Delete By Name"],
+                                   ["通过用户ID删除", "通过用户名删除"],
                                    [lambda: self.del_by_uid(), lambda: self.del_by_name()]):
             btn['font'] = btn_font
             btn['text'] = text
@@ -726,7 +718,7 @@ class DeleteUserProgram(AdminProgram):
     def del_by_uid(self):
         uid = self.uid_var.get()
         if len(uid) != 32:
-            self.station.show_msg("UserID Error", "Len of UserID must be 32", "Error")
+            self.station.show_warning("用户ID错误", "用户ID必须为32位")
             return
         event = tk_event.DelUserEvent(self.station).start(uid)
         self.station.push_event(event)
@@ -735,7 +727,7 @@ class DeleteUserProgram(AdminProgram):
         name = self.name_var[0].get()
         passwd = self.name_var[1].get()
         if len(name) == 0 or len(passwd) == 0:
-            self.station.show_msg("UserName/Password Error", "You should enter UserName and Password", "Error")
+            self.station.show_warning("用户名或密码错误", "请输入用户名和密码")
             return
         uid = create_uid(name, passwd)
         event = tk_event.DelUserEvent(self.station).start(uid)
@@ -754,7 +746,7 @@ class DeleteUserProgram(AdminProgram):
 
 class DeleteUsersProgram(AdminProgram):
     def __init__(self, station, win, color):
-        super().__init__(station, win, color, "DeleteUsers")
+        super().__init__(station, win, color, "删除多个用户")
 
         self.enter_frame = tk.Frame(self.frame)
         self.title: tk.Label = tk.Label(self.enter_frame)
@@ -781,7 +773,7 @@ class DeleteUsersProgram(AdminProgram):
         self.enter_frame.place(relx=0.2, rely=0.30, relwidth=0.6, relheight=0.10)
 
         self.title['font'] = title_font
-        self.title['text'] = "Where:"
+        self.title['text'] = "条件:"
         self.title['anchor'] = 'e'
         self.title['bg'] = "#48c0a3"
 
@@ -792,7 +784,7 @@ class DeleteUsersProgram(AdminProgram):
         self.enter.place(relx=0.35, rely=0.25, relwidth=0.60, relheight=0.50)
 
         for btn, text, x, func in zip(self.btn,
-                                      ["Delete", "Scan"],
+                                      ["删除", "扫描"],
                                       [0.2, 0.6],
                                       [lambda: self.delete_user(), lambda: self.scan_user()]):
             btn['font'] = btn_font
@@ -804,7 +796,7 @@ class DeleteUsersProgram(AdminProgram):
     def delete_user(self):
         where = self.var.get()
         if len(where) == 0:
-            self.station.show_msg("`Where`Error", "`Where` must be SQL", "Warning")
+            self.station.show_warning("条件错误", "条件必须为正确的SQL语句")
             return
         event = tk_event.DelUserFromWhereEvent(self.station).start(where)
         self.station.push_event(event)
@@ -812,7 +804,7 @@ class DeleteUsersProgram(AdminProgram):
     def scan_user(self):
         where = self.var.get()
         if len(where) == 0:
-            self.station.show_msg("`Where`Error", "`Where` must be SQL", "Warning")
+            self.station.show_warning("条件错误", "条件必须为正确的SQL语句")
             return
         event = tk_event.DelUserFromWhereScanEvent(self.station).start(where)
         self.station.push_event(event)
@@ -843,7 +835,7 @@ class DeleteGarbageProgramBase(AdminProgram):
         self.__conf_font()
         self._conf()
 
-    def _conf(self, title: str = "GarbageID:", color: str = "#b69968", support_del_all: bool = True):
+    def _conf(self, title: str = "垃圾袋ID:", color: str = "#b69968", support_del_all: bool = True):
         self.frame_title = title
         self.frame_color = color
         self.support_del_all = support_del_all
@@ -877,7 +869,7 @@ class DeleteGarbageProgramBase(AdminProgram):
         for i in range(4):
             radio = self.radio[i]
             radio['font'] = btn_font
-            radio['text'] = ['From-All', 'From-NotUse', 'From-Waiting', 'From-Used'][i]
+            radio['text'] = ['均可', '仅未使用', '仅待检测', '仅已检测'][i]
             radio['bg'] = self.color
             radio['value'] = i
             radio['variable'] = self.int_var
@@ -893,7 +885,7 @@ class DeleteGarbageProgramBase(AdminProgram):
         self.radio[3].place(relx=0.60, rely=0.55, relwidth=0.20, relheight=0.1)
 
         self.btn['font'] = btn_font
-        self.btn['text'] = 'Delete'
+        self.btn['text'] = '删除'
         self.btn['bg'] = conf.tk_btn_bg
         self.btn['command'] = lambda: self.delete_garbage()
         self.btn.place(relx=0.4, rely=0.68, relwidth=0.2, relheight=0.08)
@@ -912,7 +904,7 @@ class DeleteGarbageProgramBase(AdminProgram):
 
 class DeleteGarbageProgram(DeleteGarbageProgramBase):
     def __init__(self, station, win, color):
-        super(DeleteGarbageProgram, self).__init__(station, win, color, "DeleteGarbage")
+        super(DeleteGarbageProgram, self).__init__(station, win, color, "删除垃圾袋")
 
     def delete_garbage(self):
         where = self.int_var.get()
@@ -920,7 +912,7 @@ class DeleteGarbageProgram(DeleteGarbageProgramBase):
 
         gid = self.var.get()
         if len(gid) == 0:
-            self.station.show_msg("GarbageID Error", "You should enter the garbage id", "Warning")
+            self.station.show_warning("垃圾袋ID错误", "请输入正确的垃圾袋ID")
             return
 
         event = tk_event.DelGarbageEvent(self.station).start(gid, where)
@@ -929,9 +921,9 @@ class DeleteGarbageProgram(DeleteGarbageProgramBase):
 
 class DeleteGarbageMoreProgram(DeleteGarbageProgramBase):
     def __init__(self, station, win, color):
-        super(DeleteGarbageMoreProgram, self).__init__(station, win, color, "DeleteGarbageMore")
+        super(DeleteGarbageMoreProgram, self).__init__(station, win, color, "删除多个垃圾袋")
         self.scan_btn = tk.Button(self.frame)
-        self._conf("Where:", "#f58f98", False)
+        self._conf("条件:", "#f58f98", False)
 
     def conf_gui(self, n: int = 1):
         super(DeleteGarbageMoreProgram, self).conf_gui(n)
@@ -939,9 +931,9 @@ class DeleteGarbageMoreProgram(DeleteGarbageProgramBase):
         self.btn.place(relx=0.2, rely=0.68, relwidth=0.2, relheight=0.08)
 
         self.scan_btn['font'] = make_font(size=self.btn_font_size)
-        self.scan_btn['text'] = 'Scan'
+        self.scan_btn['text'] = '扫描'
         self.scan_btn['bg'] = conf.tk_btn_bg
-        self.scan_btn['command'] = lambda: self.delete_garbage(True)
+        self.scan_btn['command'] = self.scan_garbage
         self.scan_btn.place(relx=0.6, rely=0.68, relwidth=0.2, relheight=0.08)
 
     def set_disable(self):
@@ -952,25 +944,34 @@ class DeleteGarbageMoreProgram(DeleteGarbageProgramBase):
         super(DeleteGarbageMoreProgram, self).reset_disable()
         self.scan_btn['state'] = 'normal'
 
-    def delete_garbage(self, is_scan: bool = False):
+    def delete_garbage(self):
         where = self.int_var.get()
         assert where in [1, 2, 3]
 
         where_sql = self.var.get()
         if len(where_sql) == 0:
-            self.station.show_msg("`Where`Error", "`Where` must be SQL", "Warning")
+            self.station.show_warning("条件错误", "条件必须为正确的SQL语句")
             return
 
-        if is_scan:
-            event = tk_event.DelGarbageWhereScanEvent(self.station).start(where, where_sql)
-        else:
-            event = tk_event.DelGarbageWhereEvent(self.station).start(where, where_sql)
+        event = tk_event.DelGarbageWhereEvent(self.station).start(where, where_sql)
+        self.station.push_event(event)
+
+    def scan_garbage(self):
+        where = self.int_var.get()
+        assert where in [1, 2, 3]
+
+        where_sql = self.var.get()
+        if len(where_sql) == 0:
+            self.station.show_warning("条件错误", "条件必须为正确的SQL语句")
+            return
+
+        event = tk_event.DelGarbageWhereScanEvent(self.station).start(where, where_sql)
         self.station.push_event(event)
 
 
 class DeleteAllGarbageProgram(AdminProgram):
     def __init__(self, station, win, color):
-        super().__init__(station, win, color, "DeleteAllGarbage")
+        super().__init__(station, win, color, "删除所有垃圾袋")
 
         self.dangerous: tk.Label = tk.Label(self.frame)
 
@@ -999,22 +1000,24 @@ class DeleteAllGarbageProgram(AdminProgram):
         self.dangerous['bg'] = self.color
         self.dangerous['font'] = danger_font
         self.dangerous['fg'] = "#f20c00"
-        self.dangerous['text'] = ("Delete all garbage from database?\n"
-                                  "Please enter the admin-passwd to\n"
-                                  "continue.\n"
-                                  "Dangerous operation.\n"
-                                  "The database may not be restored.\n"
-                                  "SuperHuan is not responsible for\n"
-                                  "the consequences.")
-        self.dangerous.place(relx=0.05, rely=0.03, relwidth=0.9, relheight=0.43)
+        self.dangerous['text'] = ("确定要从数据库删除所有垃圾袋吗?\n"
+                                  "请输入[admin]用户的密码再继续操作.\n"
+                                  "只有[admin]用户具有该操作的权限.\n"
+                                  "这是相当危险的操作.\n"
+                                  "操作后数据库可能无法恢复原数据.\n"
+                                  "SuperHuan和程序的缔造者不会对\n"
+                                  "此操作负责.\n"
+                                  "删库跑路可不是一件好事.\n"
+                                  "请遵守当地法律法规.")
+        self.dangerous.place(relx=0.05, rely=0.03, relwidth=0.9, relheight=0.53)
 
         self.enter_frame['bg'] = "#f20c00"
         self.enter_frame['bd'] = 5
         self.enter_frame['relief'] = "ridge"
-        self.enter_frame.place(relx=0.2, rely=0.50, relwidth=0.6, relheight=0.10)
+        self.enter_frame.place(relx=0.2, rely=0.60, relwidth=0.6, relheight=0.10)
 
         self.title['font'] = title_font
-        self.title['text'] = "Password:"
+        self.title['text'] = "密码:"
         self.title['bg'] = "#f20c00"
         self.title['anchor'] = 'e'
 
@@ -1024,9 +1027,9 @@ class DeleteAllGarbageProgram(AdminProgram):
         self.title.place(relx=0.01, rely=0.25, relwidth=0.30, relheight=0.50)
         self.enter.place(relx=0.35, rely=0.25, relwidth=0.60, relheight=0.50)
 
-        for btn, text, x in zip(self.btn, ["Delete", "Scan"], [0.2, 0.6]):
+        for btn, text, x in zip(self.btn, ["删除", "扫描"], [0.2, 0.6]):
             btn['text'] = text
-            btn.place(relx=x, rely=0.68, relwidth=0.2, relheight=0.08)
+            btn.place(relx=x, rely=0.78, relwidth=0.2, relheight=0.08)
 
         self.btn[0]['font'] = danger_btn_font
         self.btn[0]['bg'] = "#f20c00"
@@ -1043,11 +1046,11 @@ class DeleteAllGarbageProgram(AdminProgram):
     def delete_garbage(self):
         passwd = self.var.get()
         if len(passwd) == 0:
-            self.station.show_msg("PassWordError", "Password error", "Warning")
+            self.station.show_warning("密码错误", "请输入正确的[admin]用户密码")
 
         user = find_user_by_name('admin', passwd, self.station.get_db())
         if user is None or not user.is_manager():
-            self.station.show_msg("PassWordError", "Password error", "Warning")
+            self.station.show_warning("密码错误", "请输入正确的[admin]用户密码")
             return
 
         event = tk_event.DelAllGarbageEvent(self.station)  # 不需要start
@@ -1062,7 +1065,7 @@ class DeleteAllGarbageProgram(AdminProgram):
         self.enter['state'] = 'normal'
 
 
-class SearchBaseProgram(AdminProgram, metaclass=abc.ABCMeta):
+class SearchProgramBase(AdminProgram, metaclass=abc.ABCMeta):
     def __init__(self, station, win, color, title: str):
         super().__init__(station, win, color, title)
         self.view_frame = tk.Frame(self.frame)
@@ -1098,9 +1101,9 @@ class SearchBaseProgram(AdminProgram, metaclass=abc.ABCMeta):
         self.x_scroll.place(relx=0.0, rely=1 - x_scroll, relwidth=1 - y_scroll, relheight=x_scroll)
 
 
-class SearchUserProgram(SearchBaseProgram):
+class SearchUserProgram(SearchProgramBase):
     def __init__(self, station, win, color):
-        super().__init__(station, win, color, "SearchUser")
+        super().__init__(station, win, color, "搜索用户")
 
         self.enter_frame = tk.Frame(self.frame)
         self.title: List[tk.Label] = [tk.Label(self.enter_frame) for _ in range(3)]
@@ -1110,6 +1113,8 @@ class SearchUserProgram(SearchBaseProgram):
                                                                 for _ in range(3)]
         self.btn: tk.Button = tk.Button(self.frame)
         self._columns = ["UserID", "Name", "Phone", "Score", "Reputation", "IsManager"]
+        self._columns_ch = ["用户ID[UserID]", "用户名[Name]", "手机号[Phone]",
+                            "积分[Score]", "垃圾分类信用[Reputation]", "是否管理员[IsManager]"]
         self.__conf_font()
 
     def __conf_font(self, n: int = 1):
@@ -1129,7 +1134,7 @@ class SearchUserProgram(SearchBaseProgram):
 
         height = 0.1
         for lb, text, enter, var, check in zip(self.title,
-                                               ["UserID:", "UserName:", "Phone:"],
+                                               ["用户ID:", "用户名:", "手机号:"],
                                                self.enter, self.var, self.check):
             lb['font'] = title_font
             lb['text'] = text
@@ -1151,12 +1156,12 @@ class SearchUserProgram(SearchBaseProgram):
             height += 0.30
 
         self.btn['font'] = btn_font
-        self.btn['text'] = "Search"
+        self.btn['text'] = "搜索"
         self.btn['bg'] = conf.tk_btn_bg
         self.btn['command'] = self.search_user
         self.btn.place(relx=0.4, rely=0.9, relwidth=0.2, relheight=0.08)
 
-        self.conf_view_gui(self._columns, relx=0.05, rely=0.32, relwidth=0.9, relheight=0.55)
+        self.conf_view_gui(self._columns_ch, relx=0.05, rely=0.32, relwidth=0.9, relheight=0.55)
 
     def search_user(self):
         use_uid = self.check[0][1].get()
@@ -1192,7 +1197,7 @@ class SearchUserProgram(SearchBaseProgram):
         set_tk_disable_from_list(self.enter, flat='normal')
 
 
-class SearchAdvancedProgramBase(SearchBaseProgram, metaclass=abc.ABCMeta):
+class SearchAdvancedProgramBase(SearchProgramBase, metaclass=abc.ABCMeta):
     def __init__(self, station, win, color, title: str):
         super().__init__(station, win, color, title)
 
@@ -1202,12 +1207,13 @@ class SearchAdvancedProgramBase(SearchBaseProgram, metaclass=abc.ABCMeta):
         self.var: tk.Variable = tk.StringVar()
 
         self.btn: tk.Button = tk.Button(self.frame)
-        self._conf([], "#FA8072")  # 默认颜色
+        self._conf([], [], "#FA8072")  # 默认颜色
         self.__conf_font()
 
-    def _conf(self, columns: list, bg_color):
+    def _conf(self, columns: list, columns_ch: list, bg_color):
         self.bg_color = bg_color
         self._columns = columns
+        self._columns_ch = columns_ch
         return self
 
     def __conf_font(self, n: int = 1):
@@ -1227,7 +1233,7 @@ class SearchAdvancedProgramBase(SearchBaseProgram, metaclass=abc.ABCMeta):
 
         self.title['font'] = title_font
         self.title['bg'] = self.bg_color
-        self.title['text'] = "Where:"
+        self.title['text'] = "条件:"
         self.title['anchor'] = 'e'
 
         self.enter['font'] = title_font
@@ -1236,13 +1242,13 @@ class SearchAdvancedProgramBase(SearchBaseProgram, metaclass=abc.ABCMeta):
         self.title.place(relx=0.01, rely=0.25, relwidth=0.30, relheight=0.50)
         self.enter.place(relx=0.35, rely=0.25, relwidth=0.60, relheight=0.50)
 
-        self.btn['text'] = "Search"
+        self.btn['text'] = "搜索"
         self.btn['font'] = btn_font
         self.btn['bg'] = conf.tk_btn_bg
         self.btn['command'] = self.search
         self.btn.place(relx=0.4, rely=0.9, relwidth=0.2, relheight=0.08)
 
-        self.conf_view_gui(self._columns, relx=0.05, rely=0.12, relwidth=0.9, relheight=0.76)
+        self.conf_view_gui(self._columns_ch, relx=0.05, rely=0.12, relwidth=0.9, relheight=0.76)
 
     def search(self):
         ...
@@ -1258,9 +1264,11 @@ class SearchAdvancedProgramBase(SearchBaseProgram, metaclass=abc.ABCMeta):
 
 class SearchUserAdvancedProgram(SearchAdvancedProgramBase):
     def __init__(self, station, win, color):
-        super(SearchUserAdvancedProgram, self).__init__(station, win, color, "SearchUserAdvanced")
+        super(SearchUserAdvancedProgram, self).__init__(station, win, color, "高级搜索-用户")
         columns = ["UserID", "Name", "Phone", "Score", "Reputation", "IsManager"]
-        self._conf(columns, '#48c0a3')
+        columns_ch = ["用户ID[UserID]", "用户名[Name]", "手机号[Phone]",
+                      "积分[Score]", "垃圾分类信用[Reputation]", "是否管理员[IsManager]"]
+        self._conf(columns, columns_ch, '#48c0a3')
 
     def search(self):
         where = self.var.get()
@@ -1268,9 +1276,9 @@ class SearchUserAdvancedProgram(SearchAdvancedProgramBase):
         self.station.push_event(event)
 
 
-class SearchGarbageProgram(SearchBaseProgram):
+class SearchGarbageProgram(SearchProgramBase):
     def __init__(self, station, win, color):
-        super().__init__(station, win, color, "SearchGarbage")
+        super().__init__(station, win, color, "搜索垃圾袋")
 
         self.enter_frame = tk.Frame(self.frame)
         self.title: List[tk.Label] = [tk.Label(self.enter_frame) for _ in range(8)]
@@ -1280,6 +1288,8 @@ class SearchGarbageProgram(SearchBaseProgram):
                                                                 for _ in range(8)]
         self._columns = ["GarbageID", "UserID", "CheckerID", "CreateTime", "UseTime", "Location", "GarbageType",
                          "CheckResult"]
+        self._columns_zh = ["垃圾袋ID[GarbageID]", "使用者ID[UserID]", "检测者ID[CheckerID]", "创建时间[CreateTime]",
+                            "使用时间[UseTime]", "使用地点[Location]", "垃圾类型[GarbageType]", "检测结果[CheckResult]"]
         self.btn: tk.Button = tk.Button(self.frame)
         self.__conf_font()
 
@@ -1300,8 +1310,8 @@ class SearchGarbageProgram(SearchBaseProgram):
 
         height = 0.02
         for lb, text, enter, var, check in zip(self.title,
-                                               ["GarbageID:", "UserID:", "CheckerID:", "CreateTime:", "UseTime:",
-                                                "Location:", "GarbageType:", "CheckResult:"],
+                                               ["垃圾袋ID:", "使用者ID:", "检查者ID:", "创建时间:", "使用时间:",
+                                                "使用地点:", "垃圾类型:", "检测结果:"],
                                                self.enter, self.var, self.check):
             lb['font'] = title_font
             lb['text'] = text
@@ -1328,7 +1338,7 @@ class SearchGarbageProgram(SearchBaseProgram):
         self.btn['command'] = self.search_user
         self.btn.place(relx=0.4, rely=0.9, relwidth=0.2, relheight=0.08)
 
-        self.conf_view_gui(self._columns, relx=0.05, rely=0.49, relwidth=0.9, relheight=0.38, x_scroll=0.07)
+        self.conf_view_gui(self._columns_zh, relx=0.05, rely=0.49, relwidth=0.9, relheight=0.38, x_scroll=0.07)
 
     def search_user(self):
         keys = ["gid", "uid", "cuid", "create_time", "use_time", "loc", "type_", "check"]
@@ -1356,10 +1366,12 @@ class SearchGarbageProgram(SearchBaseProgram):
 
 class SearchGarbageAdvancedProgram(SearchAdvancedProgramBase):
     def __init__(self, station, win, color):
-        super(SearchGarbageAdvancedProgram, self).__init__(station, win, color, "SearchGarbageAdvanced")
+        super(SearchGarbageAdvancedProgram, self).__init__(station, win, color, "高级搜索-垃圾袋")
         columns = ["GarbageID", "UserID", "CheckerID", "CreateTime", "UseTime", "Location", "GarbageType",
                    "CheckResult"]
-        self._conf(columns, '#d1923f')
+        columns_zh = ["垃圾袋ID[GarbageID]", "使用者ID[UserID]", "检测者ID[CheckerID]", "创建时间[CreateTime]",
+                      "使用时间[UseTime]", "使用地点[Location]", "垃圾类型[GarbageType]", "检测结果[CheckResult]"]
+        self._conf(columns, columns_zh, '#d1923f')
 
     def search(self):
         where = self.var.get()
@@ -1369,11 +1381,15 @@ class SearchGarbageAdvancedProgram(SearchAdvancedProgramBase):
 
 class SearchAdvancedProgram(SearchAdvancedProgramBase):
     def __init__(self, station, win, color):
-        super(SearchAdvancedProgram, self).__init__(station, win, color, "SearchAdvanced")
+        super(SearchAdvancedProgram, self).__init__(station, win, color, "高级搜索")
         columns = ["GarbageID", "UserID", "UserName", "UserPhone", "UserScore",
                    "UserReputation", "CheckerID", "CheckerName", "CheckerPhone",
                    "CreateTime", "UseTime", "Location", "GarbageType", "CheckResult"]
-        self._conf(columns, '#426ab3')
+        columns_zh = ["垃圾袋ID[GarbageID]", "使用者ID[UserID]", "使用者名[UserName]", "使用者手机号[UserPhone]",
+                      "使用者积分[UserScore]", "使用者垃圾分类信用[UserReputation]", "检测者ID[CheckerID]",
+                      "检测这名[CheckerName]", "检测者手机号[CheckerPhone]", "创建时间[CreateTime]", "使用时间[UseTime]",
+                      "使用地点[Location]", "垃圾类型[GarbageType]", "检测结果[CheckResult]"]
+        self._conf(columns, columns_zh, '#426ab3')
 
     def search(self):
         where = self.var.get()
@@ -1427,7 +1443,7 @@ class UpdateUserProgramBase(AdminProgram):
         height = 0.1
         for lb, text, enter, var, lb_w, text_w, enter_w, var_w in (
                 zip(self.title, self.enter_title, self.enter, self.var,
-                    self.where_title, ["Where:", self.enter_title[1]], self.where_enter, self.where_var)):
+                    self.where_title, ["条件:", self.enter_title[1]], self.where_enter, self.where_var)):
             lb['font'] = title_font
             lb['text'] = text
             lb['bg'] = self.bg_color
@@ -1452,7 +1468,7 @@ class UpdateUserProgramBase(AdminProgram):
             height += 0.43
 
         for btn, text, func in zip(self.btn,
-                                   ["Update Advanced", "Update By UserID"],
+                                   ["通过条件更新", "通过用户ID更新"],
                                    [self.update_by_where, self.update_by_uid]):
             btn['font'] = btn_font
             btn['text'] = text
@@ -1479,8 +1495,8 @@ class UpdateUserProgramBase(AdminProgram):
 
 class UpdateUserScoreBase(UpdateUserProgramBase):
     def __init__(self, station, win, color):
-        super(UpdateUserScoreBase, self).__init__(station, win, color, "UpdateScore")
-        self._conf(["UserID:", "Score:"], "#afdfe4")
+        super(UpdateUserScoreBase, self).__init__(station, win, color, "更新用户-积分")
+        self._conf(["用户ID:", "积分:"], "#afdfe4")
 
     def update_by_uid(self):
         uid = self.enter[0].get()
@@ -1497,8 +1513,8 @@ class UpdateUserScoreBase(UpdateUserProgramBase):
 
 class UpdateUserReputationBase(UpdateUserProgramBase):
     def __init__(self, station, win, color):
-        super(UpdateUserReputationBase, self).__init__(station, win, color, "UpdateReputation")
-        self._conf(["UserID:", "Reputation:"], "#f8aba6")
+        super(UpdateUserReputationBase, self).__init__(station, win, color, "更新用户-垃圾分类信用")
+        self._conf(["用户ID:", "垃圾分类信用:"], "#f8aba6")
 
     def update_by_uid(self):
         uid = self.enter[0].get()
@@ -1515,7 +1531,7 @@ class UpdateUserReputationBase(UpdateUserProgramBase):
 
 class UpdateGarbageTypeProgram(AdminProgram):
     def __init__(self, station, win, color):
-        super().__init__(station, win, color, "UpdateGarbageType")
+        super().__init__(station, win, color, "更新垃圾袋-垃圾类型")
 
         self.enter_frame = tk.Frame(self.frame)
         self.title: tk.Label = tk.Label(self.enter_frame)
@@ -1557,7 +1573,7 @@ class UpdateGarbageTypeProgram(AdminProgram):
                                                    [self.type, self.where_type],
                                                    [self.var, self.where_var],
                                                    [0.32, 0.72],
-                                                   ["GarbageID:", "Where:"]):
+                                                   ["垃圾袋ID:", "条件:"]):
             lb['font'] = title_font
             lb['text'] = text
             lb['bg'] = "#fdb933"
@@ -1569,7 +1585,7 @@ class UpdateGarbageTypeProgram(AdminProgram):
             for i, radio in enumerate(radios):
                 radio['font'] = btn_font
                 radio['bg'] = self.color
-                radio['text'] = GarbageType.GarbageTypeStrList[i + 1]
+                radio['text'] = GarbageType.GarbageTypeStrList_ch[i + 1]
                 radio['value'] = i + 1
                 radio['variable'] = var[1]
                 radio['anchor'] = 'w'
@@ -1584,7 +1600,7 @@ class UpdateGarbageTypeProgram(AdminProgram):
             enter.place(relx=0.30, rely=0.2, relwidth=0.60, relheight=0.48)
 
         for btn, text, func in zip(self.btn,
-                                   ["Update Advanced", "Update By GarbageID"],
+                                   ["通过条件更新", "通过垃圾袋ID更新"],
                                    [self.update_by_where, self.update_by_gid]):
             btn['font'] = btn_font
             btn['text'] = text
@@ -1619,7 +1635,7 @@ class UpdateGarbageTypeProgram(AdminProgram):
 
 class UpdateGarbageCheckResultProgram(AdminProgram):
     def __init__(self, station, win, color):
-        super().__init__(station, win, color, "UpdateGarbageCheckResult")
+        super().__init__(station, win, color, "更新垃圾袋-检测结果")
 
         self.enter_frame = tk.Frame(self.frame)
         self.title: tk.Label = tk.Label(self.enter_frame)
@@ -1661,7 +1677,7 @@ class UpdateGarbageCheckResultProgram(AdminProgram):
                                                    [self.type, self.where_type],
                                                    [self.var, self.where_var],
                                                    [0.32, 0.72],
-                                                   ["GarbageID:", "Where:"]):
+                                                   ["垃圾袋ID:", "条件:"]):
             lb['font'] = title_font
             lb['text'] = text
             lb['bg'] = "#abc88b"
@@ -1673,7 +1689,7 @@ class UpdateGarbageCheckResultProgram(AdminProgram):
             for i, radio in enumerate(radios):
                 radio['font'] = btn_font
                 radio['bg'] = self.color
-                radio['text'] = ["Fail", "Pass"][i]
+                radio['text'] = ["投放错误", "投放正确"][i]
                 radio['value'] = i
                 radio['variable'] = var[1]
                 radio['anchor'] = 'w'
@@ -1686,7 +1702,7 @@ class UpdateGarbageCheckResultProgram(AdminProgram):
             enter.place(relx=0.30, rely=0.2, relwidth=0.60, relheight=0.48)
 
         for btn, text, func in zip(self.btn,
-                                   ["Update Advanced", "Update By GarbageID"],
+                                   ["通过条件更新", "通过垃圾袋ID更新"],
                                    [self.update_by_where, self.update_by_gid]):
             btn['font'] = btn_font
             btn['bg'] = conf.tk_btn_bg

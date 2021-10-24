@@ -48,6 +48,7 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
     """
     GarbageStation基类
     封装GarbageStation的相关操作
+    主要是柯里化 QR, sql相关函数
     """
 
     # 操作状态
@@ -147,28 +148,35 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
         if self._user is not None and self._user.get_uid() == user.get_uid() and self.check_user():  # 正在登陆期
             self._user = None  # 退出登录
             self._user_last_time = 0
+            self.show_msg("退出登录", "退出登录成功", show_time=3.0)
             return False
         self._user = user
         self._user_last_time = time.time()
+        self.show_msg("登录", "登录成功", show_time=3.0)
         return True  # 登录
 
     def throw_garbage_core(self, garbage: GarbageBag, garbage_type: enum):
         self.__check_normal_user()
         if not self._user.throw_rubbish(garbage, garbage_type, self._loc):
+            self.show_warning("垃圾投放", "垃圾投放失败", show_time=3.0)
             raise ThrowGarbageError
         update_garbage(garbage, self._db)
         update_user(self._user, self._db)
+        self.show_msg("垃圾投放", "垃圾投放成功", show_time=3.0)
 
     def check_garbage_core(self, garbage: GarbageBag, check_result: bool):
         self.__check_manager_user()
         user = find_user_by_id(garbage.get_user(), self._db)
         if user is None:
+            self.show_warning("垃圾检测", "垃圾袋还未使用", show_time=3.0)
             raise GarbageBagNotUse
         if not self._user.check_rubbish(garbage, check_result, user):
+            self.show_warning("垃圾检测", "垃圾检测提结果交失败", show_time=3.0)
             raise CheckGarbageError
         update_garbage(garbage, self._db)
         update_user(self._user, self._db)
         update_user(user, self._db)
+        self.show_msg("垃圾检测", "垃圾检测提结果交成功", show_time=3.0)
 
     def ranking(self, limit: int = 0, order_by: str = 'DESC') -> list[Tuple[uid_t, uname_t, score_t, score_t]]:
         """
@@ -679,7 +687,7 @@ class GarbageStation(GarbageStationBase):
     def __conf_title_label(self):
         title_font = make_font(size=self._title_font_size, weight="bold")
         self._title_label['font'] = title_font
-        self._title_label['bg'] = conf.tk_win_bg  # 蜜瓜绿
+        self._title_label['bg'] = conf.tk_win_bg
         self._title_label['text'] = "HGSSystem: Garbage Station Control Center"  # 使用英语标题在GUI更美观
         self._title_label['anchor'] = 'w'
         self._title_label.place(relx=0.02, rely=0.01, relwidth=0.7, relheight=0.07)
@@ -890,7 +898,7 @@ class GarbageStation(GarbageStationBase):
         title_font = make_font(size=self._msg_font_size + 1, weight="bold")
         info_font = make_font(size=self._msg_font_size - 1)
 
-        bg_color = "#F5FFFA"
+        bg_color = conf.tk_second_win_bg
         self._msg_frame['bg'] = bg_color
         self._msg_frame['bd'] = 5
         self._msg_frame['relief'] = "ridge"
@@ -1077,13 +1085,13 @@ class GarbageStation(GarbageStationBase):
     def __conf_loading(self):
         title_font = make_font(size=self._loading_tile_font, weight="bold")
 
-        self._loading_frame['bg'] = conf.tk_win_bg
+        self._loading_frame['bg'] = conf.tk_second_win_bg
         self._loading_frame['bd'] = 5
         self._loading_frame['relief'] = "ridge"
         # frame 不会立即显示
 
         self._loading_title[0]['font'] = title_font
-        self._loading_title[0]['bg'] = conf.tk_win_bg
+        self._loading_title[0]['bg'] = conf.tk_second_win_bg
         self._loading_title[0]['anchor'] = 'w'
         self._loading_title[0]['textvariable'] = self._loading_title[1]
         self._loading_title[0].place(relx=0.02, rely=0.00, relwidth=0.96, relheight=0.6)

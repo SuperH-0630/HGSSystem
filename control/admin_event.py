@@ -67,10 +67,10 @@ class CreateUserEvent(AdminEventBase):
     def done_after_event(self):
         res: Optional[User] = self.thread.wait_event()
         if res is None:
-            self.station.show_msg("CreateUserError", f"Can't not create user: {self._name}", "Warning")
+            self.station.show_warning("创建用户错误", f"无法创建用户 user: {self._name}")
         else:
             name = res.get_name()
-            self.station.show_msg("CreateUser", f"create user {name} success")
+            self.station.show_msg("创建用户成功", f"成功创建{name}个新用户")
 
 
 class CreateGarbageEvent(AdminEventBase):
@@ -87,7 +87,7 @@ class CreateGarbageEvent(AdminEventBase):
 
     def done_after_event(self):
         res: list[tuple[str, Optional[GarbageBag]]] = self.thread.wait_event()
-        self.station.show_msg("CreateGarbage", f"create {len(res)} garbage finished.")
+        self.station.show_msg("创建垃圾袋", f"成功创建{len(res)}个垃圾袋")
 
 
 class ExportGarbageByIDEvent(AdminEventBase):
@@ -105,9 +105,9 @@ class ExportGarbageByIDEvent(AdminEventBase):
     def done_after_event(self):
         res: tuple[str, Optional[GarbageBag]] = self.thread.wait_event()
         if res[1] is None:
-            self.station.show_msg("ExportError", f"Export garbage error.")
+            self.station.show_warning("导出错误", f"无法导出垃圾袋二维码")
         else:
-            self.station.show_msg("ExportSuccess", f"Export garbage finished.")
+            self.station.show_msg("导出成功", f"成功导出垃圾袋二维码")
 
 
 class ExportGarbageAdvancedEvent(AdminEventBase):
@@ -124,7 +124,7 @@ class ExportGarbageAdvancedEvent(AdminEventBase):
 
     def done_after_event(self):
         res: list[tuple[str]] = self.thread.wait_event()
-        self.station.show_msg("Export", f"Export {len(res)} garbage finished.")
+        self.station.show_msg("导出完成", f"导出{len(res)}个垃圾袋二维码")
 
 
 class ExportUserByIDEvent(AdminEventBase):
@@ -142,9 +142,9 @@ class ExportUserByIDEvent(AdminEventBase):
     def done_after_event(self):
         res: tuple[str, Optional[GarbageBag]] = self.thread.wait_event()
         if res[1] is None:
-            self.station.show_msg("ExportError", f"Export user error.")
+            self.station.show_warning("导出错误", f"无法导出用户二维码")
         else:
-            self.station.show_msg("ExportSuccess", f"Export user finished.")
+            self.station.show_msg("导出成功", f"成功导出用户二维码")
 
 
 class ExportUserAdvancedEvent(AdminEventBase):
@@ -161,7 +161,7 @@ class ExportUserAdvancedEvent(AdminEventBase):
 
     def done_after_event(self):
         res: list[tuple[str]] = self.thread.wait_event()
-        self.station.show_msg("Export", f"Export {len(res)} user finished.")
+        self.station.show_msg("导出完成", f"导出{len(res)}个用户二维码")
 
 
 class CreateUserFromCSVEvent(AdminEventBase):
@@ -178,7 +178,7 @@ class CreateUserFromCSVEvent(AdminEventBase):
 
     def done_after_event(self):
         res: list[User] = self.thread.wait_event()
-        self.station.show_msg("Creat", f"Creat {len(res)} user finished.")
+        self.station.show_msg("创建完成", f"从CSV创建{len(res)}个新用户")
 
 
 class CreateAutoUserFromCSVEvent(AdminEventBase):
@@ -195,7 +195,7 @@ class CreateAutoUserFromCSVEvent(AdminEventBase):
 
     def done_after_event(self):
         res: list[User] = self.thread.wait_event()
-        self.station.show_msg("Creat", f"Creat {len(res)} auto user finished.")
+        self.station.show_msg("创建完成", f"从CSV创建{len(res)}个新用户")
 
 
 class DelUserEvent(AdminEventBase):
@@ -213,9 +213,9 @@ class DelUserEvent(AdminEventBase):
     def done_after_event(self):
         res: bool = self.thread.wait_event()
         if res:
-            self.station.show_msg("DeleteUser", f"Delete user finished.")
+            self.station.show_msg("删除成功", f"删除用户成功")
         else:
-            self.station.show_msg("DeleteUserError", f"Delete user failed.", "Warning")
+            self.station.show_warning("删除失败", f"删除用户失败")
 
 
 class DelUserFromWhereScanEvent(AdminEventBase):
@@ -232,9 +232,9 @@ class DelUserFromWhereScanEvent(AdminEventBase):
     def done_after_event(self):
         res: int = self.thread.wait_event()
         if res != -1:
-            self.station.show_msg("DeleteUserScan", f"Delete count: {res}")
+            self.station.show_msg("扫描结果", f"符合删除要素的用户个数: {res}")
         else:
-            self.station.show_msg("DeleteUserScanError", f"`Where` must be SQL")
+            self.station.show_warning("扫描结果", f"获取扫描结果失败")
 
 
 class DelUserFromWhereEvent(AdminEventBase):
@@ -251,22 +251,22 @@ class DelUserFromWhereEvent(AdminEventBase):
     def done_after_event(self):
         res: int = self.thread.wait_event()
         if res != -1:
-            self.station.show_msg("DeleteUser", f"Delete {res} user success")
+            self.station.show_msg("扫描结果", f"成功删除{res}个用户")
         else:
-            self.station.show_msg("DeleteUserError", f"`Where` must be SQL")
+            self.station.show_warning("扫描结果", f"获取扫描结果失败")
 
 
 class DelGarbageEvent(AdminEventBase):
     def func(self, gid, where):
         if where == 0:
-            return 1 if self.station.del_garbage(gid) else -1
+            return self.station.del_garbage(gid)
         elif where == 1:
-            return 1 if self.station.del_garbage_not_use(gid) else -1
+            return self.station.del_garbage_not_use(gid)
         elif where == 2:
-            return 1 if self.station.del_garbage_wait_check(gid) else -1
+            return self.station.del_garbage_wait_check(gid)
         elif where == 3:
-            return 1 if self.station.del_garbage_has_check(gid) else -1
-        return -1
+            return self.station.del_garbage_has_check(gid)
+        return False
 
     def __init__(self, station):
         super(DelGarbageEvent, self).__init__(station)
@@ -276,11 +276,11 @@ class DelGarbageEvent(AdminEventBase):
         return self
 
     def done_after_event(self):
-        res: int = self.thread.wait_event()
-        if res != -1:
-            self.station.show_msg("DeleteGarbage", f"Delete {res} garbage success")
+        res: bool = self.thread.wait_event()
+        if res:
+            self.station.show_msg("删除成功", f"成功删除垃圾袋")
         else:
-            self.station.show_msg("DeleteGarbageError", f"Delete error")
+            self.station.show_warning("删除失败", f"删除垃圾袋失败")
 
 
 class DelGarbageWhereEvent(AdminEventBase):
@@ -303,9 +303,9 @@ class DelGarbageWhereEvent(AdminEventBase):
     def done_after_event(self):
         res: int = self.thread.wait_event()
         if res != -1:
-            self.station.show_msg("DeleteGarbage", f"Delete {res} garbage success")
+            self.station.show_msg("删除成功", f"成功删除{res}个垃圾袋")
         else:
-            self.station.show_msg("DeleteGarbageError", f"Delete error")
+            self.station.show_warning("删除失败", f"垃圾袋删除失败")
 
 
 class DelGarbageWhereScanEvent(AdminEventBase):
@@ -328,9 +328,9 @@ class DelGarbageWhereScanEvent(AdminEventBase):
     def done_after_event(self):
         res: int = self.thread.wait_event()
         if res != -1:
-            self.station.show_msg("DeleteGarbageScan", f"Delete count: {res}")
+            self.station.show_msg("扫描结果", f"符合删除要素的垃圾袋个数: {res}")
         else:
-            self.station.show_msg("DeleteGarbageScanError", f"Delete scan error")
+            self.station.show_warning("扫描结果", f"获取扫描结果失败")
 
 
 class DelAllGarbageScanEvent(AdminEventBase):
@@ -344,9 +344,9 @@ class DelAllGarbageScanEvent(AdminEventBase):
     def done_after_event(self):
         res: int = self.thread.wait_event()
         if res != -1:
-            self.station.show_msg("DeleteAllGarbageScan", f"Delete count: {res}")
+            self.station.show_msg("扫描结果", f"全部垃圾袋个数: {res}")
         else:
-            self.station.show_msg("DeleteAllGarbageError", f"Delete scan error")
+            self.station.show_warning("扫描结果", f"获取扫描结果失败")
 
 
 class DelAllGarbageEvent(AdminEventBase):
@@ -360,9 +360,9 @@ class DelAllGarbageEvent(AdminEventBase):
     def done_after_event(self):
         res: int = self.thread.wait_event()
         if res != -1:
-            self.station.show_msg("DeleteAllGarbage", f"Delete all[{res}] garbage success")
+            self.station.show_msg("删除成功", f"成功删除所用[共计{res}个]垃圾袋")
         else:
-            self.station.show_msg("DeleteAllGarbageError", f"Delete error")
+            self.station.show_warning("删除失败", f"删除所有垃圾袋失败")
 
 
 class SearchUserEvent(AdminEventBase):
@@ -381,7 +381,7 @@ class SearchUserEvent(AdminEventBase):
     def done_after_event(self):
         res: list[list] = self.thread.wait_event()
         if res is None or self.program is None:
-            self.station.show_msg("Search User Error", f"Search error")
+            self.station.show_warning("搜索失败", f"搜索用户失败")
             return
         for i in self.program.view.get_children():
             self.program.view.delete(i)
@@ -405,7 +405,7 @@ class SearchUserAdvancedEvent(AdminEventBase):
     def done_after_event(self):
         res: list[list] = self.thread.wait_event()
         if res is None or self.program is None:
-            self.station.show_msg("Search User Advanced Error", f"Search error")
+            self.station.show_warning("高级搜索失败", f"高级搜索用户失败")
             return
         for i in self.program.view.get_children():
             self.program.view.delete(i)
@@ -429,7 +429,7 @@ class SearchGarbageEvent(AdminEventBase):
     def done_after_event(self):
         res: list[list] = self.thread.wait_event()
         if res is None or self.program is None:
-            self.station.show_msg("Search Garbage Error", f"Search error")
+            self.station.show_warning("搜索失败", f"搜索垃圾袋失败")
             return
         for i in self.program.view.get_children():
             self.program.view.delete(i)
@@ -453,7 +453,7 @@ class SearchGarbageAdvancedEvent(AdminEventBase):
     def done_after_event(self):
         res: list[list] = self.thread.wait_event()
         if res is None or self.program is None:
-            self.station.show_msg("Search Garbage Advanced Error", f"Search error")
+            self.station.show_warning("高级搜索失败", f"高级搜索垃圾袋失败")
             return
         for i in self.program.view.get_children():
             self.program.view.delete(i)
@@ -477,7 +477,7 @@ class SearchAdvancedEvent(AdminEventBase):
     def done_after_event(self):
         res: list[list] = self.thread.wait_event()
         if res is None or self.program is None:
-            self.station.show_msg("Search Advanced Error", f"Search error")
+            self.station.show_warning("高级搜索失败", f"高级搜索失败")
             return
         for i in self.program.view.get_children():
             self.program.view.delete(i)
@@ -499,9 +499,9 @@ class UpdateUserScoreEvent(AdminEventBase):
     def done_after_event(self):
         res: int = self.thread.wait_event()
         if res == -1:
-            self.station.show_msg("UpdateError", f"Update user score error")
+            self.station.show_warning("更新失败", f"更新用户-积分失败")
         else:
-            self.station.show_msg("Update", f"Update {res} user score success")
+            self.station.show_msg("更新成功", f"成功更新{res}个用户-积分")
 
 
 class UpdateUserReputationEvent(AdminEventBase):
@@ -518,9 +518,9 @@ class UpdateUserReputationEvent(AdminEventBase):
     def done_after_event(self):
         res: int = self.thread.wait_event()
         if res == -1:
-            self.station.show_msg("UpdateError", f"Update user reputation error")
+            self.station.show_warning("更新失败", f"更新用户-垃圾分类信用失败")
         else:
-            self.station.show_msg("Update", f"Update {res} user reputation success")
+            self.station.show_msg("更新成功", f"成功更新{res}个用户-垃圾分类信用")
 
 
 class UpdateGarbageTypeEvent(AdminEventBase):
@@ -537,9 +537,9 @@ class UpdateGarbageTypeEvent(AdminEventBase):
     def done_after_event(self):
         res: int = self.thread.wait_event()
         if res == -1:
-            self.station.show_msg("UpdateError", f"Update garbage type error")
+            self.station.show_warning("更新失败", f"更新垃圾袋-垃圾类型失败")
         else:
-            self.station.show_msg("Update", f"Update {res} garbage type success")
+            self.station.show_msg("更新成功", f"成功更新{res}个垃圾袋-垃圾类型")
 
 
 class UpdateGarbageCheckEvent(AdminEventBase):
@@ -556,6 +556,6 @@ class UpdateGarbageCheckEvent(AdminEventBase):
     def done_after_event(self):
         res: int = self.thread.wait_event()
         if res == -1:
-            self.station.show_msg("UpdateError", f"Update garbage check result error")
+            self.station.show_warning("更新失败", f"更新垃圾袋-检测结果失败")
         else:
-            self.station.show_msg("Update", f"Update {res} garbage check result success")
+            self.station.show_msg("更新成功", f"成功更新{res}个垃圾袋-检测结果")

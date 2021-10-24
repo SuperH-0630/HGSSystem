@@ -25,6 +25,11 @@ class StationEventBase(TkEventBase):
 
 
 class ScanUserEvent(StationEventBase):
+    """
+    任务: 扫码用户, 访问db获取数据
+    若QR-CODE不是User码则调用ScanGarbage任务
+    """
+
     @staticmethod
     def func(qr: QRCode, db: DB):
         return scan_user(qr, db)
@@ -55,6 +60,10 @@ class ScanUserEvent(StationEventBase):
 
 
 class ScanGarbageEvent(StationEventBase):
+    """
+    任务: 扫码垃圾袋, 访问db获取数据
+    """
+
     @staticmethod
     def func(qr: QRCode, db: DB):
         return scan_garbage(qr, db)
@@ -90,6 +99,10 @@ class ScanGarbageEvent(StationEventBase):
 
 
 class RankingEvent(StationEventBase):
+    """
+    任务: 获取排行榜数据
+    """
+
     @staticmethod
     def func(db: DB):
         cur = db.search((f"SELECT UserID, Name, Score, Reputation "
@@ -117,6 +130,10 @@ class RankingEvent(StationEventBase):
 
 
 class ThrowGarbageEvent(StationEventBase):
+    """
+    任务: 提交扔垃圾的结果
+    """
+
     def func(self, garbage: GarbageBag, garbage_type: enum):
         try:
             self.station.throw_garbage_core(garbage, garbage_type)
@@ -145,6 +162,10 @@ class ThrowGarbageEvent(StationEventBase):
 
 
 class CheckGarbageEvent(StationEventBase):
+    """
+    任务: 提交检测垃圾的结果
+    """
+
     def func(self, garbage: GarbageBag, check: bool):
         try:
             self.station.check_garbage_core(garbage, check)

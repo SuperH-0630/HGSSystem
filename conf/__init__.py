@@ -45,3 +45,10 @@ ranking_tk_show_uid_len = tk_show_uid_len  # tk ranking 界面上展示uid的长
 
 tk_win_bg = "#fffffb"  # tkinter manager 窗口 按钮标准颜色
 tk_btn_bg = "#dcdcdc"  # tkinter 按钮 按钮标准颜色
+
+about_info = f'''
+HGSSystem (c) SuperHuan
+From github
+HGSSystem is Garbage Sorting System
+Author: SongZihuan[SuperHuan]
+'''.strip()

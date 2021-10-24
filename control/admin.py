@@ -273,6 +273,7 @@ class AdminStation(AdminStationBase):
                                                                         tk.Button(self._window)]
 
         self._msg_frame = tk.Frame(self._window)
+        self._msg_line = tk.Label(self._msg_frame)
         self._msg_label = tk.Label(self._msg_frame), tk.Label(self._msg_frame), tk.StringVar(), tk.StringVar()
         self._msg_hide = tk.Button(self._msg_frame)
 
@@ -322,10 +323,12 @@ class AdminStation(AdminStationBase):
         rely = 0.02
         bt_help: tk.Button = self._win_ctrl_button[2]
         bt_help['text'] = 'Help'
+        bt_help['command'] = lambda: self.to_program()
         bt_help.place(relx=0.81, rely=rely, relwidth=0.05, relheight=0.05)
 
         bt_about: tk.Button = self._win_ctrl_button[3]
         bt_about['text'] = 'About'
+        bt_about['command'] = lambda: self.to_program("About")
         bt_about.place(relx=0.87, rely=rely, relwidth=0.05, relheight=0.05)
 
         bt_exit: tk.Button = self._win_ctrl_button[4]
@@ -342,7 +345,6 @@ class AdminStation(AdminStationBase):
     def __to_main_menu(self):
         self._menu_list = []
         self.to_menu()
-        self.to_program()
 
     def __to_back_menu(self):
         assert len(self._menu_list) > 1
@@ -483,6 +485,8 @@ class AdminStation(AdminStationBase):
         self._msg_label[0]['anchor'] = 'w'
         self._msg_label[0]['textvariable'] = self._msg_label[2]
 
+        self._msg_line['bg'] = '#000000'
+
         self._msg_label[1]['font'] = info_font
         self._msg_label[1]['bg'] = conf.tk_win_bg
         self._msg_label[1]['anchor'] = 'nw'
@@ -490,13 +494,14 @@ class AdminStation(AdminStationBase):
         self._msg_label[1]['justify'] = 'left'
 
         self._msg_label[0].place(relx=0.05, rely=0.05, relwidth=0.9, relheight=0.1)
+        self._msg_line.place(relx=0.05, rely=0.15, relwidth=0.9, height=1)  # 一个像素的高度即可
         self._msg_label[1].place(relx=0.075, rely=0.2, relwidth=0.85, relheight=0.58)
 
         self._msg_hide['font'] = info_font
         self._msg_hide['text'] = 'close'
         self._msg_hide['bg'] = conf.tk_btn_bg
         self._msg_hide['command'] = lambda: self.hide_msg()
-        self._msg_hide.place(relx=0.375, rely=0.80, relwidth=0.25, relheight=0.13)
+        self._msg_hide.place(relx=0.375, rely=0.80, relwidth=0.25, relheight=0.10)
 
     def show_msg(self, title, info, msg_type='info'):
         assert not self._is_loading  # loading 时不显示msg

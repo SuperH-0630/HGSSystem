@@ -45,34 +45,90 @@ class WelcomeProgram(AdminProgram):
         super().__init__(station, win, color, "Welcome")
 
         self.title = tk.Label(self.frame)
-        self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(2)]
+        self.info = tk.Label(self.frame)
         self.__conf_font()
 
     def __conf_font(self, n: int = 1):
         self.title_font_size = int(25 * n)
-        self.btn_font_size = int(14 * n)
+        self.info_font_size = int(14 * n)
 
     def conf_gui(self, n: int = 1):
         self.__conf_font(n)
 
         title_font = make_font(size=self.title_font_size, weight="bold")
-        btn_font = make_font(size=self.btn_font_size)
+        info_font = make_font(size=self.info_font_size)
 
-        for btn, text in zip(self.btn, ["TestMSG", "TestProgress"]):
-            btn['font'] = btn_font
-            btn['text'] = text
-            btn['bg'] = '#d3d7d4'
-
-        self.title['text'] = 'Welcome to HGSSystem Manager'
         self.title['font'] = title_font
         self.title['bg'] = self.color
+        self.title['text'] = 'Welcome to HGSSystem Manager\n[Help Page]'
 
-        self.btn[0]['command'] = lambda: self.test_msg()
-        self.btn[1]['command'] = lambda: self.test_progress()
+        self.info['bg'] = self.color
+        self.info['font'] = info_font
+        self.info['anchor'] = 'nw'
+        self.info['justify'] = 'left'
+        self.info['text'] = (f'''
+HGSSystem 管理者界面:
+  1) 点击菜单按钮进入子菜单或程序
+  2) Creat 菜单包含创建类的程序
+  3) Delete 菜单包含删除类的程序
+  4) Search 菜单包含数据分析类的程序
+  5) Update 菜单包含数据更新类的程序
+  6）当离开操作系统时请退出登录以确保安全
+  7）只能使用具有管理员权限的账号登陆系统
+  8）只有admin用户可以完成危险操作(例如删除所有垃圾袋数据)
 
-        self.title.place(relx=0.1, rely=0.3, relwidth=0.8, relheight=0.2)
-        self.btn[0].place(relx=0.2, rely=0.7, relwidth=0.2, relheight=0.1)
-        self.btn[1].place(relx=0.6, rely=0.7, relwidth=0.2, relheight=0.1)
+程序的运行:
+  1) 在菜单中选中程序后，根据程序界面提示完成操作
+  2) 操作过程通常会显示进度条，除非任务执行迅速
+  3) 结果通常会被反馈, 且不会自动消失
+
+系统登录:
+  1) 仅Manager用户可以登录
+
+关于彩蛋: 存在
+                '''.strip())
+
+        self.title.place(relx=0.1, rely=0.0, relwidth=0.8, relheight=0.2)
+        self.info.place(relx=0.05, rely=0.21, relwidth=0.90, relheight=0.75)
+
+    def set_disable(self):
+        pass
+
+    def reset_disable(self):
+        pass
+
+
+class AboutProgram(AdminProgram):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "About")
+
+        self.title = tk.Label(self.frame)
+        self.info = tk.Label(self.frame)
+        self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(2)]
+        self.__conf_font()
+
+    def __conf_font(self, n: int = 1):
+        self.title_font_size = int(25 * n)
+        self.info_font_size = int(14 * n)
+
+    def conf_gui(self, n: int = 1):
+        self.__conf_font(n)
+
+        title_font = make_font(size=self.title_font_size, weight="bold")
+        info_font = make_font(size=self.info_font_size)
+
+        self.title['font'] = title_font
+        self.title['bg'] = self.color
+        self.title['text'] = 'About HGSSystem Manager\n[About Page]'
+
+        self.info['bg'] = self.color
+        self.info['font'] = info_font
+        self.info['anchor'] = 'nw'
+        self.info['justify'] = 'left'
+        self.info['text'] = conf.about_info
+
+        self.title.place(relx=0.1, rely=0.0, relwidth=0.8, relheight=0.2)
+        self.info.place(relx=0.05, rely=0.21, relwidth=0.90, relheight=0.75)
 
     def test_progress(self):
         event = tk_event.TestProgressEvent(self.station)
@@ -1668,4 +1724,4 @@ all_program = [WelcomeProgram, CreateNormalUserProgram, CreateManagerUserProgram
                DeleteGarbageMoreProgram, DeleteAllGarbageProgram, SearchUserProgram, SearchUserAdvancedProgram,
                SearchGarbageProgram, SearchGarbageAdvancedProgram, SearchAdvancedProgram, UpdateUserScoreBase,
                UpdateUserReputationBase, UpdateGarbageTypeProgram, UpdateGarbageCheckResultProgram,
-               ExportGarbageProgram, ExportUserProgram, CreateUserFromCSVProgram]
+               ExportGarbageProgram, ExportUserProgram, CreateUserFromCSVProgram, AboutProgram]

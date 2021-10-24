@@ -92,10 +92,10 @@ class ScanGarbageEvent(StationEventBase):
 class RankingEvent(StationEventBase):
     @staticmethod
     def func(db: DB):
-        cur = db.search((f"SELECT uid, name, score, reputation "
+        cur = db.search((f"SELECT UserID, Name, Score, Reputation "
                          f"FROM user "
-                         f"WHERE manager = 0 "
-                         f"ORDER BY reputation DESC, score DESC "
+                         f"WHERE IsManager = 0 "
+                         f"ORDER BY Reputation DESC, Score DESC "
                          f"LIMIT 20;"))
         if cur is None:
             return []
@@ -109,9 +109,11 @@ class RankingEvent(StationEventBase):
         return not self.thread.is_alive()
 
     def done_after_event(self):
-        self.thread.join()
-        if self.thread.result is not None:
-            self.station.thread_show_rank(self.thread.result)
+        res = self.thread.wait_event()
+        if res is not None:
+            self.station.thread_show_rank(res)
+        else:
+            self.station.show_warning("RankError", f'Unable to get leaderboard data')
 
 
 class ThrowGarbageEvent(StationEventBase):

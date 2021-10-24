@@ -177,10 +177,10 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
         if order_by != 'ASC' and order_by != 'DESC':
             order_by = 'DESC'
 
-        cur = self._db.search((f"SELECT uid, name, score, reputation "
+        cur = self._db.search((f"SELECT UserID, Name, Score, Reputation "
                                f"FROM user "
-                               f"WHERE manager = 0 "
-                               f"ORDER BY reputation {order_by}, score {order_by} "
+                               f"WHERE IsManager = 0 "
+                               f"ORDER BY Reputation {order_by}, Score {order_by} "
                                f"{limit}"))
         if cur is None:
             raise RankingUserError
@@ -290,13 +290,7 @@ HGSSystem:
 
     def show_about_info(self):
         self.update_user_time()
-        self.show_msg("About", f'''
-HGSSystem (c) SuperHuan
-From github
-HGSSystem is Garbage Sorting System
-Author: SongZihuan[SuperHuan]
-Run on python {sys.version}
-                '''.strip())
+        self.show_msg("About", conf.about_info)
 
     def show_exit(self):
         self.update_user_time()
@@ -515,6 +509,7 @@ class GarbageStation(GarbageStationBase):
                                            tk.Button(self._user_btn_frame)]
 
         self._msg_frame = tk.Frame(self._window)
+        self._msg_line = tk.Label(self._msg_frame)
         self._msg_label = tk.Label(self._msg_frame), tk.Label(self._msg_frame), tk.StringVar(), tk.StringVar()
         self._msg_hide = tk.Button(self._msg_frame)
 
@@ -534,6 +529,7 @@ class GarbageStation(GarbageStationBase):
         self._rank_btn = [tk.Button(self._rank_frame), tk.Button(self._rank_frame), tk.Button(self._rank_frame)]
 
         self._loading_frame = tk.Frame(self._window)
+        self._loading_line = tk.Label(self._loading_frame)
         self._loading_title: Tuple[tk.Label, tk.Variable] = tk.Label(self._loading_frame), tk.StringVar()
         self._loading_pro = ttk.Progressbar(self._loading_frame)
 
@@ -567,7 +563,7 @@ class GarbageStation(GarbageStationBase):
     def __conf_windows(self):
         self._window.title('HGSSystem: Garbage Station')
         self._window.geometry(f'{self._win_width}x{self._win_height}')
-        self._window['bg'] = "#F0FFF0"  # 蜜瓜绿
+        self._window['bg'] = conf.tk_win_bg
         self._window.attributes("-topmost", True)
         self._window.resizable(False, False)
         self._window.protocol("WM_DELETE_WINDOW", lambda: self.show_exit())
@@ -623,7 +619,7 @@ class GarbageStation(GarbageStationBase):
     def __conf_title_label(self):
         title_font = make_font(size=self._title_font_size, weight="bold")
         self._title_label['font'] = title_font
-        self._title_label['bg'] = "#F0FFF0"  # 蜜瓜绿
+        self._title_label['bg'] = conf.tk_win_bg  # 蜜瓜绿
         self._title_label['text'] = "HGSSystem: GarbageStation Control Center"
         self._title_label['anchor'] = 'w'
         self._title_label.place(relx=0.02, rely=0.0, relwidth=0.6, relheight=0.07)
@@ -784,12 +780,12 @@ class GarbageStation(GarbageStationBase):
 
     def __conf_user_btn(self):
         btn_font = make_font(size=self._user_btn_font_size, weight="bold")
-        btn_info: List[Tuple[str, str]] = [("Detail", "#b0a4e3"),
-                                           ("Ranking", "#b0a4e3"),
-                                           ("Search", "#b0a4e3")]
+        btn_info: List[Tuple[str, str]] = [("Detail", "#DDA0DD"),
+                                           ("Ranking", "#B0C4DE"),
+                                           ("Search", "#F4A460")]
 
         self._user_btn_frame.place(relx=0.02, rely=0.66, relwidth=0.19, relheight=0.32)
-        self._user_btn_frame['bg'] = "#F0FFF0"
+        self._user_btn_frame['bg'] = conf.tk_win_bg
 
         h_label = 5
         h_label_s = 1
@@ -826,6 +822,8 @@ class GarbageStation(GarbageStationBase):
         self._msg_label[0]['anchor'] = 'w'
         self._msg_label[0]['textvariable'] = self._msg_label[2]
 
+        self._msg_line['bg'] = '#000000'
+
         self._msg_label[1]['font'] = info_font
         self._msg_label[1]['bg'] = "#F5FFFA"
         self._msg_label[1]['anchor'] = 'nw'
@@ -833,13 +831,14 @@ class GarbageStation(GarbageStationBase):
         self._msg_label[1]['textvariable'] = self._msg_label[3]
 
         self._msg_label[0].place(relx=0.05, rely=0.05, relwidth=0.9, relheight=0.1)
+        self._msg_line.place(relx=0.05, rely=0.15, relwidth=0.9, height=1)  # 一个像素的高度即可
         self._msg_label[1].place(relx=0.075, rely=0.2, relwidth=0.85, relheight=0.64)
 
         self._msg_hide['font'] = info_font
-        self._msg_hide['bg'] = "#00CED1"
+        self._msg_hide['bg'] = conf.tk_btn_bg
         self._msg_hide['text'] = 'close'
         self._msg_hide['command'] = lambda: self.hide_msg_rank(True)
-        self._msg_hide.place(relx=0.375, rely=0.85, relwidth=0.25, relheight=0.1)
+        self._msg_hide.place(relx=0.375, rely=0.85, relwidth=0.25, relheight=0.08)
 
     def show_msg(self, title, info, msg_type='info', big: bool = True):
         if self._disable_all_btn:
@@ -965,17 +964,19 @@ class GarbageStation(GarbageStationBase):
     def __conf_loading(self):
         title_font = make_font(size=self._loading_tile_font, weight="bold")
 
-        self._loading_frame['bg'] = "#808080"
+        self._loading_frame['bg'] = conf.tk_win_bg
         self._loading_frame['bd'] = 5
         self._loading_frame['relief'] = "ridge"
         # frame 不会立即显示
 
         self._loading_title[0]['font'] = title_font
-        self._loading_title[0]['bg'] = "#808080"
-        self._loading_title[0]['fg'] = "#F8F8FF"
+        self._loading_title[0]['bg'] = conf.tk_win_bg
         self._loading_title[0]['anchor'] = 'w'
         self._loading_title[0]['textvariable'] = self._loading_title[1]
-        self._loading_title[0].place(relx=0.02, rely=0.00, relwidth=0.96, relheight=0.7)
+        self._loading_title[0].place(relx=0.02, rely=0.00, relwidth=0.96, relheight=0.6)
+
+        self._loading_line['bg'] = '#000000'
+        self._loading_line.place(relx=0.02, rely=0.6, relwidth=0.96, height=1)  # 一个像素的高度即可
 
         self._loading_pro['mode'] = 'indeterminate'
         self._loading_pro['orient'] = 'horizontal'

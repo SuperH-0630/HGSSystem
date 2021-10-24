@@ -38,9 +38,9 @@ class RankingStationBase(metaclass=abc.ABCMeta):
     def get_rank(self, offset: int = 0) -> Tuple[bool, list]:
         limit = self.rank_count * self.limit_n
         offset = self.offset + limit * offset  # offset为0表示不移动, 1表示向前, -1表示向后
-        cur = self._db.search((f"SELECT uid, name, score, reputation "
+        cur = self._db.search((f"SELECT UserID, Name, Score, Reputation "
                                f"FROM user "
-                               f"WHERE manager = 0 "
+                               f"WHERE IsManager = 0 "
                                f"ORDER BY reputation DESC, score DESC "
                                f"LIMIT {limit} OFFSET {offset};"))
         if cur is None or cur.rowcount == 0:
@@ -225,11 +225,11 @@ class RankingStation(RankingStationBase):
     def __conf_windows(self):
         self.window.title('HGSSystem: Ranking')
         self.window.geometry(f'{self.width}x{self.height}')
-        self.window['bg'] = "#F0FFF0"  # 蜜瓜绿
+        self.window['bg'] = conf.tk_win_bg
         self.window.resizable(False, False)
         self.bg_img = None
         self.bg_lb = tk.Label(self.window)
-        self.bg_lb['bg'] = "#F0FFF0"  # 蜜瓜绿
+        self.bg_lb['bg'] = conf.tk_win_bg
         self.bg_lb.place(relx=0, rely=0, relwidth=1, relheight=1)
 
         self.window.bind("<F11>", lambda _: self.__switch_full_screen())
@@ -274,11 +274,11 @@ class RankingStation(RankingStationBase):
 
         self.rank_frame['relief'] = "ridge"
         self.rank_frame['bd'] = 5
-        self.rank_frame['bg'] = "#F5F5DC"
+        self.rank_frame['bg'] = conf.tk_win_bg
         self.rank_frame.place(relx=relx, rely=rely, relwidth=relwidth, relheight=relheight)
 
         self.rank_title['font'] = title_font
-        self.rank_title['bg'] = "#F5F5DC"
+        self.rank_title['bg'] = conf.tk_win_bg
         self.rank_title['textvariable'] = self.rank_title_var
         self.rank_title.place(relx=0.02, rely=0.00, relwidth=0.96, relheight=0.1)
         self.rank_title_var.set("Ranking.loading...")

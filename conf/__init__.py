@@ -47,8 +47,10 @@ tk_win_bg = "#fffffb"  # tkinter manager 窗口 按钮标准颜色
 tk_btn_bg = "#dcdcdc"  # tkinter 按钮 按钮标准颜色
 
 about_info = f'''
-HGSSystem (c) SuperHuan
-From github
 HGSSystem is Garbage Sorting System
-Author: SongZihuan[SuperHuan]
+
+HGSSystem 版权归属 SuperHuan
+作者: SongZihuan[SuperHuan]
+
+项目托关于 Github 平台
 '''.strip()

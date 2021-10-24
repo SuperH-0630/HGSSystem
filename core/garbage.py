@@ -11,6 +11,7 @@ class GarbageBagNotUse(Exception):
 
 class GarbageType:
     GarbageTypeStrList: List = ["", "recyclable", "kitchen", "hazardous", "other"]
+    GarbageTypeStrList_ch: List = ["", "可回收", "厨余", "有害", "其他"]
     recyclable: enum = 1
     kitchen: enum = 2
     hazardous: enum = 3

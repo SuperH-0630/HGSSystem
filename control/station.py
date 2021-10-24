@@ -1,7 +1,6 @@
 import time
 import conf
 import cv2
-import sys
 import random
 import traceback
 import abc
@@ -205,7 +204,7 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
     def throw_garbage(self, garbage_type: enum):
         self.update_user_time()
         if self._flat != GarbageStationBase.status_get_garbage_type or self._garbage is None:
-            self.show_warning("Operation Fail", "You should login first and scan the QR code of the trash bag")
+            self.show_warning("操作失败", "请先登录, 扫描垃圾袋")
             return
 
         event = tk_event.ThrowGarbageEvent(self).start(self._garbage, garbage_type)
@@ -216,7 +215,7 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
     def check_garbage(self, check: bool):
         self.update_user_time()
         if self._flat != GarbageStationBase.status_get_garbage_check or self._garbage is None:
-            self.show_warning("Operation Fail", "You should login first and scan the QR code of the trash bag")
+            self.show_warning("操作失败", "请先登录, 扫描垃圾袋")
             return
 
         event = tk_event.CheckGarbageEvent(self).start(self._garbage, check)
@@ -227,77 +226,82 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
     def show_garbage_info(self):
         self.update_user_time()
         if self._flat != GarbageStationBase.status_get_garbage_check or self._garbage is None:
-            self.show_warning("Operation Fail", "You should login first and scan the QR code of the trash bag")
+            self.show_warning("操作失败", "请先登录, 扫描垃圾袋")
             return
 
         if not self._garbage.is_use():
-            self.show_warning("Operation Fail", "The garbage bag has not been used")
+            self.show_warning("操作失败", "垃圾袋还未被使用")
             return
 
         info = self._garbage.get_info()
-        garbage_type = GarbageType.GarbageTypeStrList[int(info['type'])]
+        garbage_type = GarbageType.GarbageTypeStrList_ch[int(info['type'])]
         if self._garbage.is_check():
             time_str = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(float(info['use_time'])))
             check = f'Checker is f{info["checker"][0:conf.tk_show_uid_len]}\n'
             if info["check"] == '1':
-                check += f'CheckResult is Pass\n'
+                check += f'检查结果为 投放正确\n'
             else:
-                check += f'CheckResult is Fail\n'
-            self.show_msg("Garbage Info", (f"Type is {garbage_type}\n"
-                                           f"User is {info['user'][0:conf.tk_show_uid_len]}\n"
-                                           f"Location:\n  {info['loc']}\n"
+                check += f'检查结果为 投放错误\n'
+            self.show_msg("Garbage Info", (f"垃圾类型为 {garbage_type}\n"
+                                           f"用户是 {info['user'][0:conf.tk_show_uid_len]}\n"
+                                           f"地址:\n  {info['loc']}\n"
                                            f"{check}"
-                                           f"Date:\n  {time_str}"))  # 遮蔽Pass和Fail按键
+                                           f"日期:\n  {time_str}"))  # 遮蔽Pass和Fail按键
         elif self._garbage.is_use():
             time_str = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(float(info['use_time'])))
-            self.show_msg("Garbage Info", (f"Type is {garbage_type}\n"
-                                           f"User is {info['user'][0:conf.tk_show_uid_len]}\n"
-                                           f"Location:\n  {info['loc']}\n"
-                                           f"Date:\n  {time_str}"), big=False)  # 不遮蔽Pass和Fail按键
+            self.show_msg("Garbage Info", (f"垃圾类型为 {garbage_type}\n"
+                                           f"用户是 {info['user'][0:conf.tk_show_uid_len]}\n"
+                                           f"地址:\n  {info['loc']}\n"
+                                           f"日期:\n  {time_str}"), big=False)  # 不遮蔽Pass和Fail按键
         else:
             self.show_msg("Garbage Info", f"Garbage has not use")  # 遮蔽Pass和Fail按键
 
     def show_user_info(self):
         self.update_user_time()
         if not self.check_user():
-            self.show_warning("Operation Fail", "You should login first")
+            self.show_warning("操作失败", "请先登录")
             return
 
         info = self.get_user_info()
         if info.get('manager', '0') == '1':
-            self.show_msg("About User", (f"Manager User\n"
-                                         f"UserName: {info['name']}\n"
-                                         f"UserID:\n  {info['uid']}"))
+            self.show_msg("About User", (f"管理者用户\n"
+                                         f"用户名: {info['name']}\n"
+                                         f"用户ID:\n  {info['uid']}"))
         else:
-            self.show_msg("About User", (f"Normal User\n"
-                                         f"UserName: {info['name']}\n"
-                                         f"UserID:\n  {info['uid']}\n"
-                                         f"Score: {info['score']}\n"
-                                         f"Reputation: {info['reputation']}\n"
-                                         f"Rubbish: {info['rubbish']}"))
+            self.show_msg("About User", (f"普通用户\n"
+                                         f"用户名: {info['name']}\n"
+                                         f"用户ID:\n  {info['uid']}\n"
+                                         f"评分: {info['score']}\n"
+                                         f"垃圾分类信用: {info['reputation']}\n"
+                                         f"垃圾量(7天): {info['rubbish']}"))
 
     def show_help_info(self):
         self.update_user_time()
-        self.show_msg("Help", f'''
-HGSSystem:
-  1) Scan User QR code
-  2) Scan Garbage QR code
-  3) Select the type of garbage
-  4) Garbage submitted successfully
-     (You can leave now)
-  5) Waiting for feedback
+        self.show_msg("帮助", f'''
+投放垃圾使用说明（普通用户）:
+  1) 扫码用户二维码登录
+  2) 扫码垃圾袋二维码
+  3) 选择垃圾类型
+  4) 投放垃圾到垃圾桶 (投放完成, 可以离开或继续投放)
+  5) 等待结果反馈 (可能需要数日)
+检测垃圾使用说明（管理用户）:
+  1) 扫码用户二维码登录
+  2) 扫码垃圾袋二维码
+  3) 检查垃圾是否投放正确
+  4) 操作完成 (投放完成, 可以离开或继续投放)
+所有用户: 离开前请确保账户退出(再次扫描用户二维码退出登录)
         '''.strip())
 
     def show_about_info(self):
         self.update_user_time()
-        self.show_msg("About", conf.about_info)
+        self.show_msg("关于", conf.about_info)
 
     def show_exit(self):
         self.update_user_time()
         if self.is_manager():
             self.exit_win()
             return
-        self.show_warning("Exit", f'Permission not permitted'.strip())
+        self.show_warning("退出", f'用户不具有退出权限')
 
     def easter_eggs(self):
         self.update_user_time()
@@ -305,7 +309,7 @@ HGSSystem:
             return
         self._have_easter_eggs = True
         self.show_msg("Easter Agg", f'''
-恭喜触发彩蛋[中文]
+恭喜触发彩蛋
 尝试一下新的编程语言: aFunlang.
 来自: github
 [斯人若彩虹, 遇上方知有]
@@ -314,9 +318,9 @@ HGSSystem:
 
     def show_search_info(self):
         self.update_user_time()
-        self.show_msg("Search", f'''
-He will get the camera content and feedback the garbage type.
-The function has not yet been implemented.
+        self.show_msg("搜索", f'''
+搜索功能将根据摄像头获取物品信息, 反馈该物品垃圾类型。
+该功能尚未开放, 敬请期待
                 '''.strip())
 
     def thread_show_rank(self, rank_list):
@@ -336,7 +340,7 @@ The function has not yet been implemented.
             self.rank[-1].append((i + 1, r[1], r[0], r[2], r[3], color))
         if len(self.rank[0]) == 0:
             self.rank = None
-            self.show_warning("RankError", f'Unable to get leaderboard data')
+            self.show_warning("排行榜错误", f'无法获取排行榜信息')
             return
         self.rank_index = 0
         self.get_rank(0)
@@ -346,7 +350,7 @@ The function has not yet been implemented.
         self.rank_index += n
 
         if self.rank_index < 0 or self.rank_index >= len(self.rank):
-            self.show_msg("RankError", f'Unable to get leaderboard data')
+            self.show_msg("排行榜错误", f'无法获取排行榜信息')
             return
 
         self.show_rank(self.rank_index + 1, len(self.rank), self.rank[self.rank_index])
@@ -380,7 +384,7 @@ The function has not yet been implemented.
     @abc.abstractmethod
     def show_rank(self, page: int, page_c: int,
                   rank_info: List[Tuple[int, uname_t, uid_t, score_t, score_t, Optional[str]]],
-                  title: str = 'Ranking'):
+                  title: str = '排行榜'):
         ...
 
     @abc.abstractmethod
@@ -424,14 +428,19 @@ import station_event as tk_event
 
 
 class GarbageStation(GarbageStationBase):
-    def set_after_run(self, ms, func, *args):  # super.__init__可能会调用
+    """
+    GarbageStation 垃圾站系统
+    使用tkinter作为GUI
+    """
+
+    def set_after_run(self, ms, func, *args):  # 正常运行前设置定时任务 super.__init__可能会调用
         self.init_after_run_list.append((ms, func, args))
 
-    def __conf_set_after_run(self):
+    def __conf_set_after_run(self):  # 配合 set_after_run 使用
         for ms, func, args in self.init_after_run_list:
             self.set_after_run_now(ms, func, *args)
 
-    def set_after_run_now(self, ms, func, *args):
+    def set_after_run_now(self, ms, func, *args):  # 正常运行时设置定时任务
         self._window.after(ms, func, *args)
 
     def __init__(self,
@@ -445,13 +454,13 @@ class GarbageStation(GarbageStationBase):
         super(GarbageStation, self).__init__(db, cap, qr, loc)
         self.refresh_delay = refresh_delay
 
-        self._window = tk.Tk()
+        self._window = tk.Tk()  # 系统窗口
         self._sys_height = self._window.winfo_screenheight()
         self._sys_width = self._window.winfo_screenwidth()
 
-        self._win_height = int(self._sys_height * (2 / 3))
-        self._win_width = int(self._sys_width * (2 / 3))
-        self._full_screen = False
+        self._win_height = int(self._sys_height * (2 / 3))  # 窗口高度
+        self._win_width = int(self._sys_width * (2 / 3))  # 窗口宽度
+        self._full_screen = False  # 是否全屏模式
 
         self.__conf_windows()
 
@@ -461,58 +470,72 @@ class GarbageStation(GarbageStationBase):
         self._msg_time: Optional[float] = None  # msg 显示时间累计
         self._disable_all_btn: bool = False  # 禁用所有按钮和操作
 
-        self.__conf_font_size()
-        self.__create_tk()
-        self.__conf_tk()
+        self.__conf_font_size()  # 配置字体大小
+        self.__create_tk()  # 创建组件
+        self.__conf_tk()  # 配置组件
 
         self.__conf_after()
         self.__conf_set_after_run()
         self.__switch_to_no_user()
 
     def __create_tk(self):
-        self._title_label = tk.Label(self._window)
+        """
+        创建tkinter组件
+        该函数只被 __init__ 调用
+        """
+        self._title_label = tk.Label(self._window)  # 标题
+
+        # 窗口操纵
         self._win_ctrl_button: List[tk.Button, tk.Button, tk.Button] = [tk.Button(self._window),
                                                                         tk.Button(self._window),
                                                                         tk.Button(self._window)]
 
+        # 用户信息显示框
         win_info_type = Tuple[tk.Label, tk.Label, tk.Variable, str]
         self._user_frame = tk.Frame(self._window)
         self._user_name: win_info_type = (tk.Label(self._user_frame), tk.Label(self._user_frame),
-                                          tk.StringVar(), "UserName")
+                                          tk.StringVar(), "用户名")
         self._user_uid: win_info_type = (tk.Label(self._user_frame), tk.Label(self._user_frame),
-                                         tk.StringVar(), "UserID")
+                                         tk.StringVar(), "用户ID")
         self._user_score: win_info_type = (tk.Label(self._user_frame), tk.Label(self._user_frame),
-                                           tk.StringVar(), "Score")
+                                           tk.StringVar(), "积分")
         self._user_rubbish: win_info_type = (tk.Label(self._user_frame), tk.Label(self._user_frame),
-                                             tk.StringVar(), "Garbage")
+                                             tk.StringVar(), "垃圾量(7天)")
         self._user_eval: win_info_type = (tk.Label(self._user_frame), tk.Label(self._user_frame),
-                                          tk.StringVar(), "Reputation")
+                                          tk.StringVar(), "垃圾分类信用")
         self._user_img = tk.Label(self._user_frame)
 
+        # 扔垃圾相关按钮 (可回收, 不可回收, 有害垃圾, 厨余垃圾)
         self._throw_ctrl_frame = tk.Frame(self._window)
         self._throw_ctrl_btn: List[tk.Button] = [tk.Button(self._throw_ctrl_frame), tk.Button(self._throw_ctrl_frame),
                                                  tk.Button(self._throw_ctrl_frame), tk.Button(self._throw_ctrl_frame)]
 
+        # 确认垃圾相关按钮 (通过, 不通过)
         self._check_ctrl_frame = tk.Frame(self._window)
         self._check_ctrl_btn: List[tk.Button] = [tk.Button(self._check_ctrl_frame), tk.Button(self._check_ctrl_frame)]
 
+        # 系统信息显示框 (垃圾袋ID和当前时间)
         self._sys_info_frame = tk.Frame(self._window)
         self._garbage_id: win_info_type = (tk.Label(self._sys_info_frame), tk.Label(self._sys_info_frame),
-                                           tk.StringVar(), "GarbageID")
+                                           tk.StringVar(), "垃圾袋ID")
         self._sys_date: win_info_type = (tk.Label(self._sys_info_frame), tk.Label(self._sys_info_frame),
-                                         tk.StringVar(), "SystemDate")
+                                         tk.StringVar(), "系统时间")
 
+        # 摄像头显示
         self._cap_label = tk.Label(self._window)
 
+        # 用户操纵按钮
         self._user_btn_frame = tk.Frame(self._window)
         self._user_btn: List[tk.Button] = [tk.Button(self._user_btn_frame), tk.Button(self._user_btn_frame),
                                            tk.Button(self._user_btn_frame)]
 
+        # 消息提示框
         self._msg_frame = tk.Frame(self._window)
         self._msg_line = tk.Label(self._msg_frame)
         self._msg_label = tk.Label(self._msg_frame), tk.Label(self._msg_frame), tk.StringVar(), tk.StringVar()
         self._msg_hide = tk.Button(self._msg_frame)
 
+        # 排行榜
         self._rank_frame = tk.Frame(self._window)
         self._rank_label = [tk.Label(self._rank_frame),
                             tk.Label(self._rank_frame),
@@ -528,25 +551,36 @@ class GarbageStation(GarbageStationBase):
                           tk.StringVar()]
         self._rank_btn = [tk.Button(self._rank_frame), tk.Button(self._rank_frame), tk.Button(self._rank_frame)]
 
+        # 进度条
         self._loading_frame = tk.Frame(self._window)
         self._loading_line = tk.Label(self._loading_frame)
         self._loading_title: Tuple[tk.Label, tk.Variable] = tk.Label(self._loading_frame), tk.StringVar()
         self._loading_pro = ttk.Progressbar(self._loading_frame)
 
     def __conf_font_size(self, n: Union[int, float] = 1):
-        self._title_font_size = int(27 * n)
-        self._win_ctrl_font_size = int(15 * n)
-        self._win_info_font_size = int(18 * n)
-        self._throw_ctrl_btn_font_size = int(20 * n)
-        self._check_ctrl_btn_font_size = int(20 * n)
-        self._sys_info_font_size = int(18 * n)
-        self._user_btn_font_size = int(20 * n)
-        self._msg_font_size = int(20 * n)
-        self._rank_font_title_size = int(24 * n)
-        self._rank_font_size = int(16 * n)
-        self._loading_tile_font = int(20 * n)
+        """
+        设置字体大小
+        :param n: 缩放因子, 1为不缩放
+        :return:
+        """
+        self._title_font_size = int(27 * n)  # 标题
+        self._win_ctrl_font_size = int(15 * n)  # 控制按键
+        self._win_info_font_size = int(18 * n)  # 用户信息
+        self._throw_ctrl_btn_font_size = int(20 * n)  # 扔垃圾相关按钮
+        self._check_ctrl_btn_font_size = int(20 * n)  # 检查垃圾相关按钮
+        self._sys_info_font_size = int(18 * n)  # 系统信息
+        self._user_btn_font_size = int(20 * n)  # 用户按键
+        self._msg_font_size = int(20 * n)  # 消息提示框
+        self._rank_font_title_size = int(24 * n)  # 排行榜标题
+        self._rank_font_size = int(16 * n)  # 排行榜内容
+        self._loading_tile_font = int(20 * n)  # 进度条
 
     def __conf_tk(self):
+        """
+        配置(绘制)窗口
+        当切换全屏或启动界面时需要调用
+        :return:
+        """
         self.__conf_title_label()
         self.__conf_win_ctrl_button()
         self.__conf_user_info_label()
@@ -564,12 +598,11 @@ class GarbageStation(GarbageStationBase):
         self._window.title('HGSSystem: Garbage Station')
         self._window.geometry(f'{self._win_width}x{self._win_height}')
         self._window['bg'] = conf.tk_win_bg
-        self._window.attributes("-topmost", True)
-        self._window.resizable(False, False)
-        self._window.protocol("WM_DELETE_WINDOW", lambda: self.show_exit())
+        self._window.resizable(False, False)  # 禁止缩放
+        self._window.protocol("WM_DELETE_WINDOW", lambda: self.show_exit())  # 设置标题栏[x]按钮
         self._window.overrideredirect(False)  # 显示标题栏
-        self._window.bind("<Alt-Control-KeyPress-s>", lambda _: self.__set_windows_overrideredirect(True))  # 锁定窗口
 
+        # 快捷键相关配置
         def lock_windows(_):
             if self._disable_all_btn:
                 return
@@ -581,7 +614,7 @@ class GarbageStation(GarbageStationBase):
             if self.is_manager():
                 self.__set_windows_overrideredirect(False)
                 return
-            self.show_warning("Exit", f'Permission not permitted'.strip())
+            self.show_warning("解锁窗口失败", f'用户不具备解锁窗口权限'.strip())
 
         def full_screen_windows(_):
             if self._disable_all_btn:
@@ -589,7 +622,7 @@ class GarbageStation(GarbageStationBase):
             if not self._full_screen or self.is_manager():
                 self.__full_screen(not self._full_screen)
                 return
-            self.show_warning("Exit", f'Permission not permitted'.strip())
+            self.show_warning("切换全屏失败", f'用户不具备切换全屏权限'.strip())
 
         def easter_eggs(_):
             if self._disable_all_btn:
@@ -597,11 +630,19 @@ class GarbageStation(GarbageStationBase):
             self.easter_eggs()
 
         self._window.bind("<Alt-Control-KeyPress-s>", lock_windows)  # 锁定窗口
-        self._window.bind("<Alt-Control-KeyPress-e>", unlock_windows)
-        self._window.bind("<F11>", full_screen_windows)
-        self._window.bind("<F5>", easter_eggs)
+        self._window.bind("<Alt-Control-KeyPress-e>", unlock_windows)  # 解锁窗口
+        self._window.bind("<F11>", full_screen_windows)  # 切换全屏
+        self._window.bind("<F5>", easter_eggs)  # 触发彩蛋
 
     def __full_screen(self, full: bool = True):
+        """
+        切换全屏或非全屏
+        计算缩放因子(窗口变大倍数)
+        调用函数重绘窗口
+        self.__conf_font_size
+        self.__conf_tk
+        :param full: True为切换至全屏, 否则切换至非全屏
+        """
         self._window.attributes("-fullscreen", full)
         self._full_screen = full
         width = self._sys_width * (2 / 3)
@@ -614,15 +655,19 @@ class GarbageStation(GarbageStationBase):
         self.__conf_tk()
 
     def __set_windows_overrideredirect(self, show: bool = False):
+        """
+        :param show: True则显示标题栏, 否则不显示
+        :return:
+        """
         self._window.overrideredirect(show)
 
     def __conf_title_label(self):
         title_font = make_font(size=self._title_font_size, weight="bold")
         self._title_label['font'] = title_font
         self._title_label['bg'] = conf.tk_win_bg  # 蜜瓜绿
-        self._title_label['text'] = "HGSSystem: GarbageStation Control Center"
+        self._title_label['text'] = "HGSSystem: Garbage Station Control Center"  # 使用英语标题在GUI更美观
         self._title_label['anchor'] = 'w'
-        self._title_label.place(relx=0.02, rely=0.0, relwidth=0.6, relheight=0.07)
+        self._title_label.place(relx=0.02, rely=0.01, relwidth=0.7, relheight=0.07)
 
     def __conf_win_ctrl_button(self):
         title_font = make_font(size=self._win_ctrl_font_size)
@@ -632,31 +677,37 @@ class GarbageStation(GarbageStationBase):
             bt['font'] = title_font
             bt['bg'] = conf.tk_btn_bg
 
+        rely = 0.02
+        relwidth = 0.05
+        relheight = 0.05
+
         bt_help: tk.Button = self._win_ctrl_button[0]
-        bt_help['text'] = 'Help'
+        bt_help['text'] = '帮助'
         bt_help['command'] = lambda: self.show_help_info()
-        bt_help.place(relx=0.81, rely=0.01, relwidth=0.05, relheight=0.05)
+        bt_help.place(relx=0.81, rely=rely, relwidth=relwidth, relheight=relheight)
 
         bt_about: tk.Button = self._win_ctrl_button[1]
-        bt_about['text'] = 'About'
+        bt_about['text'] = '关于'
         bt_about['command'] = lambda: self.show_about_info()
-        bt_about.place(relx=0.87, rely=0.01, relwidth=0.05, relheight=0.05)
+        bt_about.place(relx=0.87, rely=rely, relwidth=relwidth, relheight=relheight)
 
         bt_exit: tk.Button = self._win_ctrl_button[2]
-        bt_exit['text'] = 'Exit'
+        bt_exit['text'] = '退出'
         bt_exit['command'] = lambda: self.show_exit()
-        bt_exit.place(relx=0.93, rely=0.01, relwidth=0.05, relheight=0.05)
+        bt_exit.place(relx=0.93, rely=rely, relwidth=relwidth, relheight=relheight)
 
     def __conf_user_info_label(self):
         title_font = make_font(size=self._win_info_font_size - 1, weight="bold")
         info_font = make_font(size=self._win_info_font_size + 1)
 
-        frame_width = self._win_width * 0.4
-        frame_height = self._win_height * 0.4
-        self._user_frame['bg'] = "#FA8072"
-        self._user_frame.place(relx=0.02, rely=0.1, relwidth=0.4, relheight=0.40)
+        frame_width = self._win_width * 0.4  # frame宽度 (像素)
+        frame_height = self._win_height * 0.4  # frame高度 (像素)
+        bg_color = "#FA8072"  # 背景颜色
+
+        self._user_frame['bg'] = bg_color
         self._user_frame['bd'] = 5
         self._user_frame['relief'] = "ridge"
+        self._user_frame.place(relx=0.02, rely=0.1, relwidth=0.4, relheight=0.40)
 
         h_label = 5
         h_label_s = 1
@@ -667,8 +718,8 @@ class GarbageStation(GarbageStationBase):
 
         for lb_list in [self._user_score, self._user_rubbish, self._user_eval, self._user_name, self._user_uid]:
             lb_list[0]['font'] = title_font
-            lb_list[0]['bg'] = "#FA8072"
-            lb_list[0]['fg'] = "#FFB6C1"
+            lb_list[0]['bg'] = bg_color
+            lb_list[0]['fg'] = "#fffbf0"  # 字体颜色使用象牙白
             lb_list[0]['text'] = lb_list[3] + ":"
             lb_list[0]['anchor'] = 'e'
             lb_list[0].place(relx=0.0, rely=height, relwidth=0.35, relheight=height_label)
@@ -676,8 +727,8 @@ class GarbageStation(GarbageStationBase):
 
         for lb_list in [self._user_score, self._user_rubbish, self._user_eval, self._user_name, self._user_uid]:
             lb_list[1]['font'] = info_font
-            lb_list[1]['bg'] = "#FA8073"
-            lb_list[1]['fg'] = "#000000"
+            lb_list[1]['bg'] = bg_color
+            lb_list[1]['fg'] = "#000000"  # 字体颜色使用纯黑
             lb_list[1]['textvariable'] = lb_list[2]
             lb_list[1]['anchor'] = 'w'
             lb_list[2].set('test')
@@ -691,6 +742,7 @@ class GarbageStation(GarbageStationBase):
             lb_list[1].place(relx=0.36, rely=height, relwidth=0.63, relheight=height_label)
             height += height_label + h_label_s / height_count
 
+        # 显示一张图片 (GUI更美观)
         img_relwidth = 0.30
         img_relheight = height_label * 3 + (h_label_s / height_count) * 2
         img = (Image.open(conf.pic_d['head']).
@@ -704,10 +756,10 @@ class GarbageStation(GarbageStationBase):
 
     def __conf_throw_btn(self):
         btn_font = make_font(size=self._throw_ctrl_btn_font_size, weight="bold")
-        btn_info: List[Tuple[str, str]] = [("Recyclable", "#00BFFF"),
-                                           ("Other", "#A9A9A9"),
-                                           ("Hazardous", "#DC143C"),
-                                           ("Kitchen", "#32CD32")]
+        btn_info: List[Tuple[str, str]] = [("可回收垃圾", "#00BFFF"),  # 按钮文字及其颜色
+                                           ("其他垃圾", "#A9A9A9"),
+                                           ("有害垃圾", "#DC143C"),
+                                           ("厨余垃圾", "#32CD32")]
 
         self.__show_throw_frame()
 
@@ -728,8 +780,8 @@ class GarbageStation(GarbageStationBase):
 
     def __conf_check_btn(self):
         btn_font = make_font(size=self._check_ctrl_btn_font_size, weight="bold")
-        btn_info: List[Tuple[str, str]] = [("Fail", "#ef7a82"),
-                                           ("Pass", "#70f3ff")]
+        btn_info: List[Tuple[str, str]] = [("投放错误", "#ef7a82"),  # 按钮文字及其颜色
+                                           ("投放正确", "#70f3ff")]
 
         self.__show_check_frame()
 
@@ -748,10 +800,11 @@ class GarbageStation(GarbageStationBase):
         title_font = make_font(size=self._sys_info_font_size - 1, weight="bold")
         info_font = make_font(size=self._sys_info_font_size + 1)
 
-        self._sys_info_frame['bg'] = "#F0F8FF"
-        self._sys_info_frame.place(relx=0.02, rely=0.51, relwidth=0.4, relheight=0.14)
+        bg_color = "#F0F8FF"
+        self._sys_info_frame['bg'] = bg_color
         self._sys_info_frame['bd'] = 5
         self._sys_info_frame['relief'] = "ridge"
+        self._sys_info_frame.place(relx=0.02, rely=0.51, relwidth=0.4, relheight=0.14)
 
         h_label = 5
         h_label_s = 1
@@ -762,7 +815,7 @@ class GarbageStation(GarbageStationBase):
         height = h_top / height_count
         for info_list in [self._garbage_id, self._sys_date]:
             info_list[0]['font'] = title_font
-            info_list[0]['bg'] = "#F0F8FF"
+            info_list[0]['bg'] = bg_color
             info_list[0]['anchor'] = 'e'
             info_list[0]['text'] = info_list[3] + ":"
             info_list[0].place(relx=0.0, rely=height, relwidth=0.35, relheight=height_label)
@@ -771,7 +824,7 @@ class GarbageStation(GarbageStationBase):
         height = h_top / height_count
         for info_list in [self._garbage_id, self._sys_date]:
             info_list[1]['font'] = info_font
-            info_list[1]['bg'] = "#F0F8FF"
+            info_list[1]['bg'] = bg_color
             info_list[1]['textvariable'] = info_list[2]
             info_list[1]['anchor'] = 'w'
             info_list[2].set('test')
@@ -780,17 +833,25 @@ class GarbageStation(GarbageStationBase):
 
     def __conf_user_btn(self):
         btn_font = make_font(size=self._user_btn_font_size, weight="bold")
-        btn_info: List[Tuple[str, str]] = [("Detail", "#DDA0DD"),
-                                           ("Ranking", "#B0C4DE"),
-                                           ("Search", "#F4A460")]
+        btn_info: List[Tuple[str, str]] = [("详细信息", "#DDA0DD"),
+                                           ("排行榜", "#B0C4DE"),
+                                           ("搜索", "#F4A460")]
 
         self._user_btn_frame.place(relx=0.02, rely=0.66, relwidth=0.19, relheight=0.32)
         self._user_btn_frame['bg'] = conf.tk_win_bg
 
+        """
+        计算标签和间隔的大小比例(相对于Frame)
+        标签和间隔的比例为5:1
+        3个标签和2个间隔
+        (h_label * 3 + h_label_s * 2) 表示 Frame 总大小
+        height_label 标签相对于 Frame 的大小
+        height_sep 间隔相对于 Frame 的大小
+        """
         h_label = 5
         h_label_s = 1
-        height_count = h_label * 3 + h_label_s * 2
         height_label = h_label / (h_label * 3 + h_label_s * 2)
+        height_sep = h_label_s / (h_label * 3 + h_label_s * 2)
 
         height = 0
         for btn, info in zip(self._user_btn, btn_info):
@@ -798,34 +859,37 @@ class GarbageStation(GarbageStationBase):
             btn['text'] = info[0]
             btn['bg'] = info[1]
             btn.place(relx=0.0, rely=height, relwidth=1.00, relheight=height_label)
-            height += height_label + h_label_s / height_count
+            height += height_label + height_sep
 
-        self._user_btn[0]['state'] = 'disable'
+        self._user_btn[0]['state'] = 'disable'  # 第一个按键默认为disable且点击无效果
         self._user_btn[1]['command'] = lambda: self.get_show_rank()
         self._user_btn[2]['command'] = lambda: self.show_search_info()
 
     def __conf_cap_label(self):
         self._cap_label['bg'] = "#000000"
+        self._cap_label['bd'] = 5
+        self._cap_label['relief'] = "ridge"
         self._cap_label.place(relx=0.22, rely=0.66, relwidth=0.2, relheight=0.32)
 
     def __conf_msg(self):
         title_font = make_font(size=self._msg_font_size + 1, weight="bold")
         info_font = make_font(size=self._msg_font_size - 1)
 
-        self._msg_frame['bg'] = "#F5FFFA"
+        bg_color = "#F5FFFA"
+        self._msg_frame['bg'] = bg_color
         self._msg_frame['bd'] = 5
         self._msg_frame['relief'] = "ridge"
         # frame 不会立即显示
 
         self._msg_label[0]['font'] = title_font
-        self._msg_label[0]['bg'] = "#F5FFFA"
+        self._msg_label[0]['bg'] = bg_color
         self._msg_label[0]['anchor'] = 'w'
         self._msg_label[0]['textvariable'] = self._msg_label[2]
 
-        self._msg_line['bg'] = '#000000'
+        self._msg_line['bg'] = '#000000'  # 分割线
 
         self._msg_label[1]['font'] = info_font
-        self._msg_label[1]['bg'] = "#F5FFFA"
+        self._msg_label[1]['bg'] = bg_color
         self._msg_label[1]['anchor'] = 'nw'
         self._msg_label[1]['justify'] = 'left'
         self._msg_label[1]['textvariable'] = self._msg_label[3]
@@ -836,11 +900,11 @@ class GarbageStation(GarbageStationBase):
 
         self._msg_hide['font'] = info_font
         self._msg_hide['bg'] = conf.tk_btn_bg
-        self._msg_hide['text'] = 'close'
+        self._msg_hide['text'] = '关闭'
         self._msg_hide['command'] = lambda: self.hide_msg_rank(True)
-        self._msg_hide.place(relx=0.375, rely=0.85, relwidth=0.25, relheight=0.08)
+        self._msg_hide.place(relx=0.42, rely=0.85, relwidth=0.16, relheight=0.09)
 
-    def show_msg(self, title, info, msg_type='info', big: bool = True):
+    def show_msg(self, title, info, msg_type='提示', big: bool = True):
         if self._disable_all_btn:
             return
 
@@ -865,20 +929,21 @@ class GarbageStation(GarbageStationBase):
         self._msg_time = time.time()
 
     def show_warning(self, title, info):
-        self.show_msg(title, info, msg_type='Warning')
+        self.show_msg(title, info, msg_type='警告')
 
     def __conf_rank(self):
         title_font = make_font(size=self._rank_font_title_size, weight="bold")
         info_font = make_font(size=self._rank_font_size)
         btn_font = make_font(size=self._msg_font_size - 1)
 
-        self._rank_frame['bg'] = "#F5F5DC"
+        bg_color = "#F5F5DC"
+        self._rank_frame['bg'] = bg_color
         self._rank_frame['relief'] = "ridge"
         self._rank_frame['bd'] = 5
         # frame 不会立即显示
 
         self._rank_label[0]['font'] = title_font
-        self._rank_label[0]['bg'] = "#F5F5DC"
+        self._rank_label[0]['bg'] = bg_color
         self._rank_label[0]['textvariable'] = self._rank_var[0]
         self._rank_label[0].place(relx=0.02, rely=0.00, relwidth=0.96, relheight=0.1)
 
@@ -890,21 +955,26 @@ class GarbageStation(GarbageStationBase):
             lb['bd'] = 2
 
         # 标签结束的高度为 0.12 + 0.15 * 5 = 0.87
-        for btn, text in zip(self._rank_btn, ("prev", "close", "next")):
+        for btn, text in zip(self._rank_btn, ("上一页", "关闭", "下一页")):
             btn['font'] = btn_font
-            btn['bg'] = "#00CED1"
+            btn['bg'] = conf.tk_btn_bg
             btn['text'] = text
 
-        self._rank_btn[0].place(relx=0.050, rely=0.88, relwidth=0.25, relheight=0.1)
+        self._rank_btn[0].place(relx=0.050, rely=0.88, relwidth=0.25, relheight=0.08)
         self._rank_btn[0]['command'] = lambda: self.get_rank(-1)
 
-        self._rank_btn[1].place(relx=0.375, rely=0.88, relwidth=0.25, relheight=0.1)
+        self._rank_btn[1].place(relx=0.375, rely=0.88, relwidth=0.25, relheight=0.08)
         self._rank_btn[1]['command'] = lambda: self.hide_msg_rank(True)
 
-        self._rank_btn[2].place(relx=0.700, rely=0.88, relwidth=0.25, relheight=0.1)
+        self._rank_btn[2].place(relx=0.700, rely=0.88, relwidth=0.25, relheight=0.08)
         self._rank_btn[2]['command'] = lambda: self.get_rank(+1)
 
     def __set_rank_info(self, rank_info: List[Tuple[int, uname_t, uid_t, score_t, score_t, Optional[str]]]):
+        """
+        显示排行榜信息
+        :param rank_info: 排行榜信息, 共计五个元组, 元组包含: 排名, uid, name, 分数, 评分
+        :return:
+        """
         if len(rank_info) > 5:
             rank_info = rank_info[:5]
 
@@ -914,8 +984,9 @@ class GarbageStation(GarbageStationBase):
         height = 0.12
         for i, info in enumerate(rank_info):
             no, name, uid, score, eval_, color = info
-            self._rank_var[i + 1].set(f"NO.{no}  {name}\nUID: {uid[0:conf.ranking_tk_show_uid_len]}\n"
-                                      f"Score: {score} Reputation: {eval_}")
+            self._rank_var[i + 1].set(f"NO.{no}  {name}\n\n"  # 中间空一行 否则中文字体显得很窄
+                                      f"ID: {uid[0:conf.ranking_tk_show_uid_len]}  "
+                                      f"信用: {eval_} 积分: {score}")
             if color is None:
                 self._rank_label[i + 1]['bg'] = "#F5FFFA"
             else:
@@ -978,14 +1049,14 @@ class GarbageStation(GarbageStationBase):
         self._loading_line['bg'] = '#000000'
         self._loading_line.place(relx=0.02, rely=0.6, relwidth=0.96, height=1)  # 一个像素的高度即可
 
-        self._loading_pro['mode'] = 'indeterminate'
-        self._loading_pro['orient'] = 'horizontal'
+        self._loading_pro['mode'] = 'indeterminate'  # 来回显示
+        self._loading_pro['orient'] = 'horizontal'  # 横向进度条
         self._loading_pro['maximum'] = 100
         self._loading_pro.place(relx=0.02, rely=0.73, relwidth=0.96, relheight=0.22)
 
     def show_loading(self, title: str):
         self.set_all_btn_disable()
-        self._loading_title[1].set(f"Loading: {title}")
+        self._loading_title[1].set(f"加载: {title}")
         self._loading_pro['value'] = 0
         self._loading_frame.place(relx=0.30, rely=0.40, relwidth=0.40, relheight=0.15)
         self._loading_pro.start(50)
@@ -1015,7 +1086,7 @@ class GarbageStation(GarbageStationBase):
             try:
                 func(*args, **kwargs)
             except:  # 捕获未考虑的错误
-                self.show_msg("System Exception", "Run Error...", "Error")
+                self.show_msg("系统错误", "运行时产生了错误...", "错误")
                 traceback.print_exc()
             finally:
                 self._window.after(self.refresh_delay, new_func)
@@ -1036,8 +1107,8 @@ class GarbageStation(GarbageStationBase):
 
         user_info: Dict[str, str] = self.get_user_info_no_update()
         if user_info.get('uid') is None:
-            name.set('Not-Login')
-            uid.set('Not-Login')
+            name.set('未登录')
+            uid.set('未登录')
             eval_.set('---')
             rubbish.set('---')
             score.set('---')
@@ -1049,9 +1120,9 @@ class GarbageStation(GarbageStationBase):
                 uid.set('error')
             else:
                 uid.set(uid_get[0:21])
-            eval_.set('Manager')
-            rubbish.set('Manager')
-            score.set('Manager')
+            eval_.set('无(管理员)')
+            rubbish.set('无(管理员)')
+            score.set('无(管理员)')
             self.__switch_to_manager_user()
         else:
             name.set(user_info.get('name'))

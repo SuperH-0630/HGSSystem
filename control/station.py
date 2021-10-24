@@ -242,19 +242,20 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
                 check += f'检查结果为 投放正确\n'
             else:
                 check += f'检查结果为 投放错误\n'
-            self.show_msg("Garbage Info", (f"垃圾类型为 {garbage_type}\n"
-                                           f"用户是 {info['user'][0:conf.tk_show_uid_len]}\n"
-                                           f"地址:\n  {info['loc']}\n"
-                                           f"{check}"
-                                           f"日期:\n  {time_str}"))  # 遮蔽Pass和Fail按键
+            self.show_msg("垃圾袋信息", (f"垃圾类型为 {garbage_type}\n"
+                                    f"用户是 {info['user'][0:conf.tk_show_uid_len]}\n"
+                                    f"地址:\n  {info['loc']}\n"
+                                    f"{check}"
+                                    f"使用日期:\n  {time_str}"), show_time=5.0)  # 遮蔽Pass和Fail按键
         elif self._garbage.is_use():
             time_str = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(float(info['use_time'])))
-            self.show_msg("Garbage Info", (f"垃圾类型为 {garbage_type}\n"
-                                           f"用户是 {info['user'][0:conf.tk_show_uid_len]}\n"
-                                           f"地址:\n  {info['loc']}\n"
-                                           f"日期:\n  {time_str}"), big=False)  # 不遮蔽Pass和Fail按键
+            self.show_msg("垃圾袋信息", (f"垃圾类型为 {garbage_type}\n"
+                                    f"用户是 {info['user'][0:conf.tk_show_uid_len]}\n"
+                                    f"地址:\n  {info['loc']}\n"
+                                    f"垃圾袋还未检查\n"
+                                    f"使用日期:\n  {time_str}"), big=False, show_time=5.0)  # 不遮蔽Pass和Fail按键
         else:
-            self.show_msg("Garbage Info", f"Garbage has not use")  # 遮蔽Pass和Fail按键
+            self.show_msg("垃圾袋信息", f"垃圾袋还未使用", show_time=5.0)  # 遮蔽Pass和Fail按键
 
     def show_user_info(self):
         self.update_user_time()
@@ -266,35 +267,37 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
         if info.get('manager', '0') == '1':
             self.show_msg("About User", (f"管理者用户\n"
                                          f"用户名: {info['name']}\n"
-                                         f"用户ID:\n  {info['uid']}"))
+                                         f"用户ID:\n  {info['uid']}"), show_time=5.0)
         else:
             self.show_msg("About User", (f"普通用户\n"
                                          f"用户名: {info['name']}\n"
                                          f"用户ID:\n  {info['uid']}\n"
                                          f"评分: {info['score']}\n"
                                          f"垃圾分类信用: {info['reputation']}\n"
-                                         f"垃圾量(7天): {info['rubbish']}"))
+                                         f"垃圾量(7天): {info['rubbish']}"), show_time=5.0)
 
     def show_help_info(self):
         self.update_user_time()
         self.show_msg("帮助", f'''
+所有用户: 离开前请确保账户退出(再次扫描用户二维码退出登录)
+        
 投放垃圾使用说明（普通用户）:
   1) 扫码用户二维码登录
   2) 扫码垃圾袋二维码
   3) 选择垃圾类型
   4) 投放垃圾到垃圾桶 (投放完成, 可以离开或继续投放)
   5) 等待结果反馈 (可能需要数日)
+  
 检测垃圾使用说明（管理用户）:
   1) 扫码用户二维码登录
   2) 扫码垃圾袋二维码
   3) 检查垃圾是否投放正确
   4) 操作完成 (投放完成, 可以离开或继续投放)
-所有用户: 离开前请确保账户退出(再次扫描用户二维码退出登录)
-        '''.strip())
+        '''.strip(), show_time=60.0)
 
     def show_about_info(self):
         self.update_user_time()
-        self.show_msg("关于", conf.about_info)
+        self.show_msg("关于", conf.about_info, show_time=5.0)
 
     def show_exit(self):
         self.update_user_time()
@@ -314,14 +317,14 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
 来自: github
 [斯人若彩虹, 遇上方知有]
 [期待再次与你相遇]
-                '''.strip())
+                '''.strip(), show_time=15.0)
 
     def show_search_info(self):
         self.update_user_time()
         self.show_msg("搜索", f'''
 搜索功能将根据摄像头获取物品信息, 反馈该物品垃圾类型。
 该功能尚未开放, 敬请期待
-                '''.strip())
+                '''.strip(), show_time=5.0)
 
     def thread_show_rank(self, rank_list):
         self.rank = [[]]
@@ -350,7 +353,7 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
         self.rank_index += n
 
         if self.rank_index < 0 or self.rank_index >= len(self.rank):
-            self.show_msg("排行榜错误", f'无法获取排行榜信息')
+            self.show_warning("排行榜错误", f'无法获取排行榜信息')
             return
 
         self.show_rank(self.rank_index + 1, len(self.rank), self.rank[self.rank_index])
@@ -374,11 +377,11 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
         self.push_event(event)
 
     @abc.abstractmethod
-    def show_msg(self, title, info, msg_type='info', big: bool = True):
+    def show_msg(self, title, info, msg_type='info', big: bool = True, show_time: float = 10.0):
         ...
 
     @abc.abstractmethod
-    def show_warning(self, title, info):
+    def show_warning(self, title, info, show_time: float = 15.0):
         ...
 
     @abc.abstractmethod
@@ -468,6 +471,7 @@ class GarbageStation(GarbageStationBase):
         self._user_im = None
 
         self._msg_time: Optional[float] = None  # msg 显示时间累计
+        self._msg_show_time: float = 10.0
         self._disable_all_btn: bool = False  # 禁用所有按钮和操作
 
         self.__conf_font_size()  # 配置字体大小
@@ -532,7 +536,11 @@ class GarbageStation(GarbageStationBase):
         # 消息提示框
         self._msg_frame = tk.Frame(self._window)
         self._msg_line = tk.Label(self._msg_frame)
-        self._msg_label = tk.Label(self._msg_frame), tk.Label(self._msg_frame), tk.StringVar(), tk.StringVar()
+        self._msg_label: Tuple[tk.Label, tk.Text, tk.Variable] = (tk.Label(self._msg_frame),
+                                                                  tk.Text(self._msg_frame),
+                                                                  tk.StringVar())
+        self._msg_y_scroll = tk.Scrollbar(self._msg_frame)
+        self._msg_x_scroll = tk.Scrollbar(self._msg_frame)
         self._msg_hide = tk.Button(self._msg_frame)
 
         # 排行榜
@@ -890,13 +898,31 @@ class GarbageStation(GarbageStationBase):
 
         self._msg_label[1]['font'] = info_font
         self._msg_label[1]['bg'] = bg_color
-        self._msg_label[1]['anchor'] = 'nw'
-        self._msg_label[1]['justify'] = 'left'
-        self._msg_label[1]['textvariable'] = self._msg_label[3]
+        self._msg_label[1]['fg'] = '#000000'
+        self._msg_label[1]['state'] = 'disable'
+        self._msg_label[1]['bd'] = 0
+        self._msg_label[1]['exportselection'] = False
+        self._msg_label[1]['selectbackground'] = bg_color  # 被选中背景颜色和未选中颜色相同, 不启用选中
+        self._msg_label[1]['selectforeground'] = '#000000'
+        self._msg_label[1]['wrap'] = 'none'
+
+        self._msg_y_scroll['orient'] = 'vertical'
+        self._msg_y_scroll['command'] = lambda *args: (self.set_msg_time_now(), self._msg_label[1].yview(*args))
+        self._msg_label[1]['yscrollcommand'] = lambda *args: (self.set_msg_time_now(), self._msg_y_scroll.set(*args))
+
+        self._msg_x_scroll['orient'] = 'horizontal'
+        self._msg_x_scroll['command'] = lambda *args: (self.set_msg_time_now(), self._msg_label[1].xview(*args))
+        self._msg_label[1]['xscrollcommand'] = lambda *args: (self.set_msg_time_now(), self._msg_x_scroll.set(*args))
 
         self._msg_label[0].place(relx=0.05, rely=0.05, relwidth=0.9, relheight=0.1)
         self._msg_line.place(relx=0.05, rely=0.15, relwidth=0.9, height=1)  # 一个像素的高度即可
-        self._msg_label[1].place(relx=0.075, rely=0.2, relwidth=0.85, relheight=0.64)
+
+        x_scroll = 0.03
+        y_scroll = 0.02
+
+        self._msg_label[1].place(relx=0.05, rely=0.20, relwidth=0.90 - y_scroll, relheight=0.64 - x_scroll)
+        self._msg_x_scroll.place(relx=0.05, rely=0.84 - x_scroll, relwidth=0.90 - y_scroll, relheight=x_scroll)
+        self._msg_y_scroll.place(relx=0.95 - y_scroll, rely=0.20, relwidth=y_scroll, relheight=0.64)
 
         self._msg_hide['font'] = info_font
         self._msg_hide['bg'] = conf.tk_btn_bg
@@ -904,15 +930,24 @@ class GarbageStation(GarbageStationBase):
         self._msg_hide['command'] = lambda: self.hide_msg_rank(True)
         self._msg_hide.place(relx=0.42, rely=0.85, relwidth=0.16, relheight=0.09)
 
-    def show_msg(self, title, info, msg_type='提示', big: bool = True):
+    def set_msg_time_now(self, show_time: float = 10.0):
+        self._msg_time = time.time()
+        self._msg_show_time = show_time
+
+    def set_msg_time_none(self):
+        self._msg_time = None
+
+    def show_msg(self, title, info: str, msg_type='提示', big: bool = True, show_time: float = 10.0):
         if self._disable_all_btn:
             return
 
         self._msg_label[2].set(f'{msg_type}: {title}')
-        self._msg_label[3].set(f'{info}')
 
-        frame_width = self._win_width * 0.53
-        self._msg_label[1]['wraplength'] = frame_width * 0.85 - 5  # 设定自动换行的像素
+        self._msg_label[1]['state'] = 'normal'
+        self._msg_label[1].delete(1.0, 'end')  # 删除所有元素
+        for i in info.split('\n'):
+            self._msg_label[1].insert('end', i + '\n')
+        self._msg_label[1]['state'] = 'disable'
 
         if big:
             self._msg_frame.place(relx=0.45, rely=0.15, relwidth=0.53, relheight=0.70)
@@ -926,10 +961,10 @@ class GarbageStation(GarbageStationBase):
             self._throw_ctrl_frame.place_forget()
             self._rank_frame.place_forget()
 
-        self._msg_time = time.time()
+        self.set_msg_time_now(show_time)
 
-    def show_warning(self, title, info):
-        self.show_msg(title, info, msg_type='警告')
+    def show_warning(self, title, info, show_time: float = 15.0):
+        self.show_msg(title, info, msg_type='警告', show_time=show_time)
 
     def __conf_rank(self):
         title_font = make_font(size=self._rank_font_title_size, weight="bold")
@@ -997,7 +1032,7 @@ class GarbageStation(GarbageStationBase):
 
     def show_rank(self, page: int, page_c: int,
                   rank_info: List[Tuple[int, uname_t, uid_t, score_t, score_t, Optional[str]]],
-                  title: str = 'Ranking'):
+                  title: str = '排行榜'):
         if self._disable_all_btn:
             return
 
@@ -1021,14 +1056,14 @@ class GarbageStation(GarbageStationBase):
         self._throw_ctrl_frame.place_forget()
         self._check_ctrl_frame.place_forget()
         self._msg_frame.place_forget()
-        self._msg_time = None
+        self.set_msg_time_none()
 
     def hide_msg_rank(self, update: bool = False):
         self.__show_check_frame()  # rank会令此消失
         self.__show_throw_frame()  # rank和msg令此消失
         self._msg_frame.place_forget()
         self._rank_frame.place_forget()
-        self._msg_time = None
+        self.set_msg_time_none()
         if update:
             self.update_user_time()
 
@@ -1086,7 +1121,7 @@ class GarbageStation(GarbageStationBase):
             try:
                 func(*args, **kwargs)
             except:  # 捕获未考虑的错误
-                self.show_msg("系统错误", "运行时产生了错误...", "错误")
+                self.show_msg("系统错误", "运行时产生了错误...", "错误", show_time=3.0)
                 traceback.print_exc()
             finally:
                 self._window.after(self.refresh_delay, new_func)
@@ -1158,7 +1193,7 @@ class GarbageStation(GarbageStationBase):
         if self._msg_time is None:
             return
 
-        if time.time() - self._msg_time > 10:  # 10s 自动关闭消息
+        if time.time() - self._msg_time > self._msg_show_time:  # 自动关闭消息
             self.hide_msg_rank()
 
     def __switch_to_normal_user(self):

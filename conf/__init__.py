@@ -16,6 +16,8 @@ MYSQL_URL = sys.argv[1]
 MYSQL_NAME = sys.argv[2]
 MYSQL_PASSWORD = sys.argv[3]
 
+database = 'MySQL'
+
 passwd_salt = "HGSSystem"
 default_score = 10
 default_reputation = 300

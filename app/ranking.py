@@ -19,13 +19,6 @@ class RankWebsite:
                                f"WHERE IsManager = 0 "
                                f"ORDER BY Reputation {order_by}, Score {order_by}, UserID {order_by} "
                                f"LIMIT 200;"))
-
-        print(f"SELECT UserID, Name, Score, Reputation "
-              f"FROM user "
-              f"WHERE IsManager = 0 "
-              f"ORDER BY Reputation {order_by}, Score {order_by}, UserID {order_by}"
-              f"LIMIT 200;")
-
         if cur is None:
             return None
         res = []

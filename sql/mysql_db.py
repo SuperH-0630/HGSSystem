@@ -11,12 +11,9 @@ class MysqlDB(Database):
         try:
             self._db = pymysql.connect(user=name, password=passwd, host=host, database="hgssystem")
         except pymysql.err.OperationalError:
-            raise DBException
+            raise
         self._cursor = self._db.cursor()
         self._lock = threading.RLock()
-
-    def __del__(self):
-        self.close()
 
     def close(self):
         if self._cursor is not None:
@@ -59,6 +56,7 @@ class MysqlDB(Database):
             self._cursor.execute(sql)
         except pymysql.MySQLError:
             self._db.rollback()
+            raise
             return None
         finally:
             self._db.commit()

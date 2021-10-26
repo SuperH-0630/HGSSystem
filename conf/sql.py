@@ -1,11 +1,6 @@
-import sys
-import warnings
-
-if len(sys.argv) != 4:
-    warnings.warn(f"参数不足: {len(sys.argv)}")
-    raise exit(1)
+from . import args
 
 database = 'MySQL'
-mysql_url = sys.argv[1]
-mysql_name = sys.argv[2]
-mysql_passwd = sys.argv[3]
+mysql_url = args.p_args.mysql_url[0]
+mysql_name = args.p_args.mysql_name[0]
+mysql_passwd = args.p_args.mysql_passwd[0]

@@ -1,0 +1,39 @@
+{% import "macro.html" as macro %}
+
+<!DOCTYPE html>
+<html lang="ch">
+<head>
+    <meta charset="utf-8">
+
+    {% block font %}
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,500;1,300&display=swap"
+              rel="stylesheet">
+    {% endblock %}
+
+    {% block style %}
+        <link href="{{ url_for('static', filename='styles/base.css') }}" rel="stylesheet">
+        <link href="{{ url_for('static', filename='styles/nav.css') }}" rel="stylesheet">
+    {% endblock %}
+
+    <title> HG: {% block  title %} HGSSystem {% endblock %} </title>
+</head>
+
+<body>
+
+{% block navbar %}
+    <nav id="nav">
+        <ul>
+            <li><h1 class="nav-h1"> HGSSystem-在线榜单 </h1></li>
+            <li><a class="nav-item" href="{{ url_for('main.index') }}">首页</a></li>
+            <li><a class="nav-item" href="{{ url_for('main.rank_up') }}">高分榜</a></li>
+            <li><a class="nav-item" href="{{ url_for('main.rank_down') }}">警示榜</a></li>
+        </ul>
+    </nav>
+{% endblock %}
+
+{% block content %}{% endblock %}
+
+</body>
+</html>

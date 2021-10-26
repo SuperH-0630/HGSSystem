@@ -1,0 +1,28 @@
+.rank_table {
+    background-color: #E9967A;
+    font-size: 17px;
+}
+
+table.rank_table {
+    border-width: 5px;
+    border-color: #F4A460;
+    border-style: ridge;
+
+    padding: 5px 5px;
+    margin: 5px 5% 5px;
+    width: 90%;
+}
+
+tr.rank_table {
+    text-align: left;
+
+}
+
+td.rank_table {
+    text-align: left;
+}
+
+caption.rank_table {
+    font-size: 30px;
+    background-color: #F0FFF0;
+}

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% import "rank_macro.html" as rank %}
+
+{% block title %} 排行榜 {% endblock %}
+
+{% block style %}
+    {{ super() }}
+    <link href="{{ url_for('static', filename='styles/ranking.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+    {{ super() }}
+
+    <h2>{{ ranking_name }}</h2>
+    {% if rank_info and rank_head %}
+        <div>
+            <table class="rank_table">
+                {{ rank.get_rank_head(rank_head) }}
+                {{ rank.get_rank(rank_info) }}
+            </table>
+        </div>
+    {% else %}
+        <p> 排行榜获取失败 </p>
+    {% endif %}
+{% endblock %}

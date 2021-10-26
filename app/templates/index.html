@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %} 排行榜 {% endblock %}
+
+{% block content %}
+    {{ super() }}
+
+    <div class="welcome">
+        <h2>欢迎</h2>
+        <p>欢迎查阅 {{ loc }} 地区的垃圾分类榜单</p>
+        <p>目前支持的榜单包括：高分榜和警示榜</p>
+    </div>
+{% endblock %}

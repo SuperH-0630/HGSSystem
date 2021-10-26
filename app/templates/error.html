@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block title %} {{ error_code }}-错误 {% endblock %}
+
+{% block content %}
+    {{ super() }}
+
+    <h2>遭遇错误</h2>
+    <p style="text-align: center"> {{ error_info }} </p>
+{% endblock %}

@@ -1,7 +1,7 @@
 import pymysql
 import threading
 from conf import MYSQL_URL, MYSQL_NAME, MYSQL_PASSWORD
-from base_db import Database, DBException, DBCloseException
+from .base_db import Database, DBException, DBCloseException
 from tool.type_ import *
 
 

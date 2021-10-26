@@ -1,0 +1,13 @@
+html {
+    font-size: 15px;
+    font-family: 'Open Sans', sans-serif;
+    background-color: #F0FFF0;
+}
+
+h1, h2 {
+    text-align: center;
+}
+
+div.welcome {
+    text-align: center;
+}

@@ -51,7 +51,7 @@ class RankingStationBase(metaclass=abc.ABCMeta):
         cur = self._db.search((f"SELECT UserID, Name, Score, Reputation "
                                f"FROM user "
                                f"WHERE IsManager = 0 "
-                               f"ORDER BY reputation DESC, score DESC "
+                               f"ORDER BY Reputation DESC, Score DESC "
                                f"LIMIT {limit} OFFSET {offset};"))
         if cur is None or cur.rowcount == 0:
             return False, []

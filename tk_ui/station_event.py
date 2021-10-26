@@ -9,8 +9,8 @@ from core.garbage import GarbageBag
 
 from sql.db import DB
 
-from event import TkThreading, TkEventBase
-import station as tk_station
+from .event import TkThreading, TkEventBase
+from . import station as tk_station
 
 
 class StationEventBase(TkEventBase):

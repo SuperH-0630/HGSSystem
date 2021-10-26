@@ -2,12 +2,11 @@ import conf
 from core.user import User
 from sql.db import DB
 from sql.user import find_user_by_id
-from type_ import *
-from scan import QRCode, HGSCapture, HGSQRCoder
+from tool.type_ import *
+from .scan import QRCode, HGSCapture, HGSQRCoder
 from tool.pic import write_text
 import re
 import os.path
-
 
 qr_user_pattern = re.compile(r'HGSSystem-QR-USER:([a-z0-9]{32})-END', re.I)
 

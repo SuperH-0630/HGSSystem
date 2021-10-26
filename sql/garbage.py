@@ -1,5 +1,5 @@
 import time
-from db import DB, DBBit, DBDataException, DBDoneException
+from sql.db import DB, DBBit, DBDataException, DBDoneException
 from tool.type_ import *
 from tool.time_ import HGSTime, mysql_time, time_from_mysql
 from core.garbage import GarbageBag, GarbageType

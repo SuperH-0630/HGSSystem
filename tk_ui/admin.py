@@ -8,7 +8,7 @@ from core.garbage import GarbageBag
 from core.user import User
 from equipment.scan_garbage import write_gid_qr, write_all_gid_qr
 from equipment.scan_user import write_uid_qr, write_all_uid_qr
-from event import TkEventMain
+from .event import TkEventMain
 from sql.db import DB, search_from_garbage_checker_user
 from sql.garbage import (create_new_garbage, search_garbage_by_fields, search_from_garbage_view,
                          del_garbage, del_garbage_not_use, del_garbage_wait_check, del_garbage_has_check,
@@ -212,9 +212,9 @@ class AdminStationBase(TkEventMain, metaclass=abc.ABCMeta):
         ...
 
 
-import admin_program as tk_program
-import admin_menu as tk_menu
-import admin_event as tk_event
+from . import admin_program as tk_program
+from . import admin_menu as tk_menu
+from . import admin_event as tk_event
 
 
 class AdminStation(AdminStationBase):

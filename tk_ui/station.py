@@ -21,7 +21,7 @@ from sql.garbage import update_garbage
 
 from equipment.scan import HGSCapture, HGSQRCoder
 
-from event import TkEventMain
+from .event import TkEventMain
 
 
 class GarbageStationException(Exception):
@@ -442,7 +442,7 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
         ...
 
 
-import station_event as tk_event
+from . import station_event as tk_event
 
 
 class GarbageStation(GarbageStationBase):
@@ -768,7 +768,7 @@ class GarbageStation(GarbageStationBase):
         # 显示一张图片 (GUI更美观)
         img_relwidth = 0.30
         img_relheight = height_label * 3 + (h_label_s / height_count) * 2
-        img = (Image.open(conf.pic_d['head']).
+        img = (Image.open(conf.picture_d['head']).
                resize((int(img_relwidth * frame_width), int(img_relheight * frame_height))))
         self._user_im = ImageTk.PhotoImage(image=img)
         self._user_img['image'] = self._user_im

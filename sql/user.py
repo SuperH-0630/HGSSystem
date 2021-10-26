@@ -1,12 +1,12 @@
 import csv
 
-from db import DB, DBBit
+from .db import DB, DBBit
 from tool.type_ import *
 from tool.login import create_uid, randomPassword
 from tool.time_ import mysql_time
 from core.user import NormalUser, ManagerUser, User
 import conf
-from garbage import count_garbage_by_time
+from . import garbage
 
 
 def update_user_score(where: str, score: score_t, db: DB) -> int:
@@ -78,7 +78,7 @@ def find_user_by_id(uid: uid_t, db: DB) -> Optional[User]:
     else:
         score: score_t = res[3]
         reputation: score_t = res[4]
-        rubbish: count_t = count_garbage_by_time(uid, db)
+        rubbish: count_t = garbage.count_garbage_by_time(uid, db)
         return NormalUser(name, uid, reputation, rubbish, score)  # rubbish 实际计算
 
 

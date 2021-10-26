@@ -1,12 +1,11 @@
 from core.garbage import GarbageBag
 from sql.db import DB
 from sql.garbage import find_garbage
-from type_ import *
-from scan import QRCode, HGSCapture, HGSQRCoder
+from tool.type_ import *
+from .scan import QRCode, HGSCapture, HGSQRCoder
 from tool.pic import write_text
 import re
 import os.path
-
 
 qr_user_pattern = re.compile(r'HGSSystem-QR-GARBAGE:([a-z0-9])+-END', re.I)
 

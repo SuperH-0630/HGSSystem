@@ -7,9 +7,9 @@ from sql.user import find_user_by_name
 from core.user import User
 from core.garbage import GarbageBag
 
-from event import TkEventBase, TkThreading
-import admin
-import admin_program
+from .event import TkEventBase, TkThreading
+from . import admin
+from . import admin_program
 
 
 class AdminEventBase(TkEventBase):

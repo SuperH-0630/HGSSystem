@@ -8,15 +8,15 @@ from tool.tk import make_font, set_tk_disable_from_list
 from tool.login import create_uid
 
 import conf
-import admin
-import admin_event as tk_event
+from . import admin
+from . import admin_event as tk_event
 
 from sql.user import find_user_by_name
 from core.garbage import GarbageType
 
 
 class AdminProgram(metaclass=abc.ABCMeta):
-    def __init__(self, station: admin.AdminStation, win: Union[tk.Frame, tk.Toplevel, tk.Tk], color: str, title: str):
+    def __init__(self, station: "admin.AdminStation", win: Union[tk.Frame, tk.Toplevel, tk.Tk], color: str, title: str):
         self.station = station
         self.win = win
         self.color = color

@@ -1,12 +1,12 @@
 import pymysql
 import threading
-from conf import MYSQL_URL, MYSQL_NAME, MYSQL_PASSWORD
+from conf import mysql_url, mysql_name, mysql_passwd
 from .base_db import Database, DBException, DBCloseException
 from tool.type_ import *
 
 
 class MysqlDB(Database):
-    def __init__(self, host: str = MYSQL_URL, name: str = MYSQL_NAME, passwd: str = MYSQL_PASSWORD):
+    def __init__(self, host: str = mysql_url, name: str = mysql_name, passwd: str = mysql_passwd):
         super(MysqlDB, self).__init__(host, name, passwd)
         try:
             self._db = pymysql.connect(user=name, password=passwd, host=host, database="hgssystem")

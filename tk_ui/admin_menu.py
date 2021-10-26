@@ -4,11 +4,11 @@ import tkinter as tk
 from tool.type_ import *
 from tool.tk import make_font, set_tk_disable_from_list
 
-import admin
+from . import admin
 
 
 class AdminMenu(metaclass=abc.ABCMeta):
-    def __init__(self, station: admin.AdminStationBase, win: Union[tk.Frame, tk.Toplevel, tk.Tk], color: str,
+    def __init__(self, station: "admin.AdminStationBase", win: Union[tk.Frame, tk.Toplevel, tk.Tk], color: str,
                  title: str):
         self.station = station
         self.win = win

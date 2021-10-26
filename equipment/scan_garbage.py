@@ -7,7 +7,7 @@ from tool.pic import write_text
 import re
 import os.path
 
-qr_user_pattern = re.compile(r'HGSSystem-QR-GARBAGE:([a-z0-9])+-END', re.I)
+qr_user_pattern = re.compile(r'HGSSystem-QR-GARBAGE:([a-z0-9]+)-END', re.I)
 
 
 def scan_gid(code: QRCode) -> gid_t:

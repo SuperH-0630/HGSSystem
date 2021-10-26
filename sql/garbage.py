@@ -216,7 +216,7 @@ def update_garbage(garbage: GarbageBag, db: DB) -> bool:
     if re is None:
         return False
 
-    if re.is_use() and not garbage.is_use() or re.is_check()[0] and not garbage.is_check():
+    if re.is_use() and not garbage.is_use() or re.is_check()[0] and not garbage.is_check()[0]:
         return False
 
     if not garbage.is_use() and not garbage.is_check()[0]:
@@ -229,21 +229,21 @@ def update_garbage(garbage: GarbageBag, db: DB) -> bool:
         res = db.done(f"UPDATE garbage SET "
                       f"Flat = 2,"
                       f"UserID = '{info['user']}',"
-                      f"UseTime = {time_from_mysql(info['use_time'])},"
+                      f"UseTime = {mysql_time(info['use_time'])},"
                       f"GarbageType = {info['type']},"
                       f"Location = '{info['loc']}',"
                       f"CheckResult = {info['check']},"
-                      f"CheckerID = '{info['checker']}',"
+                      f"CheckerID = '{info['checker']}' "
                       f"WHERE GarbageID = {gid};")
     elif garbage.is_use():
         res = db.done(f"UPDATE garbage SET "
                       f"Flat = 1,"
                       f"UserID = '{info['user']}',"
-                      f"UseTime = {time_from_mysql(info['use_time'])},"
+                      f"UseTime = {mysql_time(info['use_time'])},"
                       f"GarbageType = {info['type']},"
                       f"Location = '{info['loc']}',"
                       f"CheckResult = NULL,"
-                      f"CheckerID = NULL,"
+                      f"CheckerID = NULL "
                       f"WHERE GarbageID = {gid};")
     else:
         res = db.done(f"UPDATE garbage SET "
@@ -253,7 +253,7 @@ def update_garbage(garbage: GarbageBag, db: DB) -> bool:
                       f"GarbageType = NULL,"
                       f"Location = NULL,"
                       f"CheckResult = NULL,"
-                      f"CheckerID = NULL,"
+                      f"CheckerID = NULL "
                       f"WHERE GarbageID = {gid};")
     return res is not None
 

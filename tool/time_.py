@@ -7,7 +7,7 @@ class HGSTime:
         if second is None:
             self._time: time_t = time_t(time.time())
         else:
-            self._time: time_t = second
+            self._time: time_t = time_t(second)
         self._time_local: time.struct_time = time.localtime(self._time)
 
     def get_time(self) -> time_t:
@@ -24,7 +24,7 @@ def mysql_time(t=None) -> str:
 
 
 def time_from_mysql(t) -> float:
-    t_struct = time.strptime(t, '%Y-%m-%d %H:%M:%S')
+    t_struct = time.strptime(str(t), '%Y-%m-%d %H:%M:%S')
     return time.mktime(t_struct)
 
 

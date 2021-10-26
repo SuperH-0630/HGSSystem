@@ -144,7 +144,6 @@ class ThrowGarbageEvent(StationEventBase):
 
     def start(self, garbage: GarbageBag, garbage_type: enum):
         self.thread = TkThreading(self.func, garbage, garbage_type)
-        self.thread.start()
         return self
 
     def is_end(self) -> bool:
@@ -156,8 +155,10 @@ class ThrowGarbageEvent(StationEventBase):
             self.station.show_warning("垃圾投放", "管理员用户不得投放垃圾", show_time=3.0)
         elif res == -2:
             self.station.show_warning("垃圾投放", "垃圾投放失败", show_time=3.0)
+        elif res == -3:
+            self.station.show_warning("垃圾投放", "数据库操作失败", show_time=3.0)
         else:
-            self.station.show_warning("操作成功", "垃圾袋完成投放")
+            self.station.show_msg("操作成功", "垃圾袋完成投放", show_time=3.0)
 
 
 class CheckGarbageEvent(StationEventBase):
@@ -187,5 +188,7 @@ class CheckGarbageEvent(StationEventBase):
             self.station.show_warning("垃圾检测", "垃圾袋还未使用", show_time=3.0)
         elif res == -3:
             self.station.show_warning("垃圾检测", "垃圾检测提结果交失败", show_time=3.0)
+        elif res == -4:
+            self.station.show_warning("垃圾检测", "数据库操作失败", show_time=3.0)
         else:
             self.station.show_msg("垃圾检测", "垃圾检测提结果交成功", show_time=3.0)

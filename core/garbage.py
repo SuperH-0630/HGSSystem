@@ -16,7 +16,7 @@ class GarbageType:
 
 class GarbageBag:
     def __init__(self, gid: gid_t):
-        self._gid: gid_t = gid
+        self._gid: gid_t = gid_t(gid)
         self._have_use: bool = False
         self._have_check: bool = False
 
@@ -131,9 +131,9 @@ class GarbageBag:
                 use_time = HGSTime(use_time)
             if not isinstance(location, HGSLocation):
                 location = HGSLocation(location)
-            self._type: enum = garbage_type
+            self._type: enum = enum(garbage_type)
             self._use_time: HGSTime = use_time
-            self._user: uid_t = user
+            self._user: uid_t = uid_t(user)
             self._loc: HGSLocation = location
         finally:
             self._lock.release()
@@ -144,7 +144,7 @@ class GarbageBag:
             assert self._have_use
             assert not self._have_check
             self._have_check = True
-            self._check = use_right
-            self._checker = check_uid
+            self._check = bool(use_right)
+            self._checker = uid_t(check_uid)
         finally:
             self._lock.release()

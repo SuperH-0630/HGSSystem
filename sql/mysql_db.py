@@ -1,5 +1,7 @@
 import pymysql
 import threading
+import traceback
+
 from conf import mysql_url, mysql_name, mysql_passwd
 from .base_db import Database, DBCloseException
 from tool.type_ import *
@@ -9,7 +11,7 @@ class MysqlDB(Database):
     def __init__(self, host: str = mysql_url, name: str = mysql_name, passwd: str = mysql_passwd):
         super(MysqlDB, self).__init__(host, name, passwd)
         try:
-            self._db = pymysql.connect(user=name, password=passwd, host=host, database="hgssystem")
+            self._db = pymysql.connect(user=self._name, password=self._passwd, host=self._host, database="hgssystem")
         except pymysql.err.OperationalError:
             raise
         self._cursor = self._db.cursor()
@@ -56,6 +58,7 @@ class MysqlDB(Database):
             self._cursor.execute(sql)
         except pymysql.MySQLError:
             self._db.rollback()
+            traceback.print_exc()
             return None
         finally:
             self._db.commit()

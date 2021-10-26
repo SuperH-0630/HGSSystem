@@ -19,9 +19,9 @@ class UserType:
 
 class User(metaclass=abc.ABCMeta):
     def __init__(self, name: uname_t, uid: uid_t, user_type: enum):
-        self._name: uname_t = name
-        self._uid: uid_t = uid
-        self._type: enum = user_type
+        self._name: uname_t = uname_t(name)
+        self._uid: uid_t = uid_t(uid)
+        self._type: enum = enum(user_type)
         self._lock = threading.RLock()
 
     def is_manager(self):
@@ -89,9 +89,9 @@ class User(metaclass=abc.ABCMeta):
 class NormalUser(User):
     def __init__(self, name: uname_t, uid: uid_t, reputation: score_t, rubbish: count_t, score: score_t):
         super(NormalUser, self).__init__(name, uid, UserType.normal)
-        self._reputation = reputation
-        self._rubbish = rubbish
-        self._score = score
+        self._reputation = score_t(reputation)
+        self._rubbish = count_t(rubbish)
+        self._score = score_t(score)
 
     def __repr__(self):
         try:
@@ -112,7 +112,7 @@ class NormalUser(User):
         """
         try:
             self._lock.acquire()
-            info =  {
+            info = {
                 "name": str(self._name),
                 "uid": str(self._uid),
                 "manager": '0',

@@ -12,7 +12,7 @@ from PIL import Image, ImageTk
 from tool.type_ import *
 from tool.tk import set_tk_disable_from_list, make_font
 
-from core.user import User, UserNotSupportError
+from core.user import User
 from core.garbage import GarbageBag, GarbageType
 
 from sql.db import DB
@@ -88,13 +88,14 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
         return True
 
     def __check_normal_user(self):
-        if self.check_user() and self._user.is_manager():
-            raise UserNotSupportError
+        if self.check_user() and not self._user.is_manager():
+            return True
+        return False
 
     def __check_manager_user(self):
-        assert self.check_user()
-        if not self._user.is_manager():
-            raise UserNotSupportError
+        if self.check_user() and self._user.is_manager():
+            return True
+        return False
 
     def get_user_info(self):
         assert self.check_user()
@@ -134,21 +135,26 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
             return -1
         if not self._user.throw_rubbish(garbage, garbage_type, self._loc):
             return -2
-        update_garbage(garbage, self._db)
-        update_user(self._user, self._db)
+        if not update_garbage(garbage, self._db):
+            return -3
+        if not update_user(self._user, self._db):
+            return -3
         return 0
 
     def check_garbage_core(self, garbage: GarbageBag, check_result: bool) -> int:
-        if not self.__check_normal_user():
+        if not self.__check_manager_user():
             return -1
         user = find_user_by_id(garbage.get_user(), self._db)
         if user is None:
             return -2
         if not self._user.check_rubbish(garbage, check_result, user):
             return -3
-        update_garbage(garbage, self._db)
-        update_user(self._user, self._db)
-        update_user(user, self._db)
+        if not update_garbage(garbage, self._db):
+            return -4
+        if not update_user(self._user, self._db):
+            return -4
+        if not update_user(user, self._db):
+            return -4
         return 0
 
     def ranking(self, limit: int = 0, order_by: str = 'DESC') -> list[Tuple[uid_t, uname_t, score_t, score_t]]:
@@ -223,9 +229,9 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
 
         info = self._garbage.get_info()
         garbage_type = GarbageType.GarbageTypeStrList_ch[int(info['type'])]
-        if self._garbage.is_check():
+        if self._garbage.is_check()[0]:
             time_str = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(float(info['use_time'])))
-            check = f'Checker is f{info["checker"][0:conf.tk_show_uid_len]}\n'
+            check = f'Checker is {info["checker"][0:conf.tk_show_uid_len]}\n'
             if info["check"] == '1':
                 check += f'检查结果为 投放正确\n'
             else:
@@ -918,9 +924,10 @@ class GarbageStation(GarbageStationBase):
         self._msg_hide['command'] = lambda: self.hide_msg_rank(True)
         self._msg_hide.place(relx=0.42, rely=0.85, relwidth=0.16, relheight=0.09)
 
-    def set_msg_time_now(self, show_time: float = 10.0):
+    def set_msg_time_now(self, show_time: Optional[float] = None):
         self._msg_time = time.time()
-        self._msg_show_time = show_time
+        if show_time is not None:
+            self._msg_show_time = show_time
 
     def set_msg_time_none(self):
         self._msg_time = None
@@ -1143,9 +1150,9 @@ class GarbageStation(GarbageStationBase):
                 uid.set('error')
             else:
                 uid.set(uid_get[0:21])
-            eval_.set('无(管理员)')
-            rubbish.set('无(管理员)')
-            score.set('无(管理员)')
+            eval_.set('管理员')
+            rubbish.set('无')
+            score.set('无')
             self.__switch_to_manager_user()
         else:
             name.set(user_info.get('name'))

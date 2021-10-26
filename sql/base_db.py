@@ -21,9 +21,9 @@ class DBBit:
 class Database(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def __init__(self, host: str, name: str, passwd: str):
-        self._host = host
-        self._name = name
-        self._passwd = passwd
+        self._host = str(host)
+        self._name = str(name)
+        self._passwd = str(passwd)
 
     @abc.abstractmethod
     def close(self):

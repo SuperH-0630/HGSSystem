@@ -12,7 +12,7 @@ class HGSCapture:
         args = *args, *conf.capture_arg
         if cv2.CAP_DSHOW not in args:
             args = *args, cv2.CAP_DSHOW
-        self._capture = cv2.VideoCapture(capnum, *args, **kwargs)
+        self._capture = cv2.VideoCapture(int(capnum), *args, **kwargs)
         self._frame = None
         self._lock = threading.RLock()
 

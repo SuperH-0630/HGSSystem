@@ -44,6 +44,8 @@ class MysqlDB(Database):
             self._lock.acquire()  # 上锁
             self._cursor.execute(sql)
         except pymysql.MySQLError:
+            print(f"{sql}")
+            traceback.print_exc()
             return None
         finally:
             self._lock.release()  # 释放锁
@@ -58,6 +60,7 @@ class MysqlDB(Database):
             self._cursor.execute(sql)
         except pymysql.MySQLError:
             self._db.rollback()
+            print(f"{sql}")
             traceback.print_exc()
             return None
         finally:
@@ -73,6 +76,8 @@ class MysqlDB(Database):
             self._cursor.execute(sql)
         except pymysql.MySQLError:
             self._db.rollback()
+            print(f"{sql}")
+            traceback.print_exc()
             return None
         finally:
             self._lock.release()
@@ -82,5 +87,7 @@ class MysqlDB(Database):
         try:
             self._lock.acquire()
             self._db.commit()
+        except pymysql.err:
+            traceback.print_exc()
         finally:
             self._lock.release()

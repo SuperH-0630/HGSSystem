@@ -97,13 +97,3 @@ class HGSDatabase(metaclass=abc.ABCMeta):
         :return:
         """
         ...
-
-
-class HGSCursor(metaclass=abc.ABCMeta):
-    @abc.abstractmethod
-    def fetchone(self):
-        ...
-
-    @abc.abstractmethod
-    def fetchall(self):
-        ...

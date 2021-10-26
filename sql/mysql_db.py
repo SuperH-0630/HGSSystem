@@ -3,19 +3,8 @@ import threading
 import traceback
 
 from conf import mysql_url, mysql_name, mysql_passwd
-from .base_db import HGSDatabase, DBCloseException, HGSCursor
+from .base_db import HGSDatabase, DBCloseException
 from tool.type_ import *
-
-
-class MySQLCursor(HGSCursor):
-    def __init__(self, cursor: pymysql.cursors.Cursor):
-        self._cursor: pymysql.cursors.Cursor = cursor
-
-    def fetchall(self):
-        return self._cursor.fetchall()
-
-    def fetchone(self):
-        return self._cursor.fetchone()
 
 
 class MysqlDB(HGSDatabase):
@@ -25,8 +14,7 @@ class MysqlDB(HGSDatabase):
             self._db = pymysql.connect(user=self._name, password=self._passwd, host=self._host, database="hgssystem")
         except pymysql.err.OperationalError:
             raise
-        self._cursor: pymysql.cursors.Cursor = self._db.cursor()
-        self._mysql_cursor = MySQLCursor(self._cursor)
+        self._cursor = self._db.cursor()
         self._lock = threading.RLock()
 
     def close(self):
@@ -36,7 +24,6 @@ class MysqlDB(HGSDatabase):
             self._db.close()
         self._db = None
         self._cursor = None
-        self._mysql_cursor = None
         self._lock = None
 
     def is_connect(self) -> bool:
@@ -44,10 +31,10 @@ class MysqlDB(HGSDatabase):
             return False
         return True
 
-    def get_cursor(self) -> HGSCursor:
+    def get_cursor(self) -> pymysql.cursors.Cursor:
         if self._cursor is None or self._db is None:
             raise DBCloseException
-        return self._mysql_cursor
+        return self._cursor
 
     def search(self, columns: List[str], table: str,
                where: Union[str, List[str]] = None,
@@ -110,7 +97,7 @@ class MysqlDB(HGSDatabase):
 
         return self.__done(f"UPDATE {table} SET {kw_str} WHERE {where};")
 
-    def __search(self, sql) -> Union[None, HGSCursor]:
+    def __search(self, sql) -> Union[None, pymysql.cursors.Cursor]:
         if self._cursor is None or self._db is None:
             raise DBCloseException
 
@@ -123,9 +110,9 @@ class MysqlDB(HGSDatabase):
             return None
         finally:
             self._lock.release()  # 释放锁
-        return self._mysql_cursor
+        return self._cursor
 
-    def __done(self, sql) -> Union[None, HGSCursor]:
+    def __done(self, sql) -> Union[None, pymysql.cursors.Cursor]:
         if self._cursor is None or self._db is None:
             raise DBCloseException
 
@@ -140,4 +127,4 @@ class MysqlDB(HGSDatabase):
         finally:
             self._db.commit()
             self._lock.release()
-        return self._mysql_cursor
+        return self._cursor

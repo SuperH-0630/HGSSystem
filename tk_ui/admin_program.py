@@ -329,7 +329,7 @@ class CreateGarbageProgram(AdminProgram):
         self.enter_frame.place(relx=0.2, rely=0.3, relwidth=0.6, relheight=0.17)
 
         height = 0.1
-        for lb, text, enter, var in zip(self.title, ["数量:", "二维码导出位置:"], self.enter, self.var):
+        for lb, text, enter, var in zip(self.title, ["数量:", "导出位置:"], self.enter, self.var):
             lb['font'] = title_font
             lb['text'] = text
             lb['bg'] = "#b69968"

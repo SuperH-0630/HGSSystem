@@ -36,6 +36,9 @@ class RankingStationBase(metaclass=abc.ABCMeta):
         """
         limit = self.rank_count * self.limit_n
         offset = self.offset + limit * offset  # offset为0表示不移动, 1表示向前, -1表示向后
+        if offset < 0:
+            return False, []
+
         cur = self._db.search(columns=['UserID', 'Name', 'Score', 'Reputation'],
                               table='user',
                               where='IsManager=0',

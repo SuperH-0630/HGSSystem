@@ -67,12 +67,12 @@ elif program_name == "manager":
     station.mainloop()
 elif program_name == "ranking_website":
     try:
-        import app.ranking as ranking_website
+        from app import rank as rank_web
     except ImportError:
         can_not_load("在线排行榜服务")
         sys.exit(1)
 
-    web, app = ranking_website.creat_ranking_website(mysql)
+    web, app = rank_web.creat_ranking_website(mysql)
     web.run()
 else:
     can_not_load(program_name)

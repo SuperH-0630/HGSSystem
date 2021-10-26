@@ -135,12 +135,7 @@ class ThrowGarbageEvent(StationEventBase):
     """
 
     def func(self, garbage: GarbageBag, garbage_type: enum):
-        try:
-            self.station.throw_garbage_core(garbage, garbage_type)
-        except (tk_station.ThrowGarbageError, UserNotSupportError, tk_station.ControlNotLogin):
-            return False
-        else:
-            return True
+        return self.station.throw_garbage_core(garbage, garbage_type)
 
     def __init__(self, gb_station):
         super().__init__(gb_station, "垃圾投放")
@@ -156,9 +151,13 @@ class ThrowGarbageEvent(StationEventBase):
         return not self.thread.is_alive()
 
     def done_after_event(self):
-        self.thread.join()
-        if not self.thread.result:
-            self.station.show_warning("操作失败", "垃圾袋投放失败")
+        res = self.thread.wait_event()
+        if res == -1:
+            self.station.show_warning("垃圾投放", "管理员用户不得投放垃圾", show_time=3.0)
+        elif res == -2:
+            self.station.show_warning("垃圾投放", "垃圾投放失败", show_time=3.0)
+        else:
+            self.station.show_warning("操作成功", "垃圾袋完成投放")
 
 
 class CheckGarbageEvent(StationEventBase):
@@ -167,13 +166,7 @@ class CheckGarbageEvent(StationEventBase):
     """
 
     def func(self, garbage: GarbageBag, check: bool):
-        try:
-            self.station.check_garbage_core(garbage, check)
-        except (tk_station.ThrowGarbageError, UserNotSupportError,
-                tk_station.ControlNotLogin, tk_station.CheckGarbageError):
-            return False
-        else:
-            return True
+        return self.station.check_garbage_core(garbage, check)
 
     def __init__(self, gb_station):
         super().__init__(gb_station, "检测垃圾袋")
@@ -187,6 +180,12 @@ class CheckGarbageEvent(StationEventBase):
         return not self.thread.is_alive()
 
     def done_after_event(self):
-        self.thread.join()
-        if not self.thread.result:
-            self.station.show_warning("操作失败", "垃圾袋检测失败")
+        res = self.thread.wait_event()
+        if res == -1:
+            self.station.show_warning("垃圾投放", "非管理员用户不得检查垃圾", show_time=3.0)
+        elif res == -2:
+            self.station.show_warning("垃圾检测", "垃圾袋还未使用", show_time=3.0)
+        elif res == -3:
+            self.station.show_warning("垃圾检测", "垃圾检测提结果交失败", show_time=3.0)
+        else:
+            self.station.show_msg("垃圾检测", "垃圾检测提结果交成功", show_time=3.0)

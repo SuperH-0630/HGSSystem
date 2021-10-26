@@ -1,12 +1,9 @@
 import time
-from sql.db import DB, DBBit, DBDataException, DBDoneException
+from . import DBBit
+from .db import DB
 from tool.type_ import *
-from tool.time_ import HGSTime, mysql_time, time_from_mysql
+from tool.time_ import mysql_time, time_from_mysql
 from core.garbage import GarbageBag, GarbageType
-
-
-class GarbageDBException(DBDataException):
-    ...
 
 
 def update_garbage_type(where: str, type_: int, db: DB) -> int:
@@ -228,42 +225,37 @@ def update_garbage(garbage: GarbageBag, db: DB) -> bool:
     gid = garbage.get_gid()
     info = garbage.get_info()
 
-    try:
-        if garbage.is_check()[0]:
-            db.done_(f"UPDATE garbage SET "
-                     f"Flat = 2,"
-                     f"UserID = '{info['user']}',"
-                     f"UseTime = {time_from_mysql(info['use_time'])},"
-                     f"GarbageType = {info['type']},"
-                     f"Location = '{info['loc']}',"
-                     f"CheckResult = {info['check']},"
-                     f"CheckerID = '{info['checker']}',"
-                     f"WHERE GarbageID = {gid};")
-        elif garbage.is_use():
-            db.done_(f"UPDATE garbage SET "
-                     f"Flat = 1,"
-                     f"UserID = '{info['user']}',"
-                     f"UseTime = {time_from_mysql(info['use_time'])},"
-                     f"GarbageType = {info['type']},"
-                     f"Location = '{info['loc']}',"
-                     f"CheckResult = NULL,"
-                     f"CheckerID = NULL,"
-                     f"WHERE GarbageID = {gid};")
-        else:
-            db.done_(f"UPDATE garbage SET "
-                     f"Flat = 0,"
-                     f"UserID = NULL,"
-                     f"UseTime = NULL,"
-                     f"GarbageType = NULL,"
-                     f"Location = NULL,"
-                     f"CheckResult = NULL,"
-                     f"CheckerID = NULL,"
-                     f"WHERE GarbageID = {gid};")
-    except DBDoneException:
-        return False
-    finally:
-        db.done_commit()
-    return True
+    if garbage.is_check()[0]:
+        res = db.done(f"UPDATE garbage SET "
+                      f"Flat = 2,"
+                      f"UserID = '{info['user']}',"
+                      f"UseTime = {time_from_mysql(info['use_time'])},"
+                      f"GarbageType = {info['type']},"
+                      f"Location = '{info['loc']}',"
+                      f"CheckResult = {info['check']},"
+                      f"CheckerID = '{info['checker']}',"
+                      f"WHERE GarbageID = {gid};")
+    elif garbage.is_use():
+        res = db.done(f"UPDATE garbage SET "
+                      f"Flat = 1,"
+                      f"UserID = '{info['user']}',"
+                      f"UseTime = {time_from_mysql(info['use_time'])},"
+                      f"GarbageType = {info['type']},"
+                      f"Location = '{info['loc']}',"
+                      f"CheckResult = NULL,"
+                      f"CheckerID = NULL,"
+                      f"WHERE GarbageID = {gid};")
+    else:
+        res = db.done(f"UPDATE garbage SET "
+                      f"Flat = 0,"
+                      f"UserID = NULL,"
+                      f"UseTime = NULL,"
+                      f"GarbageType = NULL,"
+                      f"Location = NULL,"
+                      f"CheckResult = NULL,"
+                      f"CheckerID = NULL,"
+                      f"WHERE GarbageID = {gid};")
+    return res is not None
 
 
 def create_new_garbage(db: DB) -> Optional[GarbageBag]:
@@ -361,24 +353,3 @@ def del_all_garbage_scan(db: DB) -> int:
     if cur is None:
         return -1
     return cur.rowcount
-
-
-if __name__ == '__main__':
-    mysql_db = DB()
-    bag = create_new_garbage(mysql_db)
-    print(bag)
-    bag.config_use(GarbageType.recyclable, HGSTime(), "1e1d30a1f9b78c8fa852d19b4cfaee79", "HuaDu")
-    update_garbage(bag, mysql_db)
-    print(bag)
-
-    bag = find_garbage(bag.get_gid(), mysql_db)
-    print(bag)
-
-    bag.config_check(True, "048529ca5c6accf594b74e6f73ee1bf0")
-    update_garbage(bag, mysql_db)
-    print(bag)
-
-    bag = find_garbage(bag.get_gid(), mysql_db)
-    print(bag)
-
-    print(count_garbage_by_time("1e1d30a1f9b78c8fa852d19b4cfaee79", mysql_db))

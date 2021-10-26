@@ -1,5 +1,4 @@
 import conf
-from .base_db import DBBit, DBException, DBCloseException, DBDataException, DBDoneException  # 导入必要的内容
 
 if conf.database.upper() == 'MYSQL':
     try:

@@ -1,7 +1,7 @@
 import pymysql
 import threading
 from conf import mysql_url, mysql_name, mysql_passwd
-from .base_db import Database, DBException, DBCloseException
+from .base_db import Database, DBCloseException
 from tool.type_ import *
 
 
@@ -56,7 +56,6 @@ class MysqlDB(Database):
             self._cursor.execute(sql)
         except pymysql.MySQLError:
             self._db.rollback()
-            raise
             return None
         finally:
             self._db.commit()
@@ -71,6 +70,7 @@ class MysqlDB(Database):
             self._cursor.execute(sql)
         except pymysql.MySQLError:
             self._db.rollback()
+            return None
         finally:
             self._lock.release()
         return self._cursor
@@ -81,16 +81,3 @@ class MysqlDB(Database):
             self._db.commit()
         finally:
             self._lock.release()
-
-
-if __name__ == '__main__':
-    # 测试程序
-    mysql_db = MysqlDB()
-    mysql_db.search("SELECT * FROM user;")
-    res_ = mysql_db.get_cursor().fetchall()
-    print(res_)
-
-    mysql_db.search("SELECT * FROM user WHERE UserID = 0;")
-    res_ = mysql_db.get_cursor().fetchall()
-    print(res_)
-    mysql_db.close()

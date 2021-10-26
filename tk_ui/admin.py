@@ -26,18 +26,6 @@ from tool.tk import make_font
 from tool.type_ import *
 
 
-class AdminStationException(Exception):
-    ...
-
-
-class CreateGarbageError(AdminStationException):
-    ...
-
-
-class CreateUserError(AdminStationException):
-    ...
-
-
 class AdminStationBase(TkEventMain, metaclass=abc.ABCMeta):
     """
     AdminStation基类
@@ -57,8 +45,7 @@ class AdminStationBase(TkEventMain, metaclass=abc.ABCMeta):
         re = []
         for _ in range(num):
             gar = create_new_garbage(self._db)
-            if gar is None:
-                raise CreateGarbageError
+            assert gar
             if path is not None:
                 res = write_gid_qr(gar.get_gid(), path, self._db)
                 re.append(res)
@@ -668,9 +655,3 @@ class AdminStation(AdminStationBase):
 
     def exit_win(self):
         self._window.destroy()
-
-
-if __name__ == '__main__':
-    mysql_db = DB()
-    station_ = AdminStation(mysql_db)
-    station_.mainloop()

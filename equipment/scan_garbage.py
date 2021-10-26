@@ -70,20 +70,3 @@ def write_all_gid_qr(path: str, db: DB, where: str = "") -> List[Tuple[str]]:
         if make_gid_image(res[0], path_):
             re_list.append((path_,))
     return re_list
-
-
-if __name__ == '__main__':
-    mysql_db = DB()
-    capture = HGSCapture()
-    qr_capture = HGSQRCoder(capture)
-    write_all_gid_qr("gid", mysql_db)
-    while True:
-        capture.get_image()
-        qr_data = qr_capture.get_qr_code()
-        if qr_data is not None:
-            gar = scan_garbage(qr_data, mysql_db)
-            if gar is not None:
-                print(gar)
-        if capture.show_image(1) == ord('q'):
-            break
-

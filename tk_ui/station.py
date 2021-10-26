@@ -13,7 +13,7 @@ from tool.type_ import *
 from tool.tk import set_tk_disable_from_list, make_font
 
 from core.user import User, UserNotSupportError
-from core.garbage import GarbageBag, GarbageType, GarbageBagNotUse
+from core.garbage import GarbageBag, GarbageType
 
 from sql.db import DB
 from sql.user import update_user, find_user_by_id
@@ -22,26 +22,6 @@ from sql.garbage import update_garbage
 from equipment.scan import HGSCapture, HGSQRCoder
 
 from .event import TkEventMain
-
-
-class GarbageStationException(Exception):
-    ...
-
-
-class ControlNotLogin(GarbageStationException):
-    ...
-
-
-class ThrowGarbageError(GarbageStationException):
-    ...
-
-
-class CheckGarbageError(GarbageStationException):
-    ...
-
-
-class RankingUserError(GarbageStationException):
-    ...
 
 
 class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
@@ -107,23 +87,17 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
             return False
         return True
 
-    def __check_user(self):
-        if not self.check_user():
-            raise ControlNotLogin
-        self._user_last_time = time.time()
-
     def __check_normal_user(self):
-        self.__check_user()
-        if self._user.is_manager():
+        if self.check_user() and self._user.is_manager():
             raise UserNotSupportError
 
     def __check_manager_user(self):
-        self.__check_user()
+        assert self.check_user()
         if not self._user.is_manager():
             raise UserNotSupportError
 
     def get_user_info(self):
-        self.__check_user()
+        assert self.check_user()
         return self._user.get_info()
 
     def get_uid_no_update(self):
@@ -155,28 +129,27 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
         self.show_msg("登录", "登录成功", show_time=3.0)
         return True  # 登录
 
-    def throw_garbage_core(self, garbage: GarbageBag, garbage_type: enum):
-        self.__check_normal_user()
+    def throw_garbage_core(self, garbage: GarbageBag, garbage_type: enum) -> int:
+        if not self.__check_normal_user():
+            return -1
         if not self._user.throw_rubbish(garbage, garbage_type, self._loc):
-            self.show_warning("垃圾投放", "垃圾投放失败", show_time=3.0)
-            raise ThrowGarbageError
+            return -2
         update_garbage(garbage, self._db)
         update_user(self._user, self._db)
-        self.show_msg("垃圾投放", "垃圾投放成功", show_time=3.0)
+        return 0
 
-    def check_garbage_core(self, garbage: GarbageBag, check_result: bool):
-        self.__check_manager_user()
+    def check_garbage_core(self, garbage: GarbageBag, check_result: bool) -> int:
+        if not self.__check_normal_user():
+            return -1
         user = find_user_by_id(garbage.get_user(), self._db)
         if user is None:
-            self.show_warning("垃圾检测", "垃圾袋还未使用", show_time=3.0)
-            raise GarbageBagNotUse
+            return -2
         if not self._user.check_rubbish(garbage, check_result, user):
-            self.show_warning("垃圾检测", "垃圾检测提结果交失败", show_time=3.0)
-            raise CheckGarbageError
+            return -3
         update_garbage(garbage, self._db)
         update_user(self._user, self._db)
         update_user(user, self._db)
-        self.show_msg("垃圾检测", "垃圾检测提结果交成功", show_time=3.0)
+        return 0
 
     def ranking(self, limit: int = 0, order_by: str = 'DESC') -> list[Tuple[uid_t, uname_t, score_t, score_t]]:
         """
@@ -197,7 +170,7 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
                                f"ORDER BY Reputation {order_by}, Score {order_by} "
                                f"{limit}"))
         if cur is None:
-            raise RankingUserError
+            return []
         return list(cur.fetchall())
 
     def to_get_garbage_type(self, garbage: GarbageBag):
@@ -1265,10 +1238,3 @@ class GarbageStation(GarbageStationBase):
     def exit_win(self):
         self._window.destroy()
 
-
-if __name__ == '__main__':
-    mysql_db = DB()
-    capture = HGSCapture()
-    qr_capture = HGSQRCoder(capture)
-    station_ = GarbageStation(mysql_db, capture, qr_capture)
-    station_.mainloop()

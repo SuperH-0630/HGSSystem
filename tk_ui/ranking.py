@@ -8,18 +8,6 @@ from tool.tk import make_font
 from sql.db import DB
 
 
-class RankingStationException(Exception):
-    ...
-
-
-class RankingError(RankingStationException):
-    ...
-
-
-class RankingPageError(RankingStationException):
-    ...
-
-
 class RankingStationBase(metaclass=abc.ABCMeta):
     """
     RankingStation基类
@@ -132,6 +120,12 @@ class RankingStationBase(metaclass=abc.ABCMeta):
         self.offset = 0
         self.rank_count = self.rank_count
         res, self.rank = self.get_rank(0)
+
+        if not res:
+            self.set_next_btn(False)
+            self.set_prev_btn(False)
+            self.show_rank([])
+            return
 
         self.show_rank(self.rank[0])
 
@@ -382,8 +376,11 @@ class RankingStation(RankingStationBase):
             self.rank_label[i].place(relx=0.04, rely=rely, relwidth=0.92, relheight=relheight)
 
     def show_rank(self, rank_info: List[Tuple[int, uname_t, uid_t, score_t, score_t, Optional[str]]]):
-        self.__set_rank_info(rank_info)
-        self.rank_title_var.set("排行榜")
+        if len(rank_info) == 0:
+            self.rank_title_var.set("排行榜无数据")
+        else:
+            self.__set_rank_info(rank_info)
+            self.rank_title_var.set("排行榜")
 
     def rank_auto(self, auto):
         super(RankingStation, self).rank_auto(auto)
@@ -426,9 +423,3 @@ class RankingStation(RankingStationBase):
 
     def mainloop(self):
         self.window.mainloop()
-
-
-if __name__ == '__main__':
-    mysql_db = DB()
-    station = RankingStation(mysql_db)
-    station.mainloop()

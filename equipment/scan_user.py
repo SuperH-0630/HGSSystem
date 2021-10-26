@@ -78,20 +78,3 @@ def write_all_uid_qr(path: str, db: DB, name="nu", where: str = "") -> List[str]
         if make_uid_image(res[0], res[1], path_):
             re_list.append(path_)
     return re_list
-
-
-if __name__ == '__main__':
-    mysql_db = DB()
-    capture = HGSCapture()
-    qr_capture = HGSQRCoder(capture)
-    write_all_uid_qr("uid", mysql_db)
-    while True:
-        capture.get_image()
-        qr_data = qr_capture.get_qr_code()
-        if qr_data is not None:
-            usr = scan_user(qr_data, mysql_db)
-            if usr is not None:
-                print(usr)
-        if capture.show_image(1) == ord('q'):
-            break
-

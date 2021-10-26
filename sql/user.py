@@ -1,6 +1,7 @@
 import csv
 
-from .db import DB, DBBit
+from . import DBBit
+from .db import DB
 from tool.type_ import *
 from tool.login import create_uid, randomPassword
 from tool.time_ import mysql_time
@@ -234,23 +235,3 @@ def creat_auto_user_from_csv(path, db: DB) -> List[User]:
                 res.append(user)
     return res
 
-
-if __name__ == '__main__':
-    mysql_db = DB()
-    name_ = 'Huan12'
-    usr = find_user_by_name(name_, "123", mysql_db)
-    if usr is None:
-        usr = create_new_user(name_, "123", "12345678900", False, mysql_db)
-    print(usr)
-
-    for i in range(9):
-        usr.evaluate(False)
-        print(usr)
-
-    for i in range(1):
-        usr.evaluate(True)
-        print(usr)
-
-    update_user(usr, mysql_db)
-    usr = find_user_by_name(name_, "123", mysql_db)
-    print(usr)

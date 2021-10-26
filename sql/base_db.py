@@ -5,15 +5,11 @@ class DBException(Exception):
     ...
 
 
-class DBDataException(Exception):
+class DBDoneException(DBException):
     ...
 
 
-class DBCloseException(Exception):
-    ...
-
-
-class DBDoneException(Exception):
+class DBCloseException(DBException):
     ...
 
 

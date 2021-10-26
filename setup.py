@@ -2,6 +2,11 @@ import os
 import sys
 import warnings
 
+print("是否执行初始化程序?执行初始化程序会令你丢失所有数据.")
+res = input("[Y/n]")
+if res != 'Y':
+    exit(0)
+
 try:
     __import__("pip")
 except ImportError:

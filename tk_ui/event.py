@@ -6,10 +6,6 @@ import conf
 from tool.type_ import *
 
 
-class TkEventException(Exception):
-    ...
-
-
 class TkEventBase(metaclass=abc.ABCMeta):
     """
     Tkinter 子线程任务

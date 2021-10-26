@@ -5,10 +5,6 @@ from tool.time_ import HGSTime, hgs_time_t
 from tool.location import HGSLocation, hgs_location_t
 
 
-class GarbageBagNotUse(Exception):
-    pass
-
-
 class GarbageType:
     GarbageTypeStrList: List = ["", "recyclable", "kitchen", "hazardous", "other"]
     GarbageTypeStrList_ch: List = ["", "可回收", "厨余", "有害", "其他"]
@@ -109,25 +105,21 @@ class GarbageBag:
     def get_user(self) -> uid_t:
         try:
             self._lock.acquire()
+            assert self._have_use
             user = self._user
-            have_use = self._have_use
         finally:
             self._lock.release()
 
-        if not have_use:
-            raise GarbageBagNotUse
         return user
 
     def get_type(self):
         try:
             self._lock.acquire()
+            assert self._have_use
             type_ = self._type
-            have_use = self._have_use
         finally:
             self._lock.release()
 
-        if not have_use:
-            raise GarbageBagNotUse
         return type_
 
     def config_use(self, garbage_type: enum, use_time: hgs_time_t, user: uid_t, location: hgs_location_t):

@@ -7,19 +7,7 @@ from tool.time_ import HGSTime
 from .garbage import GarbageBag, GarbageType
 
 
-class UserException(Exception):
-    pass
-
-
-class UserNotSupportError(UserException):
-    pass
-
-
-class UserNotScoreException(UserException):
-    pass
-
-
-class UserRubbishException(UserException):
+class UserNotSupportError(Exception):
     pass
 
 
@@ -204,7 +192,7 @@ class NormalUser(User):
             self._lock.acquire()
             if self._score + score < 0:
                 self._score = 0
-                raise UserNotScoreException
+                return 0
 
             self._score += score
             score = self._score
@@ -216,12 +204,9 @@ class NormalUser(User):
         try:
             self._lock.acquire()
             if self._rubbish > conf.max_rubbish_week:
-                try:
-                    self.add_score(-3)
-                except UserNotScoreException:
-                    raise UserRubbishException
+                self.add_score(-3)
             elif self._rubbish > conf.limit_rubbish_week:
-                raise UserRubbishException
+                return False
 
             if garbage.is_use() or garbage.is_check()[0]:
                 return False
@@ -249,18 +234,15 @@ class ManagerUser(User):
             garbage.config_check(right, self._uid)
             user.evaluate(right)
 
-            try:
-                if right:
-                    if garbage.get_type() == GarbageType.recyclable:
-                        user.add_score(3)
-                    elif garbage.get_type() == GarbageType.kitchen or garbage.get_type() == GarbageType.hazardous:
-                        user.add_score(2)
-                    else:
-                        user.add_score(1)
+            if right:
+                if garbage.get_type() == GarbageType.recyclable:
+                    user.add_score(3)
+                elif garbage.get_type() == GarbageType.kitchen or garbage.get_type() == GarbageType.hazardous:
+                    user.add_score(2)
                 else:
-                    user.add_score(-4)
-            except UserNotScoreException:
-                ...
+                    user.add_score(1)
+            else:
+                user.add_score(-4)
         finally:
             self._lock.release()
 

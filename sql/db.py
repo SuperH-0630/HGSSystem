@@ -1,4 +1,5 @@
 import conf
+from tool.type_ import List
 
 if conf.database.upper() == 'MYSQL':
     try:
@@ -13,12 +14,8 @@ else:
     raise Exception
 
 
-def search_from_garbage_checker_user(columns, where, db: DB):
-    if len(where) > 0:
-        where = f"WHERE {where} "
-
-    column = ", ".join(columns)
-    cur = db.search(f"SELECT {column} FROM garbage_checker_user {where};")
+def search_from_garbage_checker_user(columns: List[str], where, db: DB):
+    cur = db.search(columns=columns, table='garbage_checker_user', where=where)
     if cur is None:
         return None
     res = cur.fetchall()

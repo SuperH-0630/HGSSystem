@@ -14,7 +14,7 @@ def update_user_score(where: str, score: score_t, db: DB) -> int:
     if len(where) == 0 or score < 0:
         return -1
 
-    cur = db.done(f"UPDATE user SET Score={score} WHERE {where};")
+    cur = db.update(table="user", kw={"score": score}, where=where)
     if cur is None:
         return -1
     return cur.rowcount
@@ -24,7 +24,7 @@ def update_user_reputation(where: str, reputation: score_t, db: DB) -> int:
     if len(where) == 0 or reputation <= 1 or reputation >= 1000:
         return -1
 
-    cur = db.done(f"UPDATE user SET Reputation={reputation} WHERE {where};")
+    cur = db.update(table="user", kw={"Reputation": reputation}, where=where)
     if cur is None:
         return -1
     return cur.rowcount
@@ -46,11 +46,9 @@ def search_user_by_fields(columns, uid: uid_t, name: uname_t, phone: phone_t, db
 
 
 def search_from_user_view(columns, where: str, db: DB):
-    if len(where) > 0:
-        where = f"WHERE {where} "
-
-    column = ", ".join(columns)
-    cur = db.search(f"SELECT {column} FROM user {where};")
+    cur = db.search(columns=columns,
+                    table="user",
+                    where=where)
     if cur is None:
         return None
     result = cur.fetchall()
@@ -63,7 +61,9 @@ def search_from_user_view(columns, where: str, db: DB):
 
 
 def find_user_by_id(uid: uid_t, db: DB) -> Optional[User]:
-    cur = db.search(f"SELECT UserID, Name, IsManager, Score, Reputation FROM user WHERE UserID = '{uid}';")
+    cur = db.search(columns=["UserID", "Name", "IsManager", "Score", "Reputation"],
+                    table="user",
+                    where=f"UserID = '{uid}'")
     if cur is None or cur.rowcount == 0:
         return None
     assert cur.rowcount == 1
@@ -89,7 +89,9 @@ def find_user_by_name(name: uname_t, passwd: passwd_t, db: DB) -> Optional[User]
 
 
 def is_user_exists(uid: uid_t, db: DB) -> bool:
-    cur = db.search(f"SELECT UserID FROM user WHERE UserID = '{uid}';")
+    cur = db.search(columns=["UserID"],
+                    table="user",
+                    where=f"UserID = '{uid}'")
     if cur is None or cur.rowcount == 0:
         return False
     assert cur.rowcount == 1
@@ -101,20 +103,20 @@ def update_user(user: User, db: DB) -> bool:
         return False
 
     uid = user.get_uid()
-    info: dict = user.get_info()
+    info: Dict[str, str] = user.get_info()
     is_manager = info['manager']
     if is_manager == '1':
-        cur = db.done(f"UPDATE user "
-                      f"SET IsManager = {is_manager} "
-                      f"WHERE UserID = '{uid}';")
+        cur = db.update(table="user",
+                        kw={"IsManager": {is_manager}},
+                        where=f"UserID = '{uid}'")
     else:
         score = info['score']
         reputation = info['reputation']
-        cur = db.done(f"UPDATE user "
-                      f"SET IsManager = {is_manager},"
-                      f"    Score = {score},"
-                      f"    Reputation = {reputation} "
-                      f"WHERE UserID = '{uid}';")
+        cur = db.update(table="user",
+                        kw={"IsManager": {is_manager},
+                            "Score": {score},
+                            "Reputation": {reputation}},
+                        where=f"UserID = '{uid}'")
     return cur is not None
 
 
@@ -133,9 +135,10 @@ def create_new_user(name: Optional[uname_t], passwd: Optional[passwd_t], phone: 
     if is_user_exists(uid, db):
         return None
     is_manager = '1' if manager else '0'
-    cur = db.done(f"INSERT INTO user(UserID, Name, IsManager, Phone, Score, Reputation, CreateTime) "
-                  f"VALUES ('{uid}', '{name}', {is_manager}, '{phone}', {conf.default_score}, "
-                  f"{conf.default_reputation}, {mysql_time()});")
+    cur = db.insert(table="user",
+                    columns=["UserID", "Name", "IsManager", "Phone", "Score", "Reputation", "CreateTime"],
+                    values=f"'{uid}', '{name}', {is_manager}, '{phone}', {conf.default_score}, "
+                           f"{conf.default_reputation}, {mysql_time()}")
     if cur is None:
         return None
     if is_manager:
@@ -144,7 +147,7 @@ def create_new_user(name: Optional[uname_t], passwd: Optional[passwd_t], phone: 
 
 
 def get_user_phone(uid: uid_t, db: DB) -> Optional[str]:
-    cur = db.done(f"SELECT Phone FROM user WHERE UserID = '{uid}';")
+    cur = db.search(columns=["Phone"], table="user", where=f"UserID = '{uid}'")
     if cur is None or cur.rowcount == 0:
         return None
     assert cur.rowcount == 1
@@ -152,10 +155,11 @@ def get_user_phone(uid: uid_t, db: DB) -> Optional[str]:
 
 
 def del_user(uid: uid_t, db: DB) -> bool:
-    cur = db.search(f"SELECT GarbageID FROM garbage_time WHERE UserID = '{uid}';")  # 确保没有引用
+    cur = db.search(columns=["GarbageID"], table="garbage_time", where=f"UserID = '{uid}'")  # 确保没有引用
+
     if cur is None or cur.rowcount != 0:
         return False
-    cur = db.done(f"DELETE FROM user WHERE UserID = '{uid}';")
+    cur = db.delete(table="user", where=f"UserID = '{uid}'")
     if cur is None or cur.rowcount == 0:
         return False
     assert cur.rowcount == 1
@@ -163,18 +167,17 @@ def del_user(uid: uid_t, db: DB) -> bool:
 
 
 def del_user_from_where_scan(where: str, db: DB) -> int:
-    cur = db.search(f"SELECT UserID FROM user WHERE {where};")
-    print(f"SELECT UserID FROM user WHERE {where};")
+    cur = db.search(columns=["UserID"], table="user", where=where)
     if cur is None:
         return -1
     return cur.rowcount
 
 
 def del_user_from_where(where: str, db: DB) -> int:
-    cur = db.search(f"SELECT GarbageID FROM garbage_time WHERE {where};")  # 确保没有引用
+    cur = db.search(columns=["GarbageID"], table="garbage_time", where=where)  # 确保没有引用
     if cur is None or cur.rowcount != 0:
         return False
-    cur = db.done(f"DELETE FROM user WHERE {where};")
+    cur = db.delete(table="user", where=where)
     if cur is None:
         return -1
     return cur.rowcount
@@ -234,4 +237,3 @@ def creat_auto_user_from_csv(path, db: DB) -> List[User]:
             if user is not None:
                 res.append(user)
     return res
-

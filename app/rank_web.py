@@ -11,11 +11,11 @@ class RankWebsite:
         self.app = app
 
     def get_rank(self, order_by: str = "DESC") -> Optional[List[Tuple]]:
-        cur = self._db.search((f"SELECT UserID, Name, Score, Reputation "
-                               f"FROM user "
-                               f"WHERE IsManager = 0 "
-                               f"ORDER BY Reputation {order_by}, Score {order_by}, UserID {order_by} "
-                               f"LIMIT 200;"))
+        cur = self._db.search(columns=['UserID', 'Name', 'Score', 'Reputation'],
+                              table='user',
+                              where='IsManager=0',
+                              order_by=[('Reputation', order_by), ('Score', order_by), ('UserID', order_by)],
+                              limit=200)
         if cur is None:
             return None
         res = []

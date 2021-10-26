@@ -55,10 +55,7 @@ def write_gid_qr(gid: gid_t, path: str, db: DB) -> Tuple[str, Optional[GarbageBa
 
 
 def write_all_gid_qr(path: str, db: DB, where: str = "") -> List[Tuple[str]]:
-    if len(where) > 0:
-        where = f"WHERE {where}"
-
-    cur = db.search(f"SELECT GarbageID FROM garbage {where};")
+    cur = db.search(columns=["GarbageID"], table="garbage", where=where)
     if cur is None:
         return []
 

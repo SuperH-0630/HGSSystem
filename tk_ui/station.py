@@ -170,11 +170,10 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
         if order_by != 'ASC' and order_by != 'DESC':
             order_by = 'DESC'
 
-        cur = self._db.search((f"SELECT UserID, Name, Score, Reputation "
-                               f"FROM user "
-                               f"WHERE IsManager = 0 "
-                               f"ORDER BY Reputation {order_by}, Score {order_by} "
-                               f"{limit}"))
+        cur = self._db.search(columns=['UserID', 'Name', 'Score', 'Reputation'],
+                              table='user',
+                              where='IsManager=0',
+                              order_by=[('Reputation', order_by), ('Score', order_by), ('UserID', order_by)])
         if cur is None:
             return []
         return list(cur.fetchall())

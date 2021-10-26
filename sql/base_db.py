@@ -1,4 +1,5 @@
 import abc
+from tool.type_ import List, Union, Optional, Tuple
 
 
 class DBException(Exception):
@@ -18,7 +19,7 @@ class DBBit:
     BIT_1 = b'\x01'
 
 
-class Database(metaclass=abc.ABCMeta):
+class HGSDatabase(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def __init__(self, host: str, name: str, passwd: str):
         self._host = str(host)
@@ -48,36 +49,61 @@ class Database(metaclass=abc.ABCMeta):
         ...
 
     @abc.abstractmethod
-    def search(self, sql) -> any:
+    def search(self, columns: List[str], table: str,
+               where: Union[str, List[str]] = None,
+               limit: Optional[int] = None,
+               offset: Optional[int] = None,
+               order_by: Optional[List[Tuple[str, str]]] = None):
         """
-        执行SQL语句, 仅SELECT
-        :param sql: SELECT的SQL语句
-        :return: 游标
-        """
-        ...
-
-    @abc.abstractmethod
-    def done(self, sql) -> any:
-        """
-        执行SQL语句, 并提交
-        :param sql: SQL语句
-        :return: 游标
-        """
-        ...
-
-    @abc.abstractmethod
-    def done_(self, sql) -> any:
-        """
-        执行SQL语句, 但暂时不提交
-        :param sql: SQL语句
-        :return: 游标
-        """
-        ...
-
-    @abc.abstractmethod
-    def done_commit(self):
-        """
-        提交由 done_ 执行的SQL语句
+        执行 查询 SQL语句
+        :param columns: 列名称
+        :param table: 表
+        :param where: 条件
+        :param limit: 限制行数
+        :param offset: 偏移
+        :param order_by: 排序方式
         :return:
         """
+        ...
+
+    @abc.abstractmethod
+    def insert(self, table: str, columns: list, values: Union[str, List[str]]):
+        """
+        执行 插入 SQL语句, 并提交
+        :param table: 表
+        :param columns: 列名称
+        :param values: 数据
+        :return:
+        """
+        ...
+
+    @abc.abstractmethod
+    def delete(self, table: str, where: Union[str, List[str]] = None):
+        """
+        执行 删除 SQL语句, 并提交
+        :param table: 表
+        :param where: 条件
+        :return:
+        """
+        ...
+
+    @abc.abstractmethod
+    def update(self, table: str, kw: dict[str:str], where: Union[str, List[str]] = None):
+        """
+        执行 更新 SQL语句, 并提交
+        :param table: 表
+        :param kw: 键值对
+        :param where: 条件
+        :return:
+        """
+        ...
+
+
+class HGSCursor(metaclass=abc.ABCMeta):
+    @abc.abstractmethod
+    def fetchone(self):
+        ...
+
+    @abc.abstractmethod
+    def fetchall(self):
         ...

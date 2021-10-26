@@ -105,11 +105,11 @@ class RankingEvent(StationEventBase):
 
     @staticmethod
     def func(db: DB):
-        cur = db.search((f"SELECT UserID, Name, Score, Reputation "
-                         f"FROM user "
-                         f"WHERE IsManager = 0 "
-                         f"ORDER BY Reputation DESC, Score DESC "
-                         f"LIMIT 20;"))
+        cur = db.search(columns=['UserID', 'Name', 'Score', 'Reputation'],
+                        table='user',
+                        where='IsManager=0',
+                        order_by=[('Reputation', "DESC"), ('Score', "DESC"), ('UserID', "DESC")],
+                        limit=20)
         if cur is None:
             return []
         return list(cur.fetchall())

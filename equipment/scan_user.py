@@ -63,10 +63,7 @@ def write_uid_qr(uid: uid_t, path: str, db: DB, name="nu") -> Tuple[str, Optiona
 
 
 def write_all_uid_qr(path: str, db: DB, name="nu", where: str = "") -> List[str]:
-    if len(where) > 0:
-        where = f"WHERE {where}"
-
-    cur = db.search(f"SELECT UserID, name FROM user {where};")
+    cur = db.search(columns=["UserID", "Name"], table="user", where=where)
     if cur is None:
         return []
 

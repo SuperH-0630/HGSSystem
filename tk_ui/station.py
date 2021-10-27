@@ -413,6 +413,9 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
                              "干垃圾": "其他垃圾",
                              "湿垃圾": "厨余垃圾",
                              "有害垃圾": "有害垃圾"}.get(category_, "未知垃圾类型")
+                category_score = category_score / name_score
+                if category_score > 1:
+                    category_score = 1
                 category = f"垃圾类型为{category_} [可信度: {(category_score / name_score) * 100}%]"
             res_str += f"  NO.{i + 1} {name}\n  {category}\n"
         self.show_msg("搜索垃圾", res_str, show_time=30, big=True)
@@ -423,7 +426,7 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
             self.show_warning("搜索垃圾", f"搜索太频繁了\n请稍后再尝试")
             return False
         elif sep <= Config.search_reset_time:
-            self.show_warning("搜索垃圾", f"搜索太频繁了\n请{sep}s后再尝试")
+            self.show_warning("搜索垃圾", f"搜索太频繁了\n请{int(sep)}s后再尝试")
             return False
 
         temp_dir = tempfile.TemporaryDirectory()

@@ -70,7 +70,7 @@ class CreateUserEvent(AdminEventBase):
             self.station.show_warning("创建用户错误", f"无法创建用户 user: {self._name}")
         else:
             name = res.get_name()
-            self.station.show_msg("创建用户成功", f"成功创建{name}个新用户")
+            self.station.show_msg("创建用户成功", f"成功创建 {name} 新用户")
 
 
 class CreateGarbageEvent(AdminEventBase):

@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import messagebox as msg
 from tkinter import ttk
 
-import conf
+from conf import Config
 from core.garbage import GarbageBag
 from core.user import User
 from equipment.scan_garbage import write_gid_qr, write_all_gid_qr
@@ -221,7 +221,7 @@ class AdminStation(AdminStationBase):
     def set_after_run_now(self, ms, func, *args):
         self._window.after(ms, func, *args)
 
-    def __init__(self, db: DB, refresh_delay: int = conf.tk_refresh_delay):
+    def __init__(self, db: DB, refresh_delay: int = Config.tk_refresh_delay):
         self.init_after_run_list: List[Tuple[int, Callable, Tuple]] = []
 
         super().__init__(db)
@@ -254,7 +254,7 @@ class AdminStation(AdminStationBase):
     def __conf_windows(self):
         self._window.title('HGSSystem: Manage Station')
         self._window.geometry(f'{self._win_width}x{self._win_height}')
-        self._window['bg'] = conf.tk_win_bg
+        self._window['bg'] = Config.tk_win_bg
         self._window.resizable(False, False)
         self._window.protocol("WM_DELETE_WINDOW", lambda: self.main_exit())
 
@@ -307,7 +307,7 @@ class AdminStation(AdminStationBase):
 
         for bt in self._win_ctrl_button:
             bt: tk.Button
-            bt['bg'] = conf.tk_btn_bg
+            bt['bg'] = Config.tk_btn_bg
             bt['font'] = title_font
 
         bt_main: tk.Button = self._win_ctrl_button[1]
@@ -358,7 +358,7 @@ class AdminStation(AdminStationBase):
         frame_list = []
 
         for i in tk_menu.all_menu:
-            frame_list.append(i(self, self._menu_back, conf.tk_second_win_bg))
+            frame_list.append(i(self, self._menu_back, Config.tk_second_win_bg))
 
         for i in frame_list:
             name, _ = i.get_menu_frame()
@@ -367,15 +367,15 @@ class AdminStation(AdminStationBase):
     def __conf_menu(self, n: int = 1):
         for i in self._menu_dict:
             menu = self._menu_dict[i]
-            menu.conf_gui(conf.tk_btn_bg, n)
+            menu.conf_gui(Config.tk_btn_bg, n)
 
     def __conf_menu_title(self):
-        self._menu_back['bg'] = conf.tk_second_win_bg
+        self._menu_back['bg'] = Config.tk_second_win_bg
         self._menu_back['bd'] = 5
         self._menu_back['relief'] = "ridge"
 
         title_font = make_font(size=self._menu_title_font_size, weight="bold")
-        self._menu_title[0]['bg'] = conf.tk_second_win_bg
+        self._menu_title[0]['bg'] = Config.tk_second_win_bg
         self._menu_title[0]['font'] = title_font
         self._menu_title[0]['textvariable'] = self._menu_title[1]
 
@@ -404,7 +404,7 @@ class AdminStation(AdminStationBase):
         self.set_ctrl_back_button()
 
     def __conf_program_title(self):
-        self._program_back['bg'] = conf.tk_second_win_bg
+        self._program_back['bg'] = Config.tk_second_win_bg
         self._program_back['relief'] = "ridge"
         self._program_back['bd'] = 5
 
@@ -419,7 +419,7 @@ class AdminStation(AdminStationBase):
     def __conf_create_program(self):
         program_list = []
         for i in tk_program.all_program:
-            program_list.append(i(self, self._program_back, conf.tk_second_win_bg))
+            program_list.append(i(self, self._program_back, Config.tk_second_win_bg))
 
         for i in program_list:
             name, _ = i.get_program_frame()
@@ -478,20 +478,20 @@ class AdminStation(AdminStationBase):
         title_font = make_font(size=self._msg_font_size + 1, weight="bold")
         info_font = make_font(size=self._msg_font_size - 1)
 
-        self._msg_frame['bg'] = conf.tk_second_win_bg
+        self._msg_frame['bg'] = Config.tk_second_win_bg
         self._msg_frame['bd'] = 5
         self._msg_frame['relief'] = "ridge"
         # frame 不会立即显示
 
         self._msg_label[0]['font'] = title_font
-        self._msg_label[0]['bg'] = conf.tk_second_win_bg
+        self._msg_label[0]['bg'] = Config.tk_second_win_bg
         self._msg_label[0]['anchor'] = 'w'
         self._msg_label[0]['textvariable'] = self._msg_label[2]
 
         self._msg_line['bg'] = '#000000'
 
         self._msg_label[1]['font'] = info_font
-        self._msg_label[1]['bg'] = conf.tk_second_win_bg
+        self._msg_label[1]['bg'] = Config.tk_second_win_bg
         self._msg_label[1]['anchor'] = 'nw'
         self._msg_label[1]['textvariable'] = self._msg_label[3]
         self._msg_label[1]['justify'] = 'left'
@@ -502,7 +502,7 @@ class AdminStation(AdminStationBase):
 
         self._msg_hide['font'] = info_font
         self._msg_hide['text'] = '关闭'
-        self._msg_hide['bg'] = conf.tk_btn_bg
+        self._msg_hide['bg'] = Config.tk_btn_bg
         self._msg_hide['command'] = lambda: self.hide_msg()
         self._msg_hide.place(relx=0.375, rely=0.80, relwidth=0.25, relheight=0.10)
 
@@ -563,7 +563,7 @@ class AdminStation(AdminStationBase):
             height = int(width / 2)
 
         self.login_window.geometry(f'{width}x{height}')
-        self.login_window['bg'] = conf.tk_win_bg
+        self.login_window['bg'] = Config.tk_win_bg
         self.login_window.resizable(False, False)
         self.login_window.protocol("WM_DELETE_WINDOW", lambda: self.login_exit())
         self._login_frame = tk.Frame(self.login_window)
@@ -601,13 +601,13 @@ class AdminStation(AdminStationBase):
         self._login_passwd[1]['show'] = "*"
         self._login_passwd[1].place(relx=0.26, rely=0.53, relwidth=0.64, relheight=0.30)
 
-        self._login_btn[0]['bg'] = conf.tk_btn_bg
+        self._login_btn[0]['bg'] = Config.tk_btn_bg
         self._login_btn[0]['font'] = btn_font
         self._login_btn[0]['text'] = '登录'
         self._login_btn[0]['command'] = lambda: self.login_call()
         self._login_btn[0].place(relx=0.54, rely=0.70, relwidth=0.16, relheight=0.15)
 
-        self._login_btn[1]['bg'] = conf.tk_btn_bg
+        self._login_btn[1]['bg'] = Config.tk_btn_bg
         self._login_btn[1]['font'] = btn_font
         self._login_btn[1]['text'] = '退出'
         self._login_btn[1]['command'] = lambda: self.login_exit()

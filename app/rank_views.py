@@ -1,4 +1,4 @@
-import conf
+from conf import Config
 from flask import render_template, Blueprint, Flask
 from .rank_web import RankWebsite
 from sql.db import DB
@@ -11,7 +11,7 @@ rank_app: Optional[Flask] = None
 
 @main.route('/')
 def index():
-    return render_template("index.html", loc=conf.base_location)
+    return render_template("index.html", loc=Config.base_location)
 
 
 @main.route('/rank_up')

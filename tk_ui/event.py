@@ -2,7 +2,7 @@ import abc
 import traceback
 import threading
 
-import conf
+from conf import Config
 from tool.type_ import *
 
 
@@ -35,7 +35,7 @@ class TkEventMain(metaclass=abc.ABCMeta):
 
     def __init__(self):
         self._event_list: List[TkEventBase] = []
-        self.set_after_run(conf.tk_refresh_delay, lambda: self.run_event())
+        self.set_after_run(Config.tk_refresh_delay, lambda: self.run_event())
 
     def push_event(self, event: TkEventBase):  # 添加子线程
         self._event_list.append(event)
@@ -62,7 +62,7 @@ class TkEventMain(metaclass=abc.ABCMeta):
                 event.done_after_event()
             except:
                 traceback.print_exc()
-        self.set_after_run_now(conf.tk_refresh_delay, self.run_event)
+        self.set_after_run_now(Config.tk_refresh_delay, self.run_event)
 
     @abc.abstractmethod
     def show_loading(self, title: str):  # 有子线程时显示加载

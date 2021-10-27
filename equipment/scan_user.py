@@ -1,4 +1,4 @@
-import conf
+from conf import Config
 from core.user import User
 from sql.db import DB
 from sql.user import find_user_by_id
@@ -46,7 +46,7 @@ def make_uid_image(uid: uid_t, name: uname_t, path: str):
     res = qr.make_img(path)
     if not res:
         return False
-    write_text((60, 5), "noto", f"User: {name} {uid[0: conf.qr_show_uid_len]}", path)
+    write_text((60, 5), "noto", f"User: {name} {uid[0: Config.qr_show_uid_len]}", path)
     return True
 
 

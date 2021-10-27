@@ -7,7 +7,7 @@ from tool.type_ import *
 from tool.tk import make_font, set_tk_disable_from_list
 from tool.login import create_uid
 
-import conf
+from conf import Config
 from . import admin
 from . import admin_event as tk_event
 
@@ -124,7 +124,7 @@ class AboutProgram(AdminProgram):
         self.info['font'] = info_font
         self.info['anchor'] = 'nw'
         self.info['justify'] = 'left'
-        self.info['text'] = conf.about_info
+        self.info['text'] = Config.about_info
 
         self.title.place(relx=0.1, rely=0.0, relwidth=0.8, relheight=0.2)
         self.info.place(relx=0.05, rely=0.21, relwidth=0.90, relheight=0.75)
@@ -189,7 +189,7 @@ class CreateUserProgramBase(AdminProgram):
                                       [lambda: self.create_by_name(), lambda: self.get_uid()]):
             btn['font'] = btn_font
             btn['text'] = text
-            btn['bg'] = conf.tk_btn_bg
+            btn['bg'] = Config.tk_btn_bg
             btn['command'] = func
             btn.place(relx=x, rely=0.7, relwidth=0.2, relheight=0.08)
 
@@ -280,7 +280,7 @@ class CreateAutoNormalUserProgram(AdminProgram):
 
         self.btn['font'] = btn_font
         self.btn['text'] = "创建用户"
-        self.btn['bg'] = conf.tk_btn_bg
+        self.btn['bg'] = Config.tk_btn_bg
         self.btn['command'] = lambda: self.create_user()
         self.btn.place(relx=0.4, rely=0.7, relwidth=0.2, relheight=0.08)
 
@@ -348,7 +348,7 @@ class CreateGarbageProgram(AdminProgram):
                                       [lambda: self.create_garbage(), lambda: self.choose_file()]):
             btn['font'] = btn_font
             btn['text'] = text
-            btn['bg'] = conf.tk_btn_bg
+            btn['bg'] = Config.tk_btn_bg
             btn['command'] = func
             btn.place(relx=x, rely=0.7, relwidth=0.2, relheight=0.08)
 
@@ -458,7 +458,7 @@ class ExportProgramBase(AdminProgram):
         for btn, text in zip(self.create_btn + self.file_btn, self.title_command):
             btn['font'] = btn_font
             btn['text'] = text
-            btn['bg'] = conf.tk_btn_bg
+            btn['bg'] = Config.tk_btn_bg
 
         self.create_btn[1]['command'] = self.export_where
         self.create_btn[0]['command'] = self.export_id
@@ -598,7 +598,7 @@ class CreateUserFromCSVProgram(AdminProgram):
                              ["创建用户", "创建自动用户", "选择CSV", "选择CSV"]):
             btn['font'] = btn_font
             btn['text'] = text
-            btn['bg'] = conf.tk_btn_bg
+            btn['bg'] = Config.tk_btn_bg
 
         self.create_btn[0]['command'] = self.create
         self.create_btn[1]['command'] = self.create_auto
@@ -709,7 +709,7 @@ class DeleteUserProgram(AdminProgram):
                                    [lambda: self.del_by_uid(), lambda: self.del_by_name()]):
             btn['font'] = btn_font
             btn['text'] = text
-            btn['bg'] = conf.tk_btn_bg
+            btn['bg'] = Config.tk_btn_bg
             btn['command'] = func
 
         self.btn[0].place(relx=0.6, rely=0.32, relwidth=0.2, relheight=0.08)
@@ -789,7 +789,7 @@ class DeleteUsersProgram(AdminProgram):
                                       [lambda: self.delete_user(), lambda: self.scan_user()]):
             btn['font'] = btn_font
             btn['text'] = text
-            btn['bg'] = conf.tk_btn_bg
+            btn['bg'] = Config.tk_btn_bg
             btn['command'] = func
             btn.place(relx=x, rely=0.6, relwidth=0.2, relheight=0.08)
 
@@ -886,7 +886,7 @@ class DeleteGarbageProgramBase(AdminProgram):
 
         self.btn['font'] = btn_font
         self.btn['text'] = '删除'
-        self.btn['bg'] = conf.tk_btn_bg
+        self.btn['bg'] = Config.tk_btn_bg
         self.btn['command'] = lambda: self.delete_garbage()
         self.btn.place(relx=0.4, rely=0.68, relwidth=0.2, relheight=0.08)
 
@@ -932,7 +932,7 @@ class DeleteGarbageMoreProgram(DeleteGarbageProgramBase):
 
         self.scan_btn['font'] = make_font(size=self.btn_font_size)
         self.scan_btn['text'] = '扫描'
-        self.scan_btn['bg'] = conf.tk_btn_bg
+        self.scan_btn['bg'] = Config.tk_btn_bg
         self.scan_btn['command'] = self.scan_garbage
         self.scan_btn.place(relx=0.6, rely=0.68, relwidth=0.2, relheight=0.08)
 
@@ -1036,7 +1036,7 @@ class DeleteAllGarbageProgram(AdminProgram):
         self.btn[0]['command'] = lambda: self.delete_garbage()
 
         self.btn[1]['font'] = btn_font
-        self.btn[1]['bg'] = conf.tk_btn_bg
+        self.btn[1]['bg'] = Config.tk_btn_bg
         self.btn[1]['command'] = lambda: self.scan_garbage()
 
     def scan_garbage(self):
@@ -1157,7 +1157,7 @@ class SearchUserProgram(SearchProgramBase):
 
         self.btn['font'] = btn_font
         self.btn['text'] = "搜索"
-        self.btn['bg'] = conf.tk_btn_bg
+        self.btn['bg'] = Config.tk_btn_bg
         self.btn['command'] = self.search_user
         self.btn.place(relx=0.4, rely=0.9, relwidth=0.2, relheight=0.08)
 
@@ -1244,7 +1244,7 @@ class SearchAdvancedProgramBase(SearchProgramBase, metaclass=abc.ABCMeta):
 
         self.btn['text'] = "搜索"
         self.btn['font'] = btn_font
-        self.btn['bg'] = conf.tk_btn_bg
+        self.btn['bg'] = Config.tk_btn_bg
         self.btn['command'] = self.search
         self.btn.place(relx=0.4, rely=0.9, relwidth=0.2, relheight=0.08)
 
@@ -1333,7 +1333,7 @@ class SearchGarbageProgram(SearchProgramBase):
             height += 0.121
 
         self.btn['font'] = btn_font
-        self.btn['bg'] = conf.tk_btn_bg
+        self.btn['bg'] = Config.tk_btn_bg
         self.btn['text'] = "Search"
         self.btn['command'] = self.search_user
         self.btn.place(relx=0.4, rely=0.9, relwidth=0.2, relheight=0.08)
@@ -1472,7 +1472,7 @@ class UpdateUserProgramBase(AdminProgram):
                                    [self.update_by_where, self.update_by_uid]):
             btn['font'] = btn_font
             btn['text'] = text
-            btn['bg'] = conf.tk_btn_bg
+            btn['bg'] = Config.tk_btn_bg
             btn['command'] = func
 
         self.btn[0].place(relx=0.55, rely=0.40, relwidth=0.25, relheight=0.08)
@@ -1604,7 +1604,7 @@ class UpdateGarbageTypeProgram(AdminProgram):
                                    [self.update_by_where, self.update_by_gid]):
             btn['font'] = btn_font
             btn['text'] = text
-            btn['bg'] = conf.tk_btn_bg
+            btn['bg'] = Config.tk_btn_bg
             btn['command'] = func
 
         self.btn[0].place(relx=0.55, rely=0.43, relwidth=0.25, relheight=0.08)
@@ -1705,7 +1705,7 @@ class UpdateGarbageCheckResultProgram(AdminProgram):
                                    ["通过条件更新", "通过垃圾袋ID更新"],
                                    [self.update_by_where, self.update_by_gid]):
             btn['font'] = btn_font
-            btn['bg'] = conf.tk_btn_bg
+            btn['bg'] = Config.tk_btn_bg
             btn['text'] = text
             btn['command'] = func
 

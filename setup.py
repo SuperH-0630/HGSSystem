@@ -35,11 +35,11 @@ check_import("flask", "Flask")  # 网页服务
 check_import("PIL", "Pillow")  # 图片处理
 
 import pymysql
-import conf
+from conf import Config
 
-mysql_url = conf.mysql_url
-mysql_name = conf.mysql_name
-mysql_passwd = conf.mysql_passwd
+mysql_url = Config.mysql_url
+mysql_name = Config.mysql_name
+mysql_passwd = Config.mysql_passwd
 
 sql = pymysql.connect(user=mysql_name, password=mysql_passwd, host=mysql_url)
 cursor = sql.cursor()

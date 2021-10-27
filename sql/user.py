@@ -6,7 +6,7 @@ from tool.type_ import *
 from tool.login import create_uid, randomPassword
 from tool.time_ import mysql_time
 from core.user import NormalUser, ManagerUser, User
-import conf
+from conf import Config
 from . import garbage
 
 
@@ -137,13 +137,13 @@ def create_new_user(name: Optional[uname_t], passwd: Optional[passwd_t], phone: 
     is_manager = '1' if manager else '0'
     cur = db.insert(table="user",
                     columns=["UserID", "Name", "IsManager", "Phone", "Score", "Reputation", "CreateTime"],
-                    values=f"'{uid}', '{name}', {is_manager}, '{phone}', {conf.default_score}, "
-                           f"{conf.default_reputation}, {mysql_time()}")
+                    values=f"'{uid}', '{name}', {is_manager}, '{phone}', {Config.default_score}, "
+                           f"{Config.default_reputation}, {mysql_time()}")
     if cur is None:
         return None
     if is_manager:
         return ManagerUser(name, uid)
-    return NormalUser(name, uid, conf.default_reputation, 0, conf.default_score)
+    return NormalUser(name, uid, Config.default_reputation, 0, Config.default_score)
 
 
 def get_user_phone(uid: uid_t, db: DB) -> Optional[str]:

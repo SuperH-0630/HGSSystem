@@ -257,7 +257,6 @@ def update_garbage(garbage: GarbageBag, db: DB) -> bool:
 
 def create_new_garbage(db: DB) -> Optional[GarbageBag]:
     cur = db.insert(table="garbage", columns=["CreateTime", "Flat"], values=f"{mysql_time()}, 0")
-    print(cur)
     if cur is None:
         return None
     assert cur.rowcount == 1

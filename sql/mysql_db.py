@@ -2,16 +2,24 @@ import pymysql
 import threading
 import traceback
 
-from conf import mysql_url, mysql_name, mysql_passwd
+from conf import Config
 from .base_db import HGSDatabase, DBCloseException
 from tool.type_ import *
 
 
 class MysqlDB(HGSDatabase):
-    def __init__(self, host: str = mysql_url, name: str = mysql_name, passwd: str = mysql_passwd):
-        super(MysqlDB, self).__init__(host, name, passwd)
+    def __init__(self,
+                 host: str = Config.mysql_url,
+                 name: str = Config.mysql_name,
+                 passwd: str = Config.mysql_passwd,
+                 port: str = Config.mysql_port):
+        super(MysqlDB, self).__init__(host, name, passwd, port)
         try:
-            self._db = pymysql.connect(user=self._name, password=self._passwd, host=self._host, database="hgssystem")
+            self._db = pymysql.connect(user=self._name,
+                                       password=self._passwd,
+                                       host=self._host,
+                                       port=self._port,
+                                       database="hgssystem")
         except pymysql.err.OperationalError:
             raise
         self._cursor = self._db.cursor()
@@ -54,7 +62,7 @@ class MysqlDB(HGSDatabase):
             by = [f" {i[0]} {i[1]} " for i in order_by]
             order_by: str = " ORDER BY" + ", ".join(by)
 
-        if limit is None:
+        if limit is None or limit == 0:
             limit: str = ""
         else:
             limit = f" LIMIT {limit}"

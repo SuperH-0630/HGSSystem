@@ -2,14 +2,14 @@ import time
 import threading
 import cv2 as cv2
 
-import conf
+from conf import Config
 import qrcode
 from tool.type_ import *
 
 
 class HGSCapture:
-    def __init__(self, capnum: int = conf.capture_num, *args, **kwargs):
-        args = *args, *conf.capture_arg
+    def __init__(self, capnum: int = Config.capture_num, *args, **kwargs):
+        args = *args, *Config.capture_arg
         if cv2.CAP_DSHOW not in args:
             args = *args, cv2.CAP_DSHOW
         self._capture = cv2.VideoCapture(int(capnum), *args, **kwargs)

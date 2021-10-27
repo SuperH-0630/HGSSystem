@@ -1,5 +1,4 @@
 import time
-import conf
 import cv2
 import random
 import traceback
@@ -9,6 +8,7 @@ from tkinter import ttk
 import datetime
 from PIL import Image, ImageTk
 
+from conf import Config
 from tool.type_ import *
 from tool.tk import set_tk_disable_from_list, make_font
 
@@ -46,7 +46,7 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
                  db: DB,
                  cap: HGSCapture,
                  qr: HGSQRCoder,
-                 loc: location_t = conf.base_location):
+                 loc: location_t = Config.base_location):
         self._db: DB = db
         self._cap: HGSCapture = cap
         self._qr: HGSQRCoder = qr
@@ -162,10 +162,6 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
         获取排行榜的功能
         :return:
         """
-        if limit > 0:
-            limit = f"LIMIT {int(limit)}"
-        else:
-            limit = ""
 
         if order_by != 'ASC' and order_by != 'DESC':
             order_by = 'DESC'
@@ -173,7 +169,8 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
         cur = self._db.search(columns=['UserID', 'Name', 'Score', 'Reputation'],
                               table='user',
                               where='IsManager=0',
-                              order_by=[('Reputation', order_by), ('Score', order_by), ('UserID', order_by)])
+                              order_by=[('Reputation', order_by), ('Score', order_by), ('UserID', order_by)],
+                              limit=limit)
         if cur is None:
             return []
         return list(cur.fetchall())
@@ -230,20 +227,20 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
         garbage_type = GarbageType.GarbageTypeStrList_ch[int(info['type'])]
         if self._garbage.is_check()[0]:
             time_str = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(float(info['use_time'])))
-            check = f'Checker is {info["checker"][0:conf.tk_show_uid_len]}\n'
+            check = f'Checker is {info["checker"][0:Config.tk_show_uid_len]}\n'
             if info["check"] == '1':
                 check += f'检查结果为 投放正确\n'
             else:
                 check += f'检查结果为 投放错误\n'
             self.show_msg("垃圾袋信息", (f"垃圾类型为 {garbage_type}\n"
-                                    f"用户是 {info['user'][0:conf.tk_show_uid_len]}\n"
+                                    f"用户是 {info['user'][0:Config.tk_show_uid_len]}\n"
                                     f"地址:\n  {info['loc']}\n"
                                     f"{check}"
                                     f"使用日期:\n  {time_str}"), show_time=5.0)  # 遮蔽Pass和Fail按键
         elif self._garbage.is_use():
             time_str = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(float(info['use_time'])))
             self.show_msg("垃圾袋信息", (f"垃圾类型为 {garbage_type}\n"
-                                    f"用户是 {info['user'][0:conf.tk_show_uid_len]}\n"
+                                    f"用户是 {info['user'][0:Config.tk_show_uid_len]}\n"
                                     f"地址:\n  {info['loc']}\n"
                                     f"垃圾袋还未检查\n"
                                     f"使用日期:\n  {time_str}"), big=False, show_time=5.0)  # 不遮蔽Pass和Fail按键
@@ -290,7 +287,7 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
 
     def show_about_info(self):
         self.update_user_time()
-        self.show_msg("关于", conf.about_info, show_time=5.0)
+        self.show_msg("关于", Config.about_info, show_time=5.0)
 
     def show_exit(self):
         self.update_user_time()
@@ -443,8 +440,8 @@ class GarbageStation(GarbageStationBase):
                  db: DB,
                  cap: HGSCapture,
                  qr: HGSQRCoder,
-                 loc: location_t = conf.base_location,
-                 refresh_delay: int = conf.tk_refresh_delay):
+                 loc: location_t = Config.base_location,
+                 refresh_delay: int = Config.tk_refresh_delay):
         self.init_after_run_list: List[Tuple[int, Callable, Tuple]] = []
 
         super(GarbageStation, self).__init__(db, cap, qr, loc)
@@ -598,7 +595,7 @@ class GarbageStation(GarbageStationBase):
     def __conf_windows(self):
         self._window.title('HGSSystem: Garbage Station')
         self._window.geometry(f'{self._win_width}x{self._win_height}')
-        self._window['bg'] = conf.tk_win_bg
+        self._window['bg'] = Config.tk_win_bg
         self._window.resizable(False, False)  # 禁止缩放
         self._window.protocol("WM_DELETE_WINDOW", lambda: self.show_exit())  # 设置标题栏[x]按钮
         self._window.overrideredirect(False)  # 显示标题栏
@@ -665,7 +662,7 @@ class GarbageStation(GarbageStationBase):
     def __conf_title_label(self):
         title_font = make_font(size=self._title_font_size, weight="bold")
         self._title_label['font'] = title_font
-        self._title_label['bg'] = conf.tk_win_bg
+        self._title_label['bg'] = Config.tk_win_bg
         self._title_label['text'] = "HGSSystem: Garbage Station Control Center"  # 使用英语标题在GUI更美观
         self._title_label['anchor'] = 'w'
         self._title_label.place(relx=0.02, rely=0.01, relwidth=0.7, relheight=0.07)
@@ -676,7 +673,7 @@ class GarbageStation(GarbageStationBase):
         for bt in self._win_ctrl_button:
             bt: tk.Button
             bt['font'] = title_font
-            bt['bg'] = conf.tk_btn_bg
+            bt['bg'] = Config.tk_btn_bg
 
         rely = 0.02
         relwidth = 0.05
@@ -746,7 +743,7 @@ class GarbageStation(GarbageStationBase):
         # 显示一张图片 (GUI更美观)
         img_relwidth = 0.30
         img_relheight = height_label * 3 + (h_label_s / height_count) * 2
-        img = (Image.open(conf.picture_d['head']).
+        img = (Image.open(Config.picture_d['head']).
                resize((int(img_relwidth * frame_width), int(img_relheight * frame_height))))
         self._user_im = ImageTk.PhotoImage(image=img)
         self._user_img['image'] = self._user_im
@@ -839,7 +836,7 @@ class GarbageStation(GarbageStationBase):
                                            ("搜索", "#F4A460")]
 
         self._user_btn_frame.place(relx=0.02, rely=0.66, relwidth=0.19, relheight=0.32)
-        self._user_btn_frame['bg'] = conf.tk_win_bg
+        self._user_btn_frame['bg'] = Config.tk_win_bg
 
         """
         计算标签和间隔的大小比例(相对于Frame)
@@ -876,7 +873,7 @@ class GarbageStation(GarbageStationBase):
         title_font = make_font(size=self._msg_font_size + 1, weight="bold")
         info_font = make_font(size=self._msg_font_size - 1)
 
-        bg_color = conf.tk_second_win_bg
+        bg_color = Config.tk_second_win_bg
         self._msg_frame['bg'] = bg_color
         self._msg_frame['bd'] = 5
         self._msg_frame['relief'] = "ridge"
@@ -918,7 +915,7 @@ class GarbageStation(GarbageStationBase):
         self._msg_y_scroll.place(relx=0.95 - y_scroll, rely=0.20, relwidth=y_scroll, relheight=0.64)
 
         self._msg_hide['font'] = info_font
-        self._msg_hide['bg'] = conf.tk_btn_bg
+        self._msg_hide['bg'] = Config.tk_btn_bg
         self._msg_hide['text'] = '关闭'
         self._msg_hide['command'] = lambda: self.hide_msg_rank(True)
         self._msg_hide.place(relx=0.42, rely=0.85, relwidth=0.16, relheight=0.09)
@@ -986,7 +983,7 @@ class GarbageStation(GarbageStationBase):
         # 标签结束的高度为 0.12 + 0.15 * 5 = 0.87
         for btn, text in zip(self._rank_btn, ("上一页", "关闭", "下一页")):
             btn['font'] = btn_font
-            btn['bg'] = conf.tk_btn_bg
+            btn['bg'] = Config.tk_btn_bg
             btn['text'] = text
 
         self._rank_btn[0].place(relx=0.050, rely=0.88, relwidth=0.25, relheight=0.08)
@@ -1014,7 +1011,7 @@ class GarbageStation(GarbageStationBase):
         for i, info in enumerate(rank_info):
             no, name, uid, score, eval_, color = info
             self._rank_var[i + 1].set(f"NO.{no}  {name}\n\n"  # 中间空一行 否则中文字体显得很窄
-                                      f"ID: {uid[0:conf.ranking_tk_show_uid_len]}  "
+                                      f"ID: {uid[0:Config.ranking_tk_show_uid_len]}  "
                                       f"信用: {eval_} 积分: {score}")
             if color is None:
                 self._rank_label[i + 1]['bg'] = "#F5FFFA"
@@ -1064,13 +1061,13 @@ class GarbageStation(GarbageStationBase):
     def __conf_loading(self):
         title_font = make_font(size=self._loading_tile_font, weight="bold")
 
-        self._loading_frame['bg'] = conf.tk_second_win_bg
+        self._loading_frame['bg'] = Config.tk_second_win_bg
         self._loading_frame['bd'] = 5
         self._loading_frame['relief'] = "ridge"
         # frame 不会立即显示
 
         self._loading_title[0]['font'] = title_font
-        self._loading_title[0]['bg'] = conf.tk_second_win_bg
+        self._loading_title[0]['bg'] = Config.tk_second_win_bg
         self._loading_title[0]['anchor'] = 'w'
         self._loading_title[0]['textvariable'] = self._loading_title[1]
         self._loading_title[0].place(relx=0.02, rely=0.00, relwidth=0.96, relheight=0.6)
@@ -1159,7 +1156,7 @@ class GarbageStation(GarbageStationBase):
             if uid_get is None or len(uid_get) < 32:
                 uid.set('error')
             else:
-                uid.set(uid_get[0:conf.tk_show_uid_len])
+                uid.set(uid_get[0:Config.tk_show_uid_len])
             eval_.set(user_info.get('reputation'))
             rubbish.set(user_info.get('rubbish'))
             score.set(user_info.get('score'))

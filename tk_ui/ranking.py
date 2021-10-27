@@ -2,7 +2,7 @@ import abc
 import tkinter as tk
 from PIL import Image, ImageTk
 
-import conf
+from conf import Config
 from tool.type_ import *
 from tool.tk import make_font
 from sql.db import DB
@@ -260,17 +260,17 @@ class RankingStation(RankingStationBase):
     def __conf_windows(self):
         self.window.title('HGSSystem: Ranking')
         self.window.geometry(f'{self.width}x{self.height}')
-        self.window['bg'] = conf.tk_win_bg
+        self.window['bg'] = Config.tk_win_bg
         self.window.resizable(False, False)
         self.bg_img = None
         self.bg_lb = tk.Label(self.window)
-        self.bg_lb['bg'] = conf.tk_win_bg
+        self.bg_lb['bg'] = Config.tk_win_bg
         self.bg_lb.place(relx=0, rely=0, relwidth=1, relheight=1)
 
         self.window.bind("<F11>", lambda _: self.__switch_full_screen())
 
     def __conf_windows_bg(self):
-        img = Image.open(conf.picture_d['rank_bg']).resize((self.width, self.height))
+        img = Image.open(Config.picture_d['rank_bg']).resize((self.width, self.height))
         self.bg_img = ImageTk.PhotoImage(img)
         self.bg_lb['image'] = self.bg_img
         self.bg_lb.place(relx=0, rely=0, relwidth=1, relheight=1)
@@ -309,11 +309,11 @@ class RankingStation(RankingStationBase):
 
         self.rank_frame['relief'] = "ridge"
         self.rank_frame['bd'] = 5
-        self.rank_frame['bg'] = conf.tk_second_win_bg
+        self.rank_frame['bg'] = Config.tk_second_win_bg
         self.rank_frame.place(relx=relx, rely=rely, relwidth=relwidth, relheight=relheight)
 
         self.rank_title['font'] = title_font
-        self.rank_title['bg'] = conf.tk_second_win_bg
+        self.rank_title['bg'] = Config.tk_second_win_bg
         self.rank_title['textvariable'] = self.rank_title_var
         self.rank_title.place(relx=0.02, rely=0.00, relwidth=0.96, relheight=0.1)
         self.rank_title_var.set("排行榜加载中...")
@@ -345,10 +345,10 @@ class RankingStation(RankingStationBase):
             height += height_l + height_s
 
         for btn, text, x in zip(self.rank_btn,
-                                ("前一页", "手动" if self.auto else "自动", "下一页"), (0.050, 0.375, 0.700)):
+                                ("上一页", "手动" if self.auto else "自动", "下一页"), (0.050, 0.375, 0.700)):
             btn['font'] = btn_font
             btn['text'] = text
-            btn['bg'] = conf.tk_btn_bg
+            btn['bg'] = Config.tk_btn_bg
             btn.place(relx=x, rely=0.93, relwidth=0.25, relheight=0.06)
 
         self.rank_btn[0]['command'] = lambda: self.rank_page_to_prev()
@@ -368,7 +368,7 @@ class RankingStation(RankingStationBase):
         for i, info in enumerate(rank_info):
             no, name, uid, score, eval_, color = info
             self.rank_var[i].set(f"NO.{no}  {name}\n\n"  # 中间空一行 否则中文字体显得很窄
-                                 f"ID: {uid[0:conf.ranking_tk_show_uid_len]}  "
+                                 f"ID: {uid[0:Config.ranking_tk_show_uid_len]}  "
                                  f"信用: {eval_} 积分: {score}")
             if color is None:
                 self.rank_label[i]['bg'] = "#F5FFFA"

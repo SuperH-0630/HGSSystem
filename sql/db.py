@@ -1,7 +1,7 @@
-import conf
+from conf import Config
 from tool.type_ import List
 
-if conf.database.upper() == 'MYSQL':
+if Config.database.upper() == 'MYSQL':
     try:
         from .mysql_db import MysqlDB
     except ImportError:
@@ -10,7 +10,7 @@ if conf.database.upper() == 'MYSQL':
     else:
         DB = MysqlDB
 else:
-    print(f"Not support database: {conf.database}")
+    print(f"Not support database: {Config.database}")
     raise Exception
 
 

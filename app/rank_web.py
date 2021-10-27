@@ -1,6 +1,6 @@
 from flask import Flask
 
-import conf
+from conf import Config
 from sql.db import DB
 from tool.type_ import Optional, List, Tuple
 
@@ -21,7 +21,7 @@ class RankWebsite:
         res = []
         for index in range(cur.rowcount):
             i = cur.fetchone()
-            res.append((f"NO.{index + 1}", i[1], i[0][:conf.tk_show_uid_len], str(i[3]), str(i[2])))
+            res.append((f"NO.{index + 1}", i[1], i[0][:Config.tk_show_uid_len], str(i[3]), str(i[2])))
         return res
 
     def run(self,

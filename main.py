@@ -8,8 +8,7 @@
 import sys
 import os
 
-import conf
-from conf.args import p_args
+from conf import Config
 
 
 def can_not_load(name):
@@ -17,13 +16,13 @@ def can_not_load(name):
 
 
 def main():
-    program_name = p_args.program[0]
+    program_name = Config.program
     if program_name == "setup":  # setup程序不需要数据库链接等操作
         __main = os.path.dirname(os.path.abspath(__file__))
         res = os.system(f"{sys.executable} {os.path.join(__main, 'setup.py')} "
-                        f"--mysql_url={conf.mysql_url} "
-                        f"--mysql_name={conf.mysql_name} "
-                        f"--mysql_passwd={conf.mysql_passwd} "
+                        f"--mysql_url={Config.mysql_url} "
+                        f"--mysql_name={Config.mysql_name} "
+                        f"--mysql_passwd={Config.mysql_passwd} "
                         f"--program=setup")
         if res != 0:
             print("初始化程序加载失败", file=sys.stderr)

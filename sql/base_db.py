@@ -21,10 +21,14 @@ class DBBit:
 
 class HGSDatabase(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def __init__(self, host: str, name: str, passwd: str):
+    def __init__(self, host: str, name: str, passwd: str, port: str):
         self._host = str(host)
         self._name = str(name)
         self._passwd = str(passwd)
+        if port is None:
+            self._port = 0
+        else:
+            self._port = int(port)
 
     @abc.abstractmethod
     def close(self):

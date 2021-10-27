@@ -5,16 +5,15 @@
 
 from font.noto import noto_font
 from picture import head_pic, rank_bg_pic
+from args import p_args
+from .equipment import ConfigCapture
+from .sql import ConfigDatabase
+from .sys_default import ConfigExport, ConfigSystem, ConfigSecret, ConfigTkinter, ConfUser
 
-from .equipment import *
-from .sql import *
-from .sys_default import *
 
-font_d = {
-    "noto": noto_font
-}
+class Config(ConfigTkinter, ConfigSecret, ConfigSystem, ConfUser, ConfigExport, ConfigDatabase, ConfigCapture):
+    run_type = p_args.run[0]
+    program = p_args.program[0]
 
-picture_d = {
-    "head": head_pic,
-    "rank_bg": rank_bg_pic
-}
+    font_d = {"noto": noto_font}
+    picture_d = {"head": head_pic, "rank_bg": rank_bg_pic}

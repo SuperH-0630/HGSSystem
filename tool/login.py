@@ -1,14 +1,14 @@
 from .type_ import *
 import hashlib
-import conf
+from conf import Config
 from random import randint
 
 
-def create_uid(name: uname_t, passwd: passwd_t, salt: str = conf.passwd_salt) -> str:
+def create_uid(name: uname_t, passwd: passwd_t, salt: str = Config.passwd_salt) -> str:
     return hashlib.md5(f"HGSSystem-USER{name}-PASSWORD:{passwd}-{salt}-END".encode('utf-8')).hexdigest()
 
 
-def check_login(uid: uid_t, name: uname_t, passwd: passwd_t, salt: str = conf.passwd_salt) -> bool:
+def check_login(uid: uid_t, name: uname_t, passwd: passwd_t, salt: str = Config.passwd_salt) -> bool:
     return uid == create_uid(name, passwd, salt)
 
 

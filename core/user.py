@@ -1,7 +1,7 @@
 import abc
 import threading
 
-import conf
+from conf import Config
 from tool.type_ import *
 from tool.time_ import HGSTime
 from .garbage import GarbageBag, GarbageType
@@ -147,7 +147,7 @@ class NormalUser(User):
         """
         try:
             self._lock.acquire()
-            if is_right and self._rubbish > conf.max_rubbish_week:
+            if is_right and self._rubbish > Config.max_rubbish_week:
                 return self._reputation  # 执行 finally将释放锁
 
             pa = self._reputation / 1000  # P(A)
@@ -200,12 +200,12 @@ class NormalUser(User):
             self._lock.release()
         return score
 
-    def throw_rubbish(self, garbage: GarbageBag, garbage_type: enum, loc: location_t = conf.base_location) -> bool:
+    def throw_rubbish(self, garbage: GarbageBag, garbage_type: enum, loc: location_t = Config.base_location) -> bool:
         try:
             self._lock.acquire()
-            if self._rubbish > conf.max_rubbish_week:
+            if self._rubbish > Config.max_rubbish_week:
                 self.add_score(-3)
-            elif self._rubbish > conf.limit_rubbish_week:
+            elif self._rubbish > Config.limit_rubbish_week:
                 return False
 
             if garbage.is_use() or garbage.is_check()[0]:

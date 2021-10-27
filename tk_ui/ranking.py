@@ -270,7 +270,7 @@ class RankingStation(RankingStationBase):
         self.window.bind("<F11>", lambda _: self.__switch_full_screen())
 
     def __conf_windows_bg(self):
-        img = Image.open(Config.picture_d['rank_bg']).resize((self.width, self.height))
+        img = Image.open(Config.picture_d['rank_bg']).resize((self.width, self.height), Image.ANTIALIAS)
         self.bg_img = ImageTk.PhotoImage(img)
         self.bg_lb['image'] = self.bg_img
         self.bg_lb.place(relx=0, rely=0, relwidth=1, relheight=1)

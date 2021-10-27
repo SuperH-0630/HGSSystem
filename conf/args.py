@@ -8,6 +8,9 @@ parser.add_argument("--mysql_name", nargs=1, required=False, type=str, default=N
 parser.add_argument("--mysql_passwd", nargs=1, required=False, type=str, default=None, help="MySQL-密码")
 parser.add_argument("--mysql_port", nargs=1, required=False, type=str, default=[None], help="MySQL-端口")
 
+parser.add_argument("--aliyun_key", nargs=1, required=False, type=str, default=None, help="阿里云认证-KET")
+parser.add_argument("--aliyun_secret", nargs=1, required=False, type=str, default=None, help="阿里云认证-SECRET")
+
 parser.add_argument("--program", nargs=1, required=True, type=str, choices=["setup",
                                                                             "garbage",
                                                                             "ranking",
@@ -40,4 +43,17 @@ if p_args.mysql_url is None or p_args.mysql_name is None or p_args.mysql_passwd 
         p_args.mysql_port = [None]
     else:
         warnings.warn("MYSQL地址错误")
+        exit(1)
+
+if p_args.aliyun_key is None or p_args.aliyun_secret is None:
+    res = os.environ.get('HGSSystem_Aliyun')
+    if res is None:
+        warnings.warn("未找到阿里云认证")
+        exit(1)
+    res = res.split(';')
+    if len(res) == 2:
+        p_args.aliyun_key = [res[0]]
+        p_args.aliyun_secret = [res[1]]
+    else:
+        warnings.warn("阿里云认证错误")
         exit(1)

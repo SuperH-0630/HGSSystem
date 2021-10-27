@@ -36,3 +36,7 @@ class Threading(threading.Thread):
         """
         self.join()
         return self.result
+
+
+def getThreadIdent():
+    return threading.currentThread().ident

@@ -1,10 +1,12 @@
+import tempfile
+
 from equipment.scan import QRCode
 from equipment.scan_user import scan_user
 from equipment.scan_garbage import scan_garbage
 
 from tool.type_ import *
 
-from core.user import User, UserNotSupportError
+from core.user import User
 from core.garbage import GarbageBag
 
 from sql.db import DB
@@ -192,3 +194,30 @@ class CheckGarbageEvent(StationEventBase):
             self.station.show_warning("垃圾检测", "数据库操作失败", show_time=3.0)
         else:
             self.station.show_msg("垃圾检测", "垃圾检测提结果交成功", show_time=3.0)
+
+
+class SearchGarbageEvent(StationEventBase):
+    """
+    任务: 搜索垃圾垃圾的结果
+    """
+
+    def func(self, temp_dir: tempfile.TemporaryDirectory, file_path: str):
+        return self.station.search_core(temp_dir, file_path)
+
+    def __init__(self, gb_station):
+        super().__init__(gb_station, "搜索垃圾")
+        self.thread = None
+
+    def start(self, temp_dir: tempfile.TemporaryDirectory, file_path: str):
+        self.thread = TkThreading(self.func, temp_dir, file_path)
+        return self
+
+    def is_end(self) -> bool:
+        return not self.thread.is_alive()
+
+    def done_after_event(self):
+        res = self.thread.wait_event()
+        if res is None:
+            self.station.show_warning("垃圾搜索", "垃圾搜索发生错误")
+        else:
+            self.station.get_search_result(res)

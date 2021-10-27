@@ -1,4 +1,6 @@
+import os.path
 import time
+import tempfile
 import cv2
 import random
 import traceback
@@ -11,6 +13,7 @@ from PIL import Image, ImageTk
 from conf import Config
 from tool.type_ import *
 from tool.tk import set_tk_disable_from_list, make_font
+from tool.thread_ import getThreadIdent
 
 from core.user import User
 from core.garbage import GarbageBag, GarbageType
@@ -20,6 +23,7 @@ from sql.user import update_user, find_user_by_id
 from sql.garbage import update_garbage
 
 from equipment.scan import HGSCapture, HGSQRCoder
+from equipment.aliyun import oss_file, garbage_search, ClientException, ServerException
 
 from .event import TkEventMain
 
@@ -62,6 +66,8 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
 
         self.rank = None
         self.rank_index = 0
+
+        self.search_time = 0  # 上次执行搜索任务的时间
         super(GarbageStationBase, self).__init__()
 
     def get_db(self):
@@ -309,13 +315,6 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
 [期待再次与你相遇]
                 '''.strip(), show_time=15.0)
 
-    def show_search_info(self):
-        self.update_user_time()
-        self.show_msg("搜索", f'''
-搜索功能将根据摄像头获取物品信息, 反馈该物品垃圾类型。
-该功能尚未开放, 敬请期待
-                '''.strip(), show_time=5.0)
-
     def thread_show_rank(self, rank_list):
         self.rank = [[]]
         for i, r in enumerate(rank_list):
@@ -366,12 +365,81 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
         event = tk_event.RankingEvent(self)
         self.push_event(event)
 
+    @staticmethod
+    def search_core(temp_dir: tempfile.TemporaryDirectory, file_path: str) -> Optional[Dict]:
+        try:
+            img_url = oss_file(file_path, "jpg", True)
+            res = garbage_search(img_url)
+        except (ClientException, ServerException):
+            return None
+        else:
+            return res
+        finally:
+            temp_dir.cleanup()
+
+    def get_search_result(self, res: dict) -> bool:
+        self.search_time = time.time()
+        data: Optional[dict] = res.get("Data")
+        if data is None:
+            self.show_warning("搜索垃圾", "搜索垃圾时发生错误")
+            return False
+
+        sensitive = data.get("Sensitive")
+        if sensitive is None:
+            self.show_warning("搜索垃圾", "搜索垃圾时发生错误")
+            return False
+        elif sensitive:
+            self.show_warning("搜索垃圾", "图片不够清晰")  # 图片违规
+            return False
+        elements: List[Dict] = data.get("Elements")
+        assert elements is not None
+
+        res_str = f"搜索结果为 [共{len(elements)}项]:\n\n"
+        for i, element in enumerate(elements):
+            name_ = element.get("Rubbish")
+            name_score = element.get("RubbishScore")
+            if len(name_) == 0:
+                name = "未知物品"
+            else:
+                name = f"{name_} [可信度: {name_score * 100}%]"
+            if name_score < 0.001:
+                name_score = 0.01
+            category_ = element.get("Category")
+            category_score = element.get("CategoryScore")
+            if len(category_) == 0:
+                category = "未知垃圾类型"
+            else:
+                category_ = {"可回收垃圾": "可回收垃圾",
+                             "干垃圾": "其他垃圾",
+                             "湿垃圾": "厨余垃圾",
+                             "有害垃圾": "有害垃圾"}.get(category_, "未知垃圾类型")
+                category = f"垃圾类型为{category_} [可信度: {(category_score / name_score) * 100}%]"
+            res_str += f"  NO.{i + 1} {name}\n  {category}\n"
+        self.show_msg("搜索垃圾", res_str, show_time=30, big=True)
+
+    def search_pic(self, img: Image.Image) -> bool:
+        sep = time.time() - self.search_time
+        if sep < 3:
+            self.show_warning("搜索垃圾", f"搜索太频繁了\n请稍后再尝试")
+            return False
+        elif sep <= Config.search_reset_time:
+            self.show_warning("搜索垃圾", f"搜索太频繁了\n请{sep}s后再尝试")
+            return False
+
+        temp_dir = tempfile.TemporaryDirectory()
+        tid = getThreadIdent()
+        file_path = os.path.join(temp_dir.name, f"search-{tid}.jpg")
+        img.save(file_path, 'JPEG', quality=100)
+        event = tk_event.SearchGarbageEvent(self).start(temp_dir, file_path)
+        self.push_event(event)
+        return True
+
     @abc.abstractmethod
     def show_msg(self, title, info, msg_type='info', big: bool = True, show_time: float = 10.0):
         ...
 
     @abc.abstractmethod
-    def show_warning(self, title, info, show_time: float = 15.0):
+    def show_warning(self, title, info, show_time: float = 5.0):
         ...
 
     @abc.abstractmethod
@@ -458,6 +526,7 @@ class GarbageStation(GarbageStationBase):
         self.__conf_windows()
 
         self._cap_img = None  # 存储 PIL.image 的变量 防止gc释放
+        self._cap_img_tk = None  # 存储 tkinter的image 的变量 防止gc释放
         self._user_im = None
 
         self._msg_time: Optional[float] = None  # msg 显示时间累计
@@ -517,6 +586,8 @@ class GarbageStation(GarbageStationBase):
 
         # 摄像头显示
         self._cap_label = tk.Label(self._window)
+        self._cap_width = 0
+        self._cap_height = 0
 
         # 用户操纵按钮
         self._user_btn_frame = tk.Frame(self._window)
@@ -860,13 +931,15 @@ class GarbageStation(GarbageStationBase):
             height += height_label + height_sep
 
         self._user_btn[0]['state'] = 'disable'  # 第一个按键默认为disable且点击无效果
-        self._user_btn[1]['command'] = lambda: self.get_show_rank()
-        self._user_btn[2]['command'] = lambda: self.show_search_info()
+        self._user_btn[1]['command'] = self.get_show_rank
+        self._user_btn[2]['command'] = self.search_pic
 
     def __conf_cap_label(self):
         self._cap_label['bg'] = "#000000"
         self._cap_label['bd'] = 5
         self._cap_label['relief'] = "ridge"
+        self._cap_width = int(self._win_width * 0.2)
+        self._cap_height = int(self._win_height * 0.32)
         self._cap_label.place(relx=0.22, rely=0.66, relwidth=0.2, relheight=0.32)
 
     def __conf_msg(self):
@@ -954,7 +1027,7 @@ class GarbageStation(GarbageStationBase):
 
         self.set_msg_time_now(show_time)
 
-    def show_warning(self, title, info, show_time: float = 15.0):
+    def show_warning(self, title, info, show_time: float = 5.0):
         self.show_msg(title, info, msg_type='警告', show_time=show_time)
 
     def __conf_rank(self):
@@ -1092,6 +1165,11 @@ class GarbageStation(GarbageStationBase):
         self._loading_pro.stop()
         self.set_reset_all_btn()
 
+    def search_pic(self, img: Image = None):
+        if img is None:
+            img = self._cap_img
+        super(GarbageStation, self).search_pic(img)
+
     def __show_check_frame(self):
         self._check_ctrl_frame.place(relx=0.45, rely=0.82, relwidth=0.53, relheight=0.16)
 
@@ -1177,8 +1255,22 @@ class GarbageStation(GarbageStationBase):
         # 需要存储一些数据 谨防被gc释放
         _cap_img_info = (Image.fromarray(cv2.cvtColor(self.get_cap_img(), cv2.COLOR_BGR2RGB)).
                          transpose(Image.FLIP_LEFT_RIGHT))
-        self._cap_img = ImageTk.PhotoImage(image=_cap_img_info)
-        self._cap_label['image'] = self._cap_img
+        self._cap_img = _cap_img_info
+
+        img_width, img_height = _cap_img_info.size
+        proportion = max(self._cap_width / img_width, self._cap_height / img_height)  # 缩放倍数, 取较大的那个
+        new_width = int(img_width * proportion)
+        new_height = int(img_height * proportion)
+        _cap_img_info = _cap_img_info.resize((new_width, new_height), Image.ANTIALIAS)
+
+        crop = (int(new_width / 2 - self._cap_width / 2),  # 左
+                int(new_height / 2 - self._cap_height / 2),  # 上
+                int(new_width / 2 + self._cap_width / 2),  # 右
+                int(new_height / 2 + self._cap_height / 2))  # 下
+        _cap_img_info = _cap_img_info.crop(crop)  # 裁剪图片
+
+        self._cap_img_tk = ImageTk.PhotoImage(image=_cap_img_info)
+        self._cap_label['image'] = self._cap_img_tk
 
     def update_msg(self):
         if self._msg_time is None:
@@ -1240,4 +1332,3 @@ class GarbageStation(GarbageStationBase):
 
     def exit_win(self):
         self._window.destroy()
-

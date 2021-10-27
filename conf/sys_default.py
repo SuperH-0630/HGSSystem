@@ -12,6 +12,7 @@ class ConfUserRelease:
 
 class ConfigSystemRelease:
     base_location = "Guangdong-KZ"
+    search_reset_time = 10  # 搜索间隔的时间
     about_info = f'''
 HGSSystem is Garbage Sorting System
 

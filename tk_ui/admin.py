@@ -439,6 +439,7 @@ class AdminStation(AdminStationBase):
             self.show_msg("程序错误", f"系统无法找到程序:\n  {name}")
             return
 
+        program.to_program()
         name, frame = program.get_program_frame()
 
         self.__show_program()
@@ -446,7 +447,7 @@ class AdminStation(AdminStationBase):
         self._program_title[1].set(f' {name}')
         self._program_title[0].place(relx=0.00, rely=0.00, relwidth=1, relheight=0.05)
 
-        frame.place(relx=0.02, rely=0.12, relwidth=0.96, relheight=0.86)
+        frame.place(relx=0.02, rely=0.06, relwidth=0.96, relheight=0.92)
 
         self._program_now = name, frame, program
 

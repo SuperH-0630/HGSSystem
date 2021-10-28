@@ -43,6 +43,9 @@ class AdminProgram(metaclass=abc.ABCMeta):
     def conf_gui(self, n: int = 1):
         ...
 
+    def to_program(self):
+        pass
+
     def get_program_frame(self) -> Tuple[str, tk.Frame]:
         return self.program_title, self.frame
 
@@ -1773,6 +1776,9 @@ class StatisticsBaseProgram(AdminProgram):
 
     def __conf_font(self, n: int = 1):
         self.btn_font_size = int(14 * n)
+
+    def to_program(self):
+        self.refresh()
 
     def show_color(self):
         self.color_list.delete(0, tk.END)  # 清空列表

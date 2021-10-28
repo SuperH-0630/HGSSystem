@@ -9,6 +9,8 @@ class ConfUserRelease:
     max_rubbish_week = 34
     limit_rubbish_week = 50
 
+    max_score = 500  # 积分上限为500分
+
 
 class ConfigSystemRelease:
     base_location = "Guangdong-KZ"

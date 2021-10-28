@@ -190,9 +190,13 @@ class NormalUser(User):
     def add_score(self, score: score_t) -> score_t:
         try:
             self._lock.acquire()
-            if self._score + score < 0:
+            tmp = self._score + score
+            if tmp < 0:
                 self._score = 0
                 return 0
+            elif tmp > Config.max_score:
+                self._score = Config.max_score
+                return Config.max_score
 
             self._score += score
             score = self._score

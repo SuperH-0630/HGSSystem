@@ -10,12 +10,14 @@ from .equipment import ConfigCapture
 from .sql import ConfigDatabase
 from .aliyun import ConfigAliyun
 from .sys_default import ConfigExport, ConfigSystem, ConfigSecret, ConfigTkinter, ConfUser
+from .matplotlib_conf import ConfigMatplotlib
 
 
 class Config(ConfigTkinter, ConfigSecret, ConfigSystem, ConfUser, ConfigExport,
              ConfigAliyun,
              ConfigDatabase,
-             ConfigCapture):
+             ConfigCapture,
+             ConfigMatplotlib):
     run_type = p_args.run[0]
     program = p_args.program[0]
 

@@ -3,8 +3,7 @@ import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter.filedialog import askdirectory, askopenfilename
 
-import matplotlib
-from matplotlib import font_manager
+from matplotlib import font_manager as fm
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.axes import Axes
 import numpy as np
@@ -1754,7 +1753,6 @@ class StatisticsTimeBaseProgram(AdminProgram):
         self.figure_frame = tk.Frame(self.frame)
         self.figure = Figure(dpi=100)
         self.plt: Axes = self.figure.add_subplot(111)  # 添加子图:1行1列第1个
-        self.font = font_manager.FontProperties(fname=Config.font_d["noto"])
 
         self.canvas = FigureCanvasTkAgg(self.figure, master=self.figure_frame)
         self.canvas_tk = self.canvas.get_tk_widget()
@@ -1952,9 +1950,13 @@ class StatisticsTimeBaseProgram(AdminProgram):
                              label=res_type)
                 bottom += np.array(y)
 
-        if self.legend_show[1].get() == 1:
-            self.plt.legend(loc="upper left", prop=self.font)
+        if self.legend_show[1].get() == 1:  # 显示图例
+            self.plt.legend(loc="upper left")
 
+        self.plt.set_xlim(-1, 24)
+        self.plt.set_xticks([i for i in range(0, 24, 2)])
+        self.plt.set_xticklabels([f"{i}h" for i in range(0, 24, 2)])
+        self.plt.set_title(self.program_title)
         self.canvas.draw()
         self.toolbar.update()
         self.update_listbox()
@@ -1981,10 +1983,10 @@ class StatisticsTimeTypeProgram(StatisticsTimeBaseProgram):
     def __init__(self, station, win, color):
         super().__init__(station, win, color, "时段分析-按投放类型")
         self._conf("#abc88b")
-        self.color_show_dict[GarbageType.GarbageTypeStrList[1]] = "#00BFFF"
-        self.color_show_dict[GarbageType.GarbageTypeStrList[2]] = "#32CD32"
-        self.color_show_dict[GarbageType.GarbageTypeStrList[3]] = "#DC143C"
-        self.color_show_dict[GarbageType.GarbageTypeStrList[4]] = "#A9A9A9"
+        self.color_show_dict[GarbageType.GarbageTypeStrList_ch[1]] = "#00BFFF"
+        self.color_show_dict[GarbageType.GarbageTypeStrList_ch[2]] = "#32CD32"
+        self.color_show_dict[GarbageType.GarbageTypeStrList_ch[3]] = "#DC143C"
+        self.color_show_dict[GarbageType.GarbageTypeStrList_ch[4]] = "#A9A9A9"
 
     def refresh(self):
         super().refresh()
@@ -1994,7 +1996,7 @@ class StatisticsTimeTypeProgram(StatisticsTimeBaseProgram):
     @staticmethod
     def get_name(i: Tuple):
         data: bytes = i[2]
-        return GarbageType.GarbageTypeStrList[int(data.decode('utf-8'))]
+        return GarbageType.GarbageTypeStrList_ch[int(data.decode('utf-8'))]
 
 
 class StatisticsTimeTypeLocProgram(StatisticsTimeBaseProgram):
@@ -2010,7 +2012,7 @@ class StatisticsTimeTypeLocProgram(StatisticsTimeBaseProgram):
     @staticmethod
     def get_name(i: Tuple):
         data: bytes = i[2]
-        return f"{GarbageType.GarbageTypeStrList[int(data.decode('utf-8'))]}-{i[3]}"
+        return f"{GarbageType.GarbageTypeStrList_ch[int(data.decode('utf-8'))]}-{i[3]}"
 
 
 class StatisticsTimeCheckResultProgram(StatisticsTimeBaseProgram):
@@ -2046,7 +2048,7 @@ class StatisticsTimeCheckResultAndTypeProgram(StatisticsTimeBaseProgram):
         data_1: bytes = i[2]
         data_2: bytes = i[3]
         return ((f'Pass' if data_1 == DBBit.BIT_1 else 'Fail') +
-                f'-{GarbageType.GarbageTypeStrList[int(data_2.decode("utf-8"))]}')
+                f'-{GarbageType.GarbageTypeStrList_ch[int(data_2.decode("utf-8"))]}')
 
 
 class StatisticsTimeCheckResultAndLocProgram(StatisticsTimeBaseProgram):
@@ -2081,7 +2083,7 @@ class StatisticsTimeDetailProgram(StatisticsTimeBaseProgram):
         data_1: bytes = i[2]
         data_2: bytes = i[3]
         return ((f'Pass' if data_1 == DBBit.BIT_1 else 'Fail') +
-                f'-{GarbageType.GarbageTypeStrList[int(data_2.decode("utf-8"))]}' + f'-{i[4]}')
+                f'-{GarbageType.GarbageTypeStrList_ch[int(data_2.decode("utf-8"))]}' + f'-{i[4]}')
 
 
 all_program = [WelcomeProgram, CreateNormalUserProgram, CreateManagerUserProgram, CreateAutoNormalUserProgram,

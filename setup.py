@@ -1,30 +1,38 @@
 import os
 import sys
 import time
-import warnings
+from typing import Union, List
 
-print("是否执行初始化程序?执行初始化程序会令你丢失所有数据.")
-res = input("[Y/n]")
-if res != 'Y':
-    exit(0)
+print("开始检查依赖")
 
 try:
     __import__("pip")
 except ImportError:
-    warnings.warn("The pip not found")
-    raise
+    print("检查结束, 未找到pip")
+    exit(1)
+else:
+    print("依赖 ['pip'] 存在")
 
 __setup = os.path.dirname(os.path.abspath(__file__))
 
 
-def check_import(package, pip):
+def check_import(packages: Union[str, List[str]], pips: Union[str, List[str]]):
+    if type(pips) is str:
+        pips = [pips]
+    if type(packages) is str:
+        packages = [packages]
     try:
-        __import__(package)
+        for package in packages:
+            __import__(package)
     except ImportError:
-        res = os.system(f"{sys.executable} -m pip install {pip}")
-        if res != 0:
-            print(f"{pip} 依赖安装失败")
-            exit(1)
+        for pip in pips:
+            if os.system(f"{sys.executable} -m pip install {pip}") != 0:
+                print(f"{pip} 依赖安装失败")
+                exit(1)
+            else:
+                print(f"依赖 {packages}:{pip} 按照成功")
+    else:
+        print(f"依赖 {packages}:{pips} 存在")
 
 
 check_import("cv2", "opencv-python")  # 图像处理
@@ -33,6 +41,14 @@ check_import("pymysql", "PyMySQL")  # 连接 MySQL服务器
 check_import("cryptography", "cryptography")  # 链接 MySQL 服务器时加密
 check_import("flask", "Flask")  # 网页服务
 check_import("PIL", "Pillow")  # 图片处理
+
+check_import(["oss2", "viapi", "aliyunsdkcore", "aliyunsdkimagerecog"],
+             ["oss2", "aliyun-python-sdk-viapiutils", "viapi-utils", "aliyun-python-sdk-imagerecog"])  # 阿里云依赖
+
+print("是否执行数据库初始化程序?\n执行初始化程序会令你丢失所有数据.")
+res = input("[Y/n]")
+if res != 'Y':
+    exit(0)
 
 import pymysql
 from conf import Config

@@ -207,11 +207,54 @@ class UpdateMenu(AdminMenu):
 class StatisticsMenu(AdminMenu):
     def __init__(self, station, win, color):
         super().__init__(station, win, color, "数据分析")
-        self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(5)]
-        self.btn_name = ["时间分析", "积分分析", "信用分析", "失信用户", "通过率"]
+        self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(6)]
+        self.btn_name = ["时段分析", "时间分析", "积分分析", "信用分析", "失信用户", "通过率"]
 
     def conf_gui(self, color: str, n: int = 1):
         super().conf_gui(color, n)
+        self.btn[0]['command'] = self.statistics_time_command
+
+    def statistics_time_command(self):
+        self.station.to_menu("时段分析")
 
 
-all_menu = [MainMenu, CreateMenu, DeleteMenu, SearchMenu, UpdateMenu, StatisticsMenu]
+class StatisticsTimeMenu(AdminMenu):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "时段分析")
+        self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(7)]
+        self.btn_name = ["按投放区域", "按投放类型", "投放类型和区域", "按检查结果", "按检查结果和类型", "按检查结果和区域",
+                         "详细分类"]
+
+    def conf_gui(self, color: str, n: int = 1):
+        super().conf_gui(color, n)
+        self.btn[0]['command'] = self.by_loc
+        self.btn[1]['command'] = self.by_type
+        self.btn[2]['command'] = self.by_type_and_type
+        self.btn[3]['command'] = self.by_result
+        self.btn[4]['command'] = self.by_result_and_type
+        self.btn[5]['command'] = self.by_result_and_loc
+        self.btn[6]['command'] = self.by_detail
+
+    def by_loc(self):
+        self.station.to_program("时段分析-按投放区域")
+
+    def by_type(self):
+        self.station.to_program("时段分析-按投放类型")
+
+    def by_type_and_type(self):
+        self.station.to_program("时段分析-按投放类型和区域")
+
+    def by_result(self):
+        self.station.to_program("时段分析-按检查结果")
+
+    def by_result_and_type(self):
+        self.station.to_program("时段分析-按检查结果和类型")
+
+    def by_result_and_loc(self):
+        self.station.to_program("时段分析-按检查结果和区域")
+
+    def by_detail(self):
+        self.station.to_program("时段分析-详细分类")
+
+
+all_menu = [MainMenu, CreateMenu, DeleteMenu, SearchMenu, UpdateMenu, StatisticsMenu, StatisticsTimeMenu]

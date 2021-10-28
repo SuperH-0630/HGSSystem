@@ -117,3 +117,17 @@ SELECT garbage_user.GarbageID       AS GarbageID,
        garbage_checker.CheckerPhone AS CheckerPhone
 FROM garbage_user
          LEFT JOIN garbage_checker on garbage_user.GarbageID = garbage_checker.GarbageID;
+
+
+-- 创建函数
+CREATE FUNCTION get_avg(num1 int, num2 int)
+    RETURNS DECIMAL(5, 4)
+    not deterministic
+    reads sql data
+    COMMENT '计算两个数相除'
+BEGIN
+    IF num2 = 0 or num1 = 0 THEN
+        RETURN 0;
+    END IF;
+    RETURN num1 / num2;
+END;

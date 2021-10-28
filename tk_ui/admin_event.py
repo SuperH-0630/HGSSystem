@@ -559,3 +559,51 @@ class UpdateGarbageCheckEvent(AdminEventBase):
             self.station.show_warning("更新失败", f"更新垃圾袋-检测结果失败")
         else:
             self.station.show_msg("更新成功", f"成功更新{res}个垃圾袋-检测结果")
+
+
+class CountThrowTimeEvent(AdminEventBase):
+    """
+    任务: 按时段-区域统计数据
+    """
+
+    def func(self, column: List, get_name: Callable):
+        res = {}
+        cur = self._db.search(columns=["DATE_FORMAT(UseTime,'%H') AS days", "count(GarbageID) AS count", *column],
+                              table="garbage",
+                              group_by=["days", *column],
+                              order_by=[(c, "DESC") for c in column] + [("days", "ASC")],
+                              where="UseTime IS NOT NULL")
+        if cur is None:
+            return None
+        loc_list = cur.fetchall()
+        loc_type = []
+        for i in loc_list:
+            name = get_name(i)
+            if name not in loc_type:
+                loc_type.append(name)
+            lst: List = res.get(name, list())
+            lst.append(i)
+            res[name] = lst
+        res['res_type'] = loc_type
+
+        return res
+
+    def __init__(self, gb_station):
+        super().__init__(gb_station)
+        self.thread = None
+        self._program: Optional[admin_program.StatisticsBaseProgram] = None
+
+    def start(self, column: List, get_name: Callable, program):
+        self.thread = TkThreading(self.func, column, get_name)
+        self._program = program
+        return self
+
+    def is_end(self) -> bool:
+        return not self.thread.is_alive()
+
+    def done_after_event(self):
+        res: Optional[Dict[str, str]] = self.thread.wait_event()
+        if res is None:
+            self.station.show_warning("数据分析", "数据获取时发生错误")
+        else:
+            self._program.show_result(res)

@@ -3,6 +3,12 @@ import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter.filedialog import askdirectory, askopenfilename
 
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from matplotlib.axes import Axes
+import numpy as np
+from matplotlib.figure import Figure
+
+from tool.color import random_color
 from tool.type_ import *
 from tool.tk import make_font, set_tk_disable_from_list
 from tool.login import create_uid
@@ -11,6 +17,7 @@ from conf import Config
 from . import admin
 from . import admin_event as tk_event
 
+from sql import DBBit
 from sql.user import find_user_by_name
 from core.garbage import GarbageType
 
@@ -1735,9 +1742,264 @@ class UpdateGarbageCheckResultProgram(AdminProgram):
         self.where_enter['state'] = 'normal'
 
 
+class StatisticsBaseProgram(AdminProgram):
+    def __init__(self, station, win, color, title: str):
+        super().__init__(station, win, color, title)
+
+        self.figure_frame = tk.Frame(self.frame)
+        self.figure = Figure(dpi=100)
+        self.plt: Axes = self.figure.add_subplot(111)  # 添加子图:1行1列第1个
+
+        self.canvas = FigureCanvasTkAgg(self.figure, master=self.figure_frame)
+        self.canvas_tk = self.canvas.get_tk_widget()
+
+        self.toolbar = NavigationToolbar2Tk(self.canvas, self.figure_frame)
+
+        self.color_frame = tk.Frame(self.frame)
+        self.color_list = tk.Listbox(self.color_frame)
+        self.y_scroll = tk.Scrollbar(self.color_frame)
+        self.btn_color_hide = tk.Button(self.color_frame)
+        self.color_dict = {}
+
+        self.export_btn = tk.Button(self.frame)
+        self.refresh_btn = tk.Button(self.frame)
+        self.color_btn = tk.Button(self.frame)
+
+        self._conf("#abc88b")
+        self.__conf_font()
+
+    def _conf(self, bg_color):
+        self.bg_color = bg_color
+
+    def __conf_font(self, n: int = 1):
+        self.btn_font_size = int(14 * n)
+
+    def show_color(self):
+        self.color_list.delete(0, tk.END)  # 清空列表
+        for i in self.color_dict:
+            self.color_list.insert(tk.END, i)
+            self.color_list.itemconfig(tk.END,
+                                       selectbackground=self.color_dict[i],
+                                       bg=self.color_dict[i],
+                                       selectforeground='#FFFFFF',
+                                       fg='#000000')
+        self.color_frame.place(relx=0.45, rely=0.1, relwidth=0.2, relheight=0.70)
+
+    def hide_color(self):
+        self.color_frame.place_forget()
+
+    def conf_gui(self, n: int = 1):
+        self.__conf_font(n)
+        btn_font = make_font(size=self.btn_font_size)
+
+        self.color_frame['bg'] = self.bg_color
+        self.color_frame['bd'] = 5
+        self.color_frame['relief'] = "ridge"
+
+        self.color_list.place(relx=0, rely=0, relwidth=0.96, relheight=0.90)
+        self.y_scroll.place(relx=0.96, rely=0, relwidth=0.04, relheight=0.90)
+
+        self.y_scroll['orient'] = 'vertical'
+        self.y_scroll['command'] = self.color_list.yview
+        self.color_list['yscrollcommand'] = self.y_scroll.set
+        self.color_list['activestyle'] = tk.NONE
+
+        self.btn_color_hide['font'] = btn_font
+        self.btn_color_hide['bg'] = Config.tk_btn_bg
+        self.btn_color_hide['text'] = "关闭"
+        self.btn_color_hide['command'] = self.hide_color
+        self.btn_color_hide.place(relx=0, rely=0.90, relwidth=1, relheight=0.1)
+
+        self.figure_frame['bg'] = self.bg_color
+        self.figure_frame['bd'] = 5
+        self.figure_frame['relief'] = "ridge"
+        self.figure_frame.place(relx=0.05, rely=0.05, relwidth=0.9, relheight=0.85)
+
+        self.canvas_tk.place(relx=0, rely=0, relwidth=1.0, relheight=0.9)
+        self.toolbar.place(relx=0, rely=0.9, relwidth=1.0, relheight=0.1)
+
+        for btn, text, func, x in zip([self.color_btn, self.refresh_btn, self.export_btn],
+                                      ["显示标志", "刷新数据", "导出数据"],
+                                      [self.show_color, self.refresh, self.export],
+                                      [0.31, 0.53, 0.75]):
+            btn['font'] = btn_font
+            btn['bg'] = Config.tk_btn_bg
+            btn['text'] = text
+            btn['command'] = func
+            btn.place(relx=x, rely=0.91, relwidth=0.20, relheight=0.08)
+
+    def export(self):
+        ...
+
+    def refresh(self):
+        self.plt.cla()
+
+    def show_result(self, res: Dict[str, str]):
+        ...
+
+    def set_disable(self):
+        self.export_btn['state'] = 'disable'
+
+    def reset_disable(self):
+        self.export_btn['state'] = 'normal'
+
+
+class StatisticsTimeBaseProgram(StatisticsBaseProgram):
+    def __init__(self, station, win, color, title):
+        super().__init__(station, win, color, title)
+
+    def show_result(self, res: Dict[str, any]):
+        bottom = np.zeros(24)
+        label_num = [i for i in range(24)]
+        label_str = [f"{i}" for i in range(24)]
+        res_type_lst: List = res['res_type']
+        for res_type in res_type_lst:
+            res_count: Tuple[str] = res[res_type]
+            if len(res_count) != 0:
+                y = [0 for _ in range(24)]
+                for i in res_count:
+                    y[int(i[0])] = int(i[1])
+                color = self.color_dict.get(res_type, random_color())
+                self.color_dict[res_type] = color
+                self.plt.bar(label_num, y,
+                             color=color,
+                             align="center",
+                             bottom=bottom,
+                             tick_label=label_str,
+                             label=res_type)
+                bottom += np.array(y)
+
+        self.canvas.draw()
+        self.toolbar.update()
+
+    def export(self):
+        ...
+
+
+class StatisticsTimeLocProgram(StatisticsTimeBaseProgram):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "时段分析-按投放区域")
+        self._conf("#abc88b")
+
+    def refresh(self):
+        super().refresh()
+        event = tk_event.CountThrowTimeEvent(self.station).start(["Location"], lambda i: i[2], self)
+        self.station.push_event(event)
+
+
+class StatisticsTimeTypeProgram(StatisticsTimeBaseProgram):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "时段分析-按投放类型")
+        self._conf("#abc88b")
+        self.color_dict[GarbageType.GarbageTypeStrList_ch[1]] = "#00BFFF"
+        self.color_dict[GarbageType.GarbageTypeStrList_ch[2]] = "#32CD32"
+        self.color_dict[GarbageType.GarbageTypeStrList_ch[3]] = "#DC143C"
+        self.color_dict[GarbageType.GarbageTypeStrList_ch[4]] = "#A9A9A9"
+
+    def refresh(self):
+        super().refresh()
+        event = tk_event.CountThrowTimeEvent(self.station).start(["GarbageType"], self.get_name, self)
+        self.station.push_event(event)
+
+    @staticmethod
+    def get_name(i: Tuple):
+        data: bytes = i[2]
+        return GarbageType.GarbageTypeStrList_ch[int(data.decode('utf-8'))]
+
+
+class StatisticsTimeTypeLocProgram(StatisticsTimeBaseProgram):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "时段分析-按投放类型和区域")
+        self._conf("#abc88b")
+
+    def refresh(self):
+        super().refresh()
+        event = tk_event.CountThrowTimeEvent(self.station).start(["GarbageType", "Location"], self.get_name, self)
+        self.station.push_event(event)
+
+    @staticmethod
+    def get_name(i: Tuple):
+        data: bytes = i[2]
+        return f"{GarbageType.GarbageTypeStrList_ch[int(data.decode('utf-8'))]}-{i[3]}"
+
+
+class StatisticsTimeCheckResultProgram(StatisticsTimeBaseProgram):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "时段分析-按检查结果")
+        self._conf("#abc88b")
+        self.color_dict['Pass'] = "#00BFFF"
+        self.color_dict['Fail'] = "#DC143C"
+
+    def refresh(self):
+        super().refresh()
+        event = tk_event.CountThrowTimeEvent(self.station).start(["CheckResult"], self.get_name, self)
+        self.station.push_event(event)
+
+    @staticmethod
+    def get_name(i: Tuple):
+        data: bytes = i[2]
+        return 'Pass' if data == DBBit.BIT_1 else 'Fail'
+
+
+class StatisticsTimeCheckResultAndTypeProgram(StatisticsTimeBaseProgram):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "时段分析-按检查结果和类型")
+        self._conf("#abc88b")
+
+    def refresh(self):
+        super().refresh()
+        event = tk_event.CountThrowTimeEvent(self.station).start(["CheckResult", "GarbageType"], self.get_name, self)
+        self.station.push_event(event)
+
+    @staticmethod
+    def get_name(i: Tuple):
+        data_1: bytes = i[2]
+        data_2: bytes = i[3]
+        return ((f'Pass' if data_1 == DBBit.BIT_1 else 'Fail') +
+                f'-{GarbageType.GarbageTypeStrList_ch[int(data_2.decode("utf-8"))]}')
+
+
+class StatisticsTimeCheckResultAndLocProgram(StatisticsTimeBaseProgram):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "时段分析-按检查结果和区域")
+        self._conf("#abc88b")
+
+    def refresh(self):
+        super().refresh()
+        event = tk_event.CountThrowTimeEvent(self.station).start(["CheckResult", "Location"], self.get_name, self)
+        self.station.push_event(event)
+
+    @staticmethod
+    def get_name(i: Tuple):
+        data_1: bytes = i[2]
+        return (f'Pass' if data_1 == DBBit.BIT_1 else 'Fail') + f"-{i[3]}"
+
+
+class StatisticsTimeDetailProgram(StatisticsTimeBaseProgram):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "时段分析-详细分类")
+        self._conf("#abc88b")
+
+    def refresh(self):
+        super().refresh()
+        event = tk_event.CountThrowTimeEvent(self.station)
+        event.start(["CheckResult", "GarbageType", "Location"], self.get_name, self)
+        self.station.push_event(event)
+
+    @staticmethod
+    def get_name(i: Tuple):
+        data_1: bytes = i[2]
+        data_2: bytes = i[3]
+        return ((f'Pass' if data_1 == DBBit.BIT_1 else 'Fail') +
+                f'-{GarbageType.GarbageTypeStrList_ch[int(data_2.decode("utf-8"))]}' + f'-{i[4]}')
+
+
 all_program = [WelcomeProgram, CreateNormalUserProgram, CreateManagerUserProgram, CreateAutoNormalUserProgram,
                CreateGarbageProgram, DeleteUserProgram, DeleteUsersProgram, DeleteGarbageProgram,
                DeleteGarbageMoreProgram, DeleteAllGarbageProgram, SearchUserProgram, SearchUserAdvancedProgram,
                SearchGarbageProgram, SearchGarbageAdvancedProgram, SearchAdvancedProgram, UpdateUserScoreBase,
                UpdateUserReputationBase, UpdateGarbageTypeProgram, UpdateGarbageCheckResultProgram,
-               ExportGarbageProgram, ExportUserProgram, CreateUserFromCSVProgram, AboutProgram]
+               ExportGarbageProgram, ExportUserProgram, CreateUserFromCSVProgram, AboutProgram,
+               StatisticsTimeLocProgram, StatisticsTimeTypeProgram, StatisticsTimeTypeLocProgram,
+               StatisticsTimeCheckResultProgram, StatisticsTimeCheckResultAndTypeProgram,
+               StatisticsTimeCheckResultAndLocProgram, StatisticsTimeDetailProgram]

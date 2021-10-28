@@ -208,7 +208,7 @@ class StatisticsMenu(AdminMenu):
     def __init__(self, station, win, color):
         super().__init__(station, win, color, "数据分析")
         self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(6)]
-        self.btn_name = ["时段分析", "时间分析", "积分信用分析", "失信用户", "通过率"]
+        self.btn_name = ["时段分析", "积分信用分析", "失信用户", "通过率"]
 
     def conf_gui(self, color: str, n: int = 1):
         super().conf_gui(color, n)

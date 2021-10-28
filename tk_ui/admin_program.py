@@ -1,9 +1,8 @@
 import abc
 import tkinter as tk
 import tkinter.ttk as ttk
-from tkinter.filedialog import askdirectory, askopenfilename
+from tkinter.filedialog import askdirectory, askopenfilename, asksaveasfilename
 
-from matplotlib import font_manager as fm
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.axes import Axes
 import numpy as np
@@ -1769,6 +1768,7 @@ class StatisticsTimeBaseProgram(AdminProgram):
         self.btn_hide = tk.Button(self.color_frame)
         self.color_show_dict = {}
         self.color_hide_dict = {}
+        self.export_lst = []
 
         self.export_btn = tk.Button(self.frame)
         self.refresh_btn = tk.Button(self.frame)
@@ -1908,8 +1908,15 @@ class StatisticsTimeBaseProgram(AdminProgram):
         self.legend_show[0]['variable'] = self.legend_show[1]
         self.legend_show[0].place(relx=0.21, rely=0.91, relwidth=0.15, relheight=0.08)
 
-    def export(self):
-        ...
+    def export(self, title, func: Callable):
+        path = asksaveasfilename(title='选择CSV文件保存位置', filetypes=[("CSV", ".csv")])
+        if not path.endswith(".csv"):
+            path += ".csv"
+        with open(path, "w") as f:
+            f.write(f"Hour, Count, {title}\n")
+            for i in self.export_lst:
+                f.write(f"{i[0]}, {i[1]}, {func(i)}\n")
+        self.station.show_msg("保存数据", f"数据导出成功\n保存位置:\n  {path}")
 
     def refresh(self):
         self.plt.cla()
@@ -1925,11 +1932,12 @@ class StatisticsTimeBaseProgram(AdminProgram):
         self.color_hide_dict = tmp
         self.update_listbox()
 
-    def show_result(self, res: Dict[str, any]):
+    def show_result(self, res: Dict[str, any], lst: List):
         bottom = np.zeros(24)
         label_num = [i for i in range(24)]
         label_str = [f"{i}" for i in range(24)]
         res_type_lst: List = res['res_type']
+        self.export_lst = lst
         for res_type in res_type_lst:
             res_count: Tuple[str] = res[res_type]
             if len(res_count) != 0:
@@ -1978,6 +1986,9 @@ class StatisticsTimeLocProgram(StatisticsTimeBaseProgram):
         event = tk_event.CountThrowTimeEvent(self.station).start(["Location"], lambda i: i[2], self)
         self.station.push_event(event)
 
+    def export(self, *_, **__):
+        super().export("Location", lambda i: i[2])
+
 
 class StatisticsTimeTypeProgram(StatisticsTimeBaseProgram):
     def __init__(self, station, win, color):
@@ -1992,6 +2003,9 @@ class StatisticsTimeTypeProgram(StatisticsTimeBaseProgram):
         super().refresh()
         event = tk_event.CountThrowTimeEvent(self.station).start(["GarbageType"], self.get_name, self)
         self.station.push_event(event)
+
+    def export(self, *_, **__):
+        super().export("Type", self.get_name)
 
     @staticmethod
     def get_name(i: Tuple):
@@ -2008,6 +2022,9 @@ class StatisticsTimeTypeLocProgram(StatisticsTimeBaseProgram):
         super().refresh()
         event = tk_event.CountThrowTimeEvent(self.station).start(["GarbageType", "Location"], self.get_name, self)
         self.station.push_event(event)
+
+    def export(self, *_, **__):
+        super().export("Type-Location", self.get_name)
 
     @staticmethod
     def get_name(i: Tuple):
@@ -2027,6 +2044,9 @@ class StatisticsTimeCheckResultProgram(StatisticsTimeBaseProgram):
         event = tk_event.CountThrowTimeEvent(self.station).start(["CheckResult"], self.get_name, self)
         self.station.push_event(event)
 
+    def export(self, *_, **__):
+        super().export("Result", self.get_name)
+
     @staticmethod
     def get_name(i: Tuple):
         data: bytes = i[2]
@@ -2042,6 +2062,9 @@ class StatisticsTimeCheckResultAndTypeProgram(StatisticsTimeBaseProgram):
         super().refresh()
         event = tk_event.CountThrowTimeEvent(self.station).start(["CheckResult", "GarbageType"], self.get_name, self)
         self.station.push_event(event)
+
+    def export(self, *_, **__):
+        super().export("Result-Location", self.get_name)
 
     @staticmethod
     def get_name(i: Tuple):
@@ -2061,6 +2084,9 @@ class StatisticsTimeCheckResultAndLocProgram(StatisticsTimeBaseProgram):
         event = tk_event.CountThrowTimeEvent(self.station).start(["CheckResult", "Location"], self.get_name, self)
         self.station.push_event(event)
 
+    def export(self, *_, **__):
+        super().export("Result-Type", self.get_name)
+
     @staticmethod
     def get_name(i: Tuple):
         data_1: bytes = i[2]
@@ -2077,6 +2103,9 @@ class StatisticsTimeDetailProgram(StatisticsTimeBaseProgram):
         event = tk_event.CountThrowTimeEvent(self.station)
         event.start(["CheckResult", "GarbageType", "Location"], self.get_name, self)
         self.station.push_event(event)
+
+    def export(self, *_, **__):
+        super().export("Detail", self.get_name)
 
     @staticmethod
     def get_name(i: Tuple):

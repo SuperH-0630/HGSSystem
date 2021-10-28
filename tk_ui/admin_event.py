@@ -586,12 +586,12 @@ class CountThrowTimeEvent(AdminEventBase):
             res[name] = lst
         res['res_type'] = loc_type
 
-        return res
+        return res, loc_list
 
     def __init__(self, gb_station):
         super().__init__(gb_station)
         self.thread = None
-        self._program: Optional[admin_program.StatisticsBaseProgram] = None
+        self._program: Optional[admin_program.StatisticsTimeBaseProgram] = None
 
     def start(self, column: List, get_name: Callable, program):
         self.thread = TkThreading(self.func, column, get_name)
@@ -602,8 +602,8 @@ class CountThrowTimeEvent(AdminEventBase):
         return not self.thread.is_alive()
 
     def done_after_event(self):
-        res: Optional[Dict[str, str]] = self.thread.wait_event()
+        res: Optional[Tuple[Dict[str, str], List]] = self.thread.wait_event()
         if res is None:
             self.station.show_warning("数据分析", "数据获取时发生错误")
         else:
-            self._program.show_result(res)
+            self._program.show_result(res[0], res[1])

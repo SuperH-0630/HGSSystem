@@ -3,6 +3,8 @@ import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter.filedialog import askdirectory, askopenfilename
 
+import matplotlib
+from matplotlib import font_manager
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.axes import Axes
 import numpy as np
@@ -1745,13 +1747,14 @@ class UpdateGarbageCheckResultProgram(AdminProgram):
         self.where_enter['state'] = 'normal'
 
 
-class StatisticsBaseProgram(AdminProgram):
+class StatisticsTimeBaseProgram(AdminProgram):
     def __init__(self, station, win, color, title: str):
         super().__init__(station, win, color, title)
 
         self.figure_frame = tk.Frame(self.frame)
         self.figure = Figure(dpi=100)
         self.plt: Axes = self.figure.add_subplot(111)  # 添加子图:1行1列第1个
+        self.font = font_manager.FontProperties(fname=Config.font_d["noto"])
 
         self.canvas = FigureCanvasTkAgg(self.figure, master=self.figure_frame)
         self.canvas_tk = self.canvas.get_tk_widget()
@@ -1759,14 +1762,21 @@ class StatisticsBaseProgram(AdminProgram):
         self.toolbar = NavigationToolbar2Tk(self.canvas, self.figure_frame)
 
         self.color_frame = tk.Frame(self.frame)
-        self.color_list = tk.Listbox(self.color_frame)
-        self.y_scroll = tk.Scrollbar(self.color_frame)
-        self.btn_color_hide = tk.Button(self.color_frame)
-        self.color_dict = {}
+        self.show_list_tk = tk.Listbox(self.color_frame)
+        self.show_list_scroll = tk.Scrollbar(self.color_frame)
+        self.hide_list_tk = tk.Listbox(self.color_frame)
+        self.hide_list_scroll = tk.Scrollbar(self.color_frame)
+
+        self.btn_show = tk.Button(self.color_frame)
+        self.btn_hide = tk.Button(self.color_frame)
+        self.color_show_dict = {}
+        self.color_hide_dict = {}
 
         self.export_btn = tk.Button(self.frame)
         self.refresh_btn = tk.Button(self.frame)
-        self.color_btn = tk.Button(self.frame)
+        self.reset_btn = tk.Button(self.frame)
+        self.reverse_btn = tk.Button(self.frame)
+        self.legend_show = tk.Checkbutton(self.frame), tk.IntVar()
 
         self._conf("#abc88b")
         self.__conf_font()
@@ -1776,63 +1786,129 @@ class StatisticsBaseProgram(AdminProgram):
 
     def __conf_font(self, n: int = 1):
         self.btn_font_size = int(14 * n)
+        self.little_btn_font_size = int(12 * n)
 
     def to_program(self):
         self.refresh()
 
-    def show_color(self):
-        self.color_list.delete(0, tk.END)  # 清空列表
-        for i in self.color_dict:
-            self.color_list.insert(tk.END, i)
-            self.color_list.itemconfig(tk.END,
-                                       selectbackground=self.color_dict[i],
-                                       bg=self.color_dict[i],
-                                       selectforeground='#FFFFFF',
-                                       fg='#000000')
-        self.color_frame.place(relx=0.45, rely=0.1, relwidth=0.2, relheight=0.70)
+    def update_listbox(self):
+        self.show_list_tk.delete(0, tk.END)  # 清空列表
+        self.hide_list_tk.delete(0, tk.END)  # 清空列表
+        for i in self.color_show_dict:
+            self.show_list_tk.insert(tk.END, i)
+            self.show_list_tk.itemconfig(tk.END,
+                                         selectbackground=self.color_show_dict[i],
+                                         bg=self.color_show_dict[i],
+                                         selectforeground='#FFFFFF',
+                                         fg='#000000')
 
-    def hide_color(self):
-        self.color_frame.place_forget()
+        for i in self.color_hide_dict:
+            self.hide_list_tk.insert(tk.END, i)
+            self.hide_list_tk.itemconfig(tk.END,
+                                         selectbackground=self.color_hide_dict[i],
+                                         bg=self.color_hide_dict[i],
+                                         selectforeground='#FFFFFF',
+                                         fg='#000000')
+
+    def check_show(self, res: str):
+        color = self.color_show_dict.get(res)
+        if color is not None:
+            return color
+        color = self.color_hide_dict.get(res)
+        if color is not None:
+            return None
+        color = random_color()
+        self.color_show_dict[res] = color
+        return color
+
+    def hide(self):
+        i = self.show_list_tk.curselection()
+        if len(i) == 0:
+            return
+        res = self.show_list_tk.get(i[0])
+        self.hide_(res)
+        self.update_listbox()
+
+    def show(self):
+        i = self.hide_list_tk.curselection()
+        if len(i) == 0:
+            return
+        res = self.hide_list_tk.get(i[0])
+        self.show_(res)
+        self.update_listbox()
+
+    def hide_(self, res):
+        color = self.color_show_dict.get(res)
+        if color is not None:
+            del self.color_show_dict[res]
+            self.color_hide_dict[res] = color
+
+    def show_(self, res):
+        color = self.color_hide_dict.get(res)
+        if color is not None:
+            del self.color_hide_dict[res]
+            self.color_show_dict[res] = color
 
     def conf_gui(self, n: int = 1):
         self.__conf_font(n)
         btn_font = make_font(size=self.btn_font_size)
+        little_btn_font = make_font(size=self.little_btn_font_size)
 
         self.color_frame['bg'] = self.bg_color
         self.color_frame['bd'] = 5
         self.color_frame['relief'] = "ridge"
 
-        self.color_list.place(relx=0, rely=0, relwidth=0.96, relheight=0.90)
-        self.y_scroll.place(relx=0.96, rely=0, relwidth=0.04, relheight=0.90)
+        self.show_list_tk.place(relx=0, rely=0, relwidth=0.90, relheight=0.475)
+        self.show_list_scroll.place(relx=0.90, rely=0, relwidth=0.10, relheight=0.475)
 
-        self.y_scroll['orient'] = 'vertical'
-        self.y_scroll['command'] = self.color_list.yview
-        self.color_list['yscrollcommand'] = self.y_scroll.set
-        self.color_list['activestyle'] = tk.NONE
+        self.show_list_scroll['orient'] = 'vertical'
+        self.show_list_scroll['command'] = self.show_list_tk.yview
+        self.show_list_tk['yscrollcommand'] = self.show_list_scroll.set
+        self.show_list_tk['activestyle'] = tk.NONE
 
-        self.btn_color_hide['font'] = btn_font
-        self.btn_color_hide['bg'] = Config.tk_btn_bg
-        self.btn_color_hide['text'] = "关闭"
-        self.btn_color_hide['command'] = self.hide_color
-        self.btn_color_hide.place(relx=0, rely=0.90, relwidth=1, relheight=0.1)
+        self.hide_list_tk.place(relx=0, rely=0.525, relwidth=0.90, relheight=0.475)
+        self.hide_list_scroll.place(relx=0.90, rely=0.525, relwidth=0.10, relheight=0.475)
+
+        self.hide_list_scroll['orient'] = 'vertical'
+        self.hide_list_scroll['command'] = self.hide_list_tk.yview
+        self.hide_list_tk['yscrollcommand'] = self.hide_list_scroll.set
+        self.hide_list_tk['activestyle'] = tk.NONE
+
+        for btn, text, func, x in zip([self.btn_show, self.btn_hide],
+                                      ["Show", "Hide"],
+                                      [self.show, self.hide],
+                                      [0.00, 0.50]):
+            btn['font'] = little_btn_font
+            btn['bg'] = Config.tk_btn_bg
+            btn['text'] = text
+            btn['command'] = func
+            btn.place(relx=x, rely=0.475, relwidth=0.50, relheight=0.05)
+
+        self.color_frame.place(relx=0.01, rely=0.02, relwidth=0.18, relheight=0.88)
 
         self.figure_frame['bg'] = self.bg_color
         self.figure_frame['bd'] = 5
         self.figure_frame['relief'] = "ridge"
-        self.figure_frame.place(relx=0.05, rely=0.05, relwidth=0.9, relheight=0.85)
+        self.figure_frame.place(relx=0.21, rely=0.02, relwidth=0.79, relheight=0.88)
 
         self.canvas_tk.place(relx=0, rely=0, relwidth=1.0, relheight=0.9)
         self.toolbar.place(relx=0, rely=0.9, relwidth=1.0, relheight=0.1)
 
-        for btn, text, func, x in zip([self.color_btn, self.refresh_btn, self.export_btn],
-                                      ["显示标志", "刷新数据", "导出数据"],
-                                      [self.show_color, self.refresh, self.export],
-                                      [0.31, 0.53, 0.75]):
+        for btn, text, func, x in zip([self.reset_btn, self.reverse_btn, self.refresh_btn, self.export_btn],
+                                      ["复位选择", "反转选择", "刷新数据", "导出数据"],
+                                      [self.reset, self.reverse, self.refresh, self.export],
+                                      [0.37, 0.53, 0.69, 0.85]):
             btn['font'] = btn_font
             btn['bg'] = Config.tk_btn_bg
             btn['text'] = text
             btn['command'] = func
-            btn.place(relx=x, rely=0.91, relwidth=0.20, relheight=0.08)
+            btn.place(relx=x, rely=0.91, relwidth=0.15, relheight=0.08)
+
+        self.legend_show[0]['font'] = btn_font
+        self.legend_show[0]['bg'] = self.color
+        self.legend_show[0]['text'] = "显示图例"
+        self.legend_show[0]['variable'] = self.legend_show[1]
+        self.legend_show[0].place(relx=0.21, rely=0.91, relwidth=0.15, relheight=0.08)
 
     def export(self):
         ...
@@ -1840,19 +1916,16 @@ class StatisticsBaseProgram(AdminProgram):
     def refresh(self):
         self.plt.cla()
 
-    def show_result(self, res: Dict[str, str]):
-        ...
+    def reset(self):
+        self.color_show_dict.update(self.color_hide_dict)
+        self.color_hide_dict = {}
+        self.update_listbox()
 
-    def set_disable(self):
-        self.export_btn['state'] = 'disable'
-
-    def reset_disable(self):
-        self.export_btn['state'] = 'normal'
-
-
-class StatisticsTimeBaseProgram(StatisticsBaseProgram):
-    def __init__(self, station, win, color, title):
-        super().__init__(station, win, color, title)
+    def reverse(self):
+        tmp = self.color_show_dict
+        self.color_show_dict = self.color_hide_dict
+        self.color_hide_dict = tmp
+        self.update_listbox()
 
     def show_result(self, res: Dict[str, any]):
         bottom = np.zeros(24)
@@ -1862,11 +1935,15 @@ class StatisticsTimeBaseProgram(StatisticsBaseProgram):
         for res_type in res_type_lst:
             res_count: Tuple[str] = res[res_type]
             if len(res_count) != 0:
+                color = self.check_show(res_type)
+                if color is None:
+                    continue
+
                 y = [0 for _ in range(24)]
                 for i in res_count:
                     y[int(i[0])] = int(i[1])
-                color = self.color_dict.get(res_type, random_color())
-                self.color_dict[res_type] = color
+
+                self.color_show_dict[res_type] = color
                 self.plt.bar(label_num, y,
                              color=color,
                              align="center",
@@ -1875,11 +1952,18 @@ class StatisticsTimeBaseProgram(StatisticsBaseProgram):
                              label=res_type)
                 bottom += np.array(y)
 
+        if self.legend_show[1].get() == 1:
+            self.plt.legend(loc="upper left", prop=self.font)
+
         self.canvas.draw()
         self.toolbar.update()
+        self.update_listbox()
 
-    def export(self):
-        ...
+    def set_disable(self):
+        self.export_btn['state'] = 'disable'
+
+    def reset_disable(self):
+        self.export_btn['state'] = 'normal'
 
 
 class StatisticsTimeLocProgram(StatisticsTimeBaseProgram):
@@ -1897,10 +1981,10 @@ class StatisticsTimeTypeProgram(StatisticsTimeBaseProgram):
     def __init__(self, station, win, color):
         super().__init__(station, win, color, "时段分析-按投放类型")
         self._conf("#abc88b")
-        self.color_dict[GarbageType.GarbageTypeStrList_ch[1]] = "#00BFFF"
-        self.color_dict[GarbageType.GarbageTypeStrList_ch[2]] = "#32CD32"
-        self.color_dict[GarbageType.GarbageTypeStrList_ch[3]] = "#DC143C"
-        self.color_dict[GarbageType.GarbageTypeStrList_ch[4]] = "#A9A9A9"
+        self.color_show_dict[GarbageType.GarbageTypeStrList[1]] = "#00BFFF"
+        self.color_show_dict[GarbageType.GarbageTypeStrList[2]] = "#32CD32"
+        self.color_show_dict[GarbageType.GarbageTypeStrList[3]] = "#DC143C"
+        self.color_show_dict[GarbageType.GarbageTypeStrList[4]] = "#A9A9A9"
 
     def refresh(self):
         super().refresh()
@@ -1910,7 +1994,7 @@ class StatisticsTimeTypeProgram(StatisticsTimeBaseProgram):
     @staticmethod
     def get_name(i: Tuple):
         data: bytes = i[2]
-        return GarbageType.GarbageTypeStrList_ch[int(data.decode('utf-8'))]
+        return GarbageType.GarbageTypeStrList[int(data.decode('utf-8'))]
 
 
 class StatisticsTimeTypeLocProgram(StatisticsTimeBaseProgram):
@@ -1926,15 +2010,15 @@ class StatisticsTimeTypeLocProgram(StatisticsTimeBaseProgram):
     @staticmethod
     def get_name(i: Tuple):
         data: bytes = i[2]
-        return f"{GarbageType.GarbageTypeStrList_ch[int(data.decode('utf-8'))]}-{i[3]}"
+        return f"{GarbageType.GarbageTypeStrList[int(data.decode('utf-8'))]}-{i[3]}"
 
 
 class StatisticsTimeCheckResultProgram(StatisticsTimeBaseProgram):
     def __init__(self, station, win, color):
         super().__init__(station, win, color, "时段分析-按检查结果")
         self._conf("#abc88b")
-        self.color_dict['Pass'] = "#00BFFF"
-        self.color_dict['Fail'] = "#DC143C"
+        self.color_show_dict['Pass'] = "#00BFFF"
+        self.color_show_dict['Fail'] = "#DC143C"
 
     def refresh(self):
         super().refresh()
@@ -1962,7 +2046,7 @@ class StatisticsTimeCheckResultAndTypeProgram(StatisticsTimeBaseProgram):
         data_1: bytes = i[2]
         data_2: bytes = i[3]
         return ((f'Pass' if data_1 == DBBit.BIT_1 else 'Fail') +
-                f'-{GarbageType.GarbageTypeStrList_ch[int(data_2.decode("utf-8"))]}')
+                f'-{GarbageType.GarbageTypeStrList[int(data_2.decode("utf-8"))]}')
 
 
 class StatisticsTimeCheckResultAndLocProgram(StatisticsTimeBaseProgram):
@@ -1997,7 +2081,7 @@ class StatisticsTimeDetailProgram(StatisticsTimeBaseProgram):
         data_1: bytes = i[2]
         data_2: bytes = i[3]
         return ((f'Pass' if data_1 == DBBit.BIT_1 else 'Fail') +
-                f'-{GarbageType.GarbageTypeStrList_ch[int(data_2.decode("utf-8"))]}' + f'-{i[4]}')
+                f'-{GarbageType.GarbageTypeStrList[int(data_2.decode("utf-8"))]}' + f'-{i[4]}')
 
 
 all_program = [WelcomeProgram, CreateNormalUserProgram, CreateManagerUserProgram, CreateAutoNormalUserProgram,

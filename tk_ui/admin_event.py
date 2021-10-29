@@ -1,4 +1,5 @@
 import time
+import numpy as np
 
 from tool.type_ import *
 from sql.db import DB
@@ -563,7 +564,7 @@ class UpdateGarbageCheckEvent(AdminEventBase):
 
 class CountThrowTimeEvent(AdminEventBase):
     """
-    任务: 按时段-区域统计数据
+    任务: 按时段统计数据
     """
 
     def func(self, column: List, get_name: Callable):
@@ -607,3 +608,132 @@ class CountThrowTimeEvent(AdminEventBase):
             self.station.show_warning("数据分析", "数据获取时发生错误")
         else:
             self._program.show_result(res[0], res[1])
+
+
+class CountScoreReputationTinyEvent(AdminEventBase):
+    """
+    任务: 统计积分和用户数据
+    """
+
+    def func(self):
+        cur = self._db.search(columns=["ceil(Score / 5) AS ScoreGB",
+                                       "ceil(Reputation / 10) AS ReputationGB",
+                                       "count(UserID) AS count"],
+                              table="user",
+                              group_by=["ScoreGB", "ReputationGB"],
+                              order_by=[("ScoreGB", "DESC"), ("ReputationGB", "DESC")])
+        if cur is None:
+            return None
+        lst = np.zeros((100, 100))
+        for i in range(cur.rowcount):
+            res = cur.fetchone()
+            x = res[0]
+            y = res[1]
+            if x == 100:
+                x = 99  # 边界值
+            if y == 100:
+                y = 99  # 边界值
+            lst[x, y] = int(res[2])
+        return lst
+
+    def __init__(self, gb_station):
+        super().__init__(gb_station)
+        self.thread = None
+        self._program: Optional[admin_program.StatisticsUserTinyProgram] = None
+
+    def start(self, program):
+        self.thread = TkThreading(self.func)
+        self._program = program
+        return self
+
+    def is_end(self) -> bool:
+        return not self.thread.is_alive()
+
+    def done_after_event(self):
+        res: Optional[np.array] = self.thread.wait_event()
+        if res is None:
+            self.station.show_warning("数据分析", "数据获取时发生错误")
+        else:
+            self._program.show_result(res)
+
+
+class CountScoreReputationLargeEvent(AdminEventBase):
+    """
+    任务: 统计积分和用户数据
+    """
+
+    def func(self):
+        cur = self._db.search(columns=["ceil(Score / 50) AS ScoreGB",
+                                       "ceil(Reputation / 100) AS ReputationGB",
+                                       "count(UserID) AS count"],
+                              table="user",
+                              group_by=["ScoreGB", "ReputationGB"],
+                              order_by=[("ScoreGB", "DESC"), ("ReputationGB", "DESC")])
+        if cur is None:
+            return None
+        lst = np.zeros((10, 10))
+        for i in range(cur.rowcount):
+            res = cur.fetchone()
+            x = res[0]
+            y = res[1]
+            if x == 10:
+                x = 9  # 边界值
+            if y == 10:
+                y = 9  # 边界值
+            lst[x, y] = int(res[2])
+        return lst
+
+    def __init__(self, gb_station):
+        super().__init__(gb_station)
+        self.thread = None
+        self._program: Optional[admin_program.StatisticsUserLargeProgram] = None
+
+    def start(self, program):
+        self.thread = TkThreading(self.func)
+        self._program = program
+        return self
+
+    def is_end(self) -> bool:
+        return not self.thread.is_alive()
+
+    def done_after_event(self):
+        res: Optional[np.array] = self.thread.wait_event()
+        if res is None:
+            self.station.show_warning("数据分析", "数据获取时发生错误")
+        else:
+            self._program.show_result(res)
+
+
+class ScoreReputationDistributedEvent(AdminEventBase):
+    """
+    任务: 统计积分或信用分布
+    """
+
+    def func(self, which):
+        cur = self._db.search(columns=[which],
+                              table="user",
+                              order_by=[(which, "DESC")])
+        if cur is None:
+            return None
+        return cur.fetchall()
+
+    def __init__(self, gb_station):
+        super().__init__(gb_station)
+        self.thread = None
+        self._program: Optional[admin_program.StatisticsScoreDistributedProgram] = None
+
+    def start(self, which, program):
+        self.thread = TkThreading(self.func, which)
+        self._program = program
+        return self
+
+    def is_end(self) -> bool:
+        return not self.thread.is_alive()
+
+    def done_after_event(self):
+        res: Optional[np.array] = self.thread.wait_event()
+        if res is None:
+            self.station.show_warning("数据分析", "数据获取时发生错误")
+        else:
+            lst = [int(i[0]) for i in res]
+            self._program.show_result(lst)

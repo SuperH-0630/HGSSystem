@@ -48,8 +48,8 @@ class AdminMenu(metaclass=abc.ABCMeta):
 class MainMenu(AdminMenu):
     def __init__(self, station, win, color):
         super().__init__(station, win, color, "主页")
-        self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(5)]
-        self.btn_name = ["创建", "删除", "搜索", "更新", "退出登录"]
+        self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(6)]
+        self.btn_name = ["创建", "删除", "搜索", "更新", "数据分析", "退出登录"]
 
     def conf_gui(self, color: str, n: int = 1):
         super().conf_gui(color, n)
@@ -57,7 +57,8 @@ class MainMenu(AdminMenu):
         self.btn[1]['command'] = lambda: self.delete_command()
         self.btn[2]['command'] = lambda: self.search_command()
         self.btn[3]['command'] = lambda: self.update_command()
-        self.btn[4]['command'] = lambda: self.logout_command()
+        self.btn[4]['command'] = lambda: self.statistics_command()
+        self.btn[5]['command'] = lambda: self.logout_command()
 
     def create_command(self):
         self.station.to_menu("创建")
@@ -70,6 +71,9 @@ class MainMenu(AdminMenu):
 
     def update_command(self):
         self.station.to_menu("更新")
+
+    def statistics_command(self):
+        self.station.to_menu("数据分析")
 
     def logout_command(self):
         self.station.logout()
@@ -148,7 +152,7 @@ class SearchMenu(AdminMenu):
     def __init__(self, station, win, color):
         super().__init__(station, win, color, "搜索")
         self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(6)]
-        self.btn_name = ["用户", "高级搜索-用户", "垃圾袋", "高级搜索-垃圾袋", "高级搜索", "数据分析"]
+        self.btn_name = ["用户", "高级搜索-用户", "垃圾袋", "高级搜索-垃圾袋", "高级搜索"]
 
     def conf_gui(self, color: str, n: int = 1):
         super().conf_gui(color, n)
@@ -157,7 +161,6 @@ class SearchMenu(AdminMenu):
         self.btn[2]['command'] = lambda: self.garbage_command()
         self.btn[3]['command'] = lambda: self.garbage_advanced_command()
         self.btn[4]['command'] = lambda: self.advanced_command()
-        self.btn[5]['command'] = lambda: self.statistics_command()
 
     def user_command(self):
         self.station.to_program("搜索用户")
@@ -173,9 +176,6 @@ class SearchMenu(AdminMenu):
 
     def advanced_command(self):
         self.station.to_program("高级搜索")
-
-    def statistics_command(self):
-        self.station.to_menu("数据分析")
 
 
 class UpdateMenu(AdminMenu):
@@ -207,15 +207,19 @@ class UpdateMenu(AdminMenu):
 class StatisticsMenu(AdminMenu):
     def __init__(self, station, win, color):
         super().__init__(station, win, color, "数据分析")
-        self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(6)]
-        self.btn_name = ["时段分析", "积分信用分析", "失信用户", "通过率"]
+        self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(3)]
+        self.btn_name = ["时段分析", "积分信用分析", "通过率"]
 
     def conf_gui(self, color: str, n: int = 1):
         super().conf_gui(color, n)
         self.btn[0]['command'] = self.statistics_time_command
+        self.btn[1]['command'] = self.statistics_user_command
 
     def statistics_time_command(self):
         self.station.to_menu("时段分析")
+
+    def statistics_user_command(self):
+        self.station.to_menu("积分信用分析")
 
 
 class StatisticsTimeMenu(AdminMenu):
@@ -257,4 +261,31 @@ class StatisticsTimeMenu(AdminMenu):
         self.station.to_program("时段分析-详细分类")
 
 
-all_menu = [MainMenu, CreateMenu, DeleteMenu, SearchMenu, UpdateMenu, StatisticsMenu, StatisticsTimeMenu]
+class StatisticsUserMenu(AdminMenu):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "积分信用分析")
+        self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(6)]
+        self.btn_name = ["积分,信用-细致", "积分,信用-大致", "积分分布", "信用分布"]
+
+    def conf_gui(self, color: str, n: int = 1):
+        super().conf_gui(color, n)
+        self.btn[0]['command'] = self.by_tiny
+        self.btn[1]['command'] = self.by_large
+        self.btn[2]['command'] = self.score
+        self.btn[3]['command'] = self.reputation
+
+    def by_tiny(self):
+        self.station.to_program("积分信用分析-细致")
+
+    def by_large(self):
+        self.station.to_program("积分信用分析-大致")
+
+    def score(self):
+        self.station.to_program("积分分布")
+
+    def reputation(self):
+        self.station.to_program("垃圾分类信用分布")
+
+
+all_menu = [MainMenu, CreateMenu, DeleteMenu, SearchMenu, UpdateMenu, StatisticsMenu, StatisticsTimeMenu,
+            StatisticsUserMenu]

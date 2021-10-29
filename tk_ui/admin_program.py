@@ -2,10 +2,11 @@ import abc
 import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter.filedialog import askdirectory, askopenfilename, asksaveasfilename
-
+import random
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.axes import Axes
 import numpy as np
+from matplotlib.colorbar import Colorbar
 from matplotlib.figure import Figure
 
 from tool.color import random_color
@@ -1964,16 +1965,27 @@ class StatisticsTimeBaseProgram(AdminProgram):
         self.plt.set_xlim(-1, 24)
         self.plt.set_xticks([i for i in range(0, 24, 2)])
         self.plt.set_xticklabels([f"{i}h" for i in range(0, 24, 2)])
-        self.plt.set_title(self.program_title)
+        self.plt.set_title(f"{self.program_title}柱状图")
+
         self.canvas.draw()
         self.toolbar.update()
         self.update_listbox()
 
     def set_disable(self):
         self.export_btn['state'] = 'disable'
+        self.reset_btn['state'] = 'disable'
+        self.refresh_btn['state'] = 'disable'
+        self.reverse_btn['state'] = 'disable'
+        self.btn_show['state'] = 'disable'
+        self.btn_hide['state'] = 'disable'
 
     def reset_disable(self):
         self.export_btn['state'] = 'normal'
+        self.reset_btn['state'] = 'normal'
+        self.refresh_btn['state'] = 'normal'
+        self.reverse_btn['state'] = 'normal'
+        self.btn_show['state'] = 'normal'
+        self.btn_hide['state'] = 'normal'
 
 
 class StatisticsTimeLocProgram(StatisticsTimeBaseProgram):
@@ -2115,6 +2127,241 @@ class StatisticsTimeDetailProgram(StatisticsTimeBaseProgram):
                 f'-{GarbageType.GarbageTypeStrList_ch[int(data_2.decode("utf-8"))]}' + f'-{i[4]}')
 
 
+class StatisticsUserBaseProgram(AdminProgram):
+    def __init__(self, station, win, color, title: str):
+        super().__init__(station, win, color, title)
+
+        self.figure_frame = tk.Frame(self.frame)
+        self.figure = Figure(dpi=100)
+        self.plt: Axes = self.figure.add_subplot(111)  # 添加子图:1行1列第1个
+
+        self.canvas = FigureCanvasTkAgg(self.figure, master=self.figure_frame)
+        self.canvas_tk = self.canvas.get_tk_widget()
+        self.toolbar = NavigationToolbar2Tk(self.canvas, self.figure_frame)
+        self.color_bar: Optional[Colorbar] = None
+        self.export_lst: Optional[np.array] = None
+
+        self.export_btn = tk.Button(self.frame)
+        self.refresh_btn = tk.Button(self.frame)
+        self._conf("#abc88b")
+        self.__conf_font()
+
+    def _conf(self, bg_color):
+        self.bg_color = bg_color
+
+    def __conf_font(self, n: int = 1):
+        self.btn_font_size = int(14 * n)
+
+    def conf_gui(self, n: int = 1):
+        self.__conf_font(n)
+        btn_font = make_font(size=self.btn_font_size)
+
+        self.figure_frame['bg'] = self.bg_color
+        self.figure_frame['bd'] = 5
+        self.figure_frame['relief'] = "ridge"
+        self.figure_frame.place(relx=0.00, rely=0.02, relwidth=1, relheight=0.88)
+
+        self.canvas_tk.place(relx=0, rely=0, relwidth=1.0, relheight=0.9)
+        self.toolbar.place(relx=0, rely=0.9, relwidth=1.0, relheight=0.1)
+
+        for btn, text, func, x in zip([self.refresh_btn, self.export_btn],
+                                      ["刷新数据", "导出数据"],
+                                      [self.refresh, self.export],
+                                      [0.34, 0.51]):
+            btn['font'] = btn_font
+            btn['bg'] = Config.tk_btn_bg
+            btn['text'] = text
+            btn['command'] = func
+            btn.place(relx=x, rely=0.91, relwidth=0.15, relheight=0.08)
+
+    def export(self):
+        ...
+
+    def refresh(self, event_class):
+        self.plt.cla()
+        if self.color_bar is not None:
+            self.color_bar.remove()
+        event = event_class(self.station).start(self)
+        self.station.push_event(event)
+
+    def set_disable(self):
+        self.export_btn['state'] = 'disable'
+        self.refresh_btn['state'] = 'disable'
+
+    def reset_disable(self):
+        self.export_btn['state'] = 'normal'
+        self.refresh_btn['state'] = 'normal'
+
+
+class StatisticsUserTinyProgram(StatisticsUserBaseProgram):
+    def __init__(self, station, win, color):
+        super(StatisticsUserTinyProgram, self).__init__(station, win, color, "积分信用分析-细致")
+
+    def show_result(self, lst: np.array):
+        self.export_lst = lst
+        x_label = [f'{i * 10}' for i in range(0, 51, 10)]
+        y_label = [f'{i * 10}' for i in range(0, 101, 20)]
+
+        im = self.plt.pcolormesh(lst, cmap='Blues')  # 用cmap设置配色方案
+
+        self.plt.set_xticks(range(0, 101, 20))  # 设置x轴刻度
+        self.plt.set_yticks(range(0, 101, 20))  # 设置y轴刻度
+        self.plt.set_xticklabels(x_label)  # 设置x轴刻度标签
+        self.plt.set_yticklabels(y_label)  # 设置y轴刻度标签
+        self.plt.set_xlabel("用户积分")  # 设置x轴刻度标签
+        self.plt.set_ylabel("垃圾分类信用")  # 设置y轴刻度标签
+
+        self.color_bar = self.figure.colorbar(im, pad=0.03, ax=self.plt)  # 设置颜色条
+        self.plt.set_title("积分信用分析-细致热图")  # 设置标题以及其位置和字体大小
+
+        self.canvas.draw()
+        self.toolbar.update()
+
+    def export(self):
+        if self.export_lst is None:
+            self.station.show_msg("保存数据", f"没有数据需要保存")
+            return
+
+        path = asksaveasfilename(title='选择CSV文件保存位置', filetypes=[("CSV", ".csv")])
+        if not path.endswith(".csv"):
+            path += ".csv"
+        with open(path, "w") as f:
+            f.write("#, " + ", ".join([f'[{i * 10} {i * 10 + 10}]' for i in range(0, 100, 1)]) + "\n")
+            for i, lst in zip(range(0, 50, 1), self.export_lst):
+                f.write(f"[{i * 10} {i * 10 + 10}], " + ", ".join([f"{a}" for a in lst]) + "\n")
+        self.station.show_msg("保存数据", f"数据导出成功\n保存位置:\n  {path}")
+
+    def to_program(self):
+        self.refresh()
+
+    def refresh(self, _=None):
+        super().refresh(tk_event.CountScoreReputationTinyEvent)
+
+
+class StatisticsUserLargeProgram(StatisticsUserBaseProgram):
+    def __init__(self, station, win, color):
+        super(StatisticsUserLargeProgram, self).__init__(station, win, color, "积分信用分析-大致")
+
+    def show_result(self, lst: np.array):
+        self.export_lst = lst
+        print("HHHH")
+        x_label = [f'{i * 10}' for i in range(0, 51, 10)]
+        y_label = [f'{i * 10}' for i in range(0, 101, 20)]
+
+        im = self.plt.pcolormesh(lst, cmap='Blues')  # 用cmap设置配色方案
+
+        self.plt.set_xticks(range(0, 11, 2))  # 设置x轴刻度
+        self.plt.set_yticks(range(0, 11, 2))  # 设置y轴刻度
+        self.plt.set_xticklabels(x_label)  # 设置x轴刻度标签
+        self.plt.set_yticklabels(y_label)  # 设置y轴刻度标签
+        self.plt.set_xlabel("用户积分")  # 设置x轴刻度标签
+        self.plt.set_ylabel("垃圾分类信用")  # 设置y轴刻度标签
+
+        self.color_bar = self.figure.colorbar(im, pad=0.03, ax=self.plt)  # 设置颜色条
+        self.plt.set_title("积分信用分析-大致热图")  # 设置标题以及其位置和字体大小
+
+        self.canvas.draw()
+        self.toolbar.update()
+
+    def export(self):
+        if self.export_lst is None:
+            self.station.show_msg("保存数据", f"没有数据需要保存")
+            return
+
+        path = asksaveasfilename(title='选择CSV文件保存位置', filetypes=[("CSV", ".csv")])
+        if not path.endswith(".csv"):
+            path += ".csv"
+        with open(path, "w") as f:
+            f.write("#, " + ", ".join([f'[{i * 10} {i * 10 + 100}]' for i in range(0, 100, 10)]) + "\n")
+            for i, lst in zip(range(0, 50, 5), self.export_lst):
+                f.write(f"[{i * 10} {i * 10 + 50}], " + ", ".join([f"{a}" for a in lst]) + "\n")
+        self.station.show_msg("保存数据", f"数据导出成功\n保存位置:\n  {path}")
+
+    def to_program(self):
+        self.refresh()
+
+    def refresh(self, _=None):
+        super().refresh(tk_event.CountScoreReputationLargeEvent)
+
+
+class StatisticsScoreDistributedProgram(StatisticsUserBaseProgram):
+    def __init__(self, station, win, color):
+        super(StatisticsScoreDistributedProgram, self).__init__(station, win, color, "积分分布")
+
+    def show_result(self, lst: np.array):
+        bins = [i for i in range(0, 501, 10)]
+        res = self.plt.hist(lst, bins)
+        self.export_lst = res[0]
+
+        self.plt.set_xlabel("用户积分")  # 设置x轴刻度标签
+        self.plt.set_ylabel("分布")  # 设置x轴刻度标签
+        self.plt.set_title("积分分布直方图")  # 设置标题以及其位置和字体大小
+        self.canvas.draw()
+        self.toolbar.update()
+
+    def export(self):
+        if self.export_lst is None:
+            self.station.show_msg("保存数据", f"没有数据需要保存")
+            return
+
+        path = asksaveasfilename(title='选择CSV文件保存位置', filetypes=[("CSV", ".csv")])
+        if not path.endswith(".csv"):
+            path += ".csv"
+        with open(path, "w") as f:
+            f.write("积分区间," + ", ".join([f'[{i * 10} {i * 10 + 100}]' for i in range(0, 501, 10)]) + "\n")
+            f.write("积分分布," + ", ".join([f'{i}' for i in self.export_lst]) + "\n")
+        self.station.show_msg("保存数据", f"数据导出成功\n保存位置:\n  {path}")
+
+    def to_program(self):
+        self.refresh()
+
+    def refresh(self, _=None):
+        self.plt.cla()
+        if self.color_bar is not None:
+            self.color_bar.remove()
+        event = tk_event.ScoreReputationDistributedEvent(self.station).start("Score", self)
+        self.station.push_event(event)
+
+
+class StatisticsReputationDistributedProgram(StatisticsUserBaseProgram):
+    def __init__(self, station, win, color):
+        super(StatisticsReputationDistributedProgram, self).__init__(station, win, color, "垃圾分类信用分布")
+
+    def show_result(self, lst: np.array):
+        bins = [i for i in range(0, 501, 10)]
+        res = self.plt.hist(lst, bins)
+        self.export_lst = res[0]
+
+        self.plt.set_xlabel("垃圾分类信用")  # 设置x轴刻度标签
+        self.plt.set_ylabel("分布")  # 设置x轴刻度标签
+        self.plt.set_title("垃圾分类信用分布直方图")  # 设置标题以及其位置和字体大小
+        self.canvas.draw()
+        self.toolbar.update()
+
+    def export(self):
+        if self.export_lst is None:
+            self.station.show_msg("保存数据", f"没有数据需要保存")
+            return
+
+        path = asksaveasfilename(title='选择CSV文件保存位置', filetypes=[("CSV", ".csv")])
+        if not path.endswith(".csv"):
+            path += ".csv"
+        with open(path, "w") as f:
+            f.write("信用区间," + ", ".join([f'[{i * 10} {i * 10 + 100}]' for i in range(0, 501, 10)]) + "\n")
+            f.write("信用分布," + ", ".join([f'{i}' for i in self.export_lst]) + "\n")
+        self.station.show_msg("保存数据", f"数据导出成功\n保存位置:\n  {path}")
+
+    def to_program(self):
+        self.refresh()
+
+    def refresh(self, _=None):
+        self.plt.cla()
+        if self.color_bar is not None:
+            self.color_bar.remove()
+        event = tk_event.ScoreReputationDistributedEvent(self.station).start("Reputation", self)
+        self.station.push_event(event)
+
+
 all_program = [WelcomeProgram, CreateNormalUserProgram, CreateManagerUserProgram, CreateAutoNormalUserProgram,
                CreateGarbageProgram, DeleteUserProgram, DeleteUsersProgram, DeleteGarbageProgram,
                DeleteGarbageMoreProgram, DeleteAllGarbageProgram, SearchUserProgram, SearchUserAdvancedProgram,
@@ -2123,4 +2370,5 @@ all_program = [WelcomeProgram, CreateNormalUserProgram, CreateManagerUserProgram
                ExportGarbageProgram, ExportUserProgram, CreateUserFromCSVProgram, AboutProgram,
                StatisticsTimeLocProgram, StatisticsTimeTypeProgram, StatisticsTimeTypeLocProgram,
                StatisticsTimeCheckResultProgram, StatisticsTimeCheckResultAndTypeProgram,
-               StatisticsTimeCheckResultAndLocProgram, StatisticsTimeDetailProgram]
+               StatisticsTimeCheckResultAndLocProgram, StatisticsTimeDetailProgram, StatisticsUserTinyProgram,
+               StatisticsUserLargeProgram, StatisticsScoreDistributedProgram, StatisticsReputationDistributedProgram]

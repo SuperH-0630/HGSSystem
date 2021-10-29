@@ -49,6 +49,9 @@ class AdminProgram(metaclass=abc.ABCMeta):
     def to_program(self):
         pass
 
+    def get_title(self) -> str:
+        return self.program_title
+
     def get_program_frame(self) -> Tuple[str, tk.Frame]:
         return self.program_title, self.frame
 

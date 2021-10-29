@@ -361,7 +361,7 @@ class AdminStation(AdminStationBase):
             frame_list.append(i(self, self._menu_back, Config.tk_second_win_bg))
 
         for i in frame_list:
-            name, _ = i.get_menu_frame()
+            name = i.get_menu_title()
             self._menu_dict[name] = i
 
     def __conf_menu(self, n: int = 1):
@@ -422,7 +422,7 @@ class AdminStation(AdminStationBase):
             program_list.append(i(self, self._program_back, Config.tk_second_win_bg))
 
         for i in program_list:
-            name, _ = i.get_program_frame()
+            name = i.get_title()
             self._program_dict[name] = i
 
     def __conf_program(self, n: int = 1):

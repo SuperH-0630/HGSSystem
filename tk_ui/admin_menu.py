@@ -41,6 +41,9 @@ class AdminMenu(metaclass=abc.ABCMeta):
             btn.place(relx=0.02, rely=height, relwidth=0.96, relheight=0.1)
             height += 0.1 + 0.02
 
+    def get_menu_title(self) -> str:
+        return self.menu_title
+
     def get_menu_frame(self) -> Tuple[str, tk.Frame]:
         return self.menu_title, self.frame
 

@@ -214,12 +214,16 @@ class StatisticsMenu(AdminMenu):
         super().conf_gui(color, n)
         self.btn[0]['command'] = self.statistics_time_command
         self.btn[1]['command'] = self.statistics_user_command
+        self.btn[2]['command'] = self.statistics_pass_command
 
     def statistics_time_command(self):
         self.station.to_menu("时段分析")
 
     def statistics_user_command(self):
         self.station.to_menu("积分信用分析")
+
+    def statistics_pass_command(self):
+        self.station.to_menu("通过率")
 
 
 class StatisticsTimeMenu(AdminMenu):
@@ -287,5 +291,31 @@ class StatisticsUserMenu(AdminMenu):
         self.station.to_program("垃圾分类信用分布")
 
 
+class StatisticsPassMenu(AdminMenu):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "通过率")
+        self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(4)]
+        self.btn_name = ["全局", "按类型", "按区域", "按类型和区域"]
+
+    def conf_gui(self, color: str, n: int = 1):
+        super().conf_gui(color, n)
+        self.btn[0]['command'] = self.by_global
+        self.btn[1]['command'] = self.by_type
+        self.btn[2]['command'] = self.by_loc
+        self.btn[3]['command'] = self.by_type_loc
+
+    def by_global(self):
+        self.station.to_program("通过率-全局")
+
+    def by_type(self):
+        self.station.to_program("通过率-按类型")
+
+    def by_loc(self):
+        self.station.to_program("通过率-按区域")
+
+    def by_type_loc(self):
+        self.station.to_program("通过率-按类型和区域")
+
+
 all_menu = [MainMenu, CreateMenu, DeleteMenu, SearchMenu, UpdateMenu, StatisticsMenu, StatisticsTimeMenu,
-            StatisticsUserMenu]
+            StatisticsUserMenu, StatisticsPassMenu]

@@ -3,6 +3,8 @@ import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter.filedialog import askdirectory, askopenfilename, asksaveasfilename
 import random
+
+import matplotlib.pyplot
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.axes import Axes
 import numpy as np
@@ -2362,6 +2364,225 @@ class StatisticsReputationDistributedProgram(StatisticsUserBaseProgram):
         self.station.push_event(event)
 
 
+class StatisticsPassRateGlobalProgram(StatisticsUserBaseProgram):
+    def __init__(self, station, win, color):
+        super(StatisticsPassRateGlobalProgram, self).__init__(station, win, color, "通过率-全局")
+
+    def show_result(self, lst: np.array):
+        passing = float(lst[0][0])
+        not_passing = 1 - passing
+        data = [passing, not_passing]
+        label = ["通过", "未通过"]
+
+        res = self.plt.pie(data, radius=1, pctdistance=0.7, textprops=dict(color='w'),  # 不显示文字
+                           shadow=True, startangle=45, autopct="%6.3f%%", wedgeprops=dict(width=0.6, edgecolor="w"))
+        self.plt.legend(res[0], label, loc="lower left")
+        self.plt.set_title("全局垃圾分类通过率")  # 设置标题以及其位置和字体大小
+        self.canvas.draw()
+        self.toolbar.update()
+
+    def export(self):
+        self.station.show_msg("保存数据", f"数据不支持导出")
+        return
+
+    def to_program(self):
+        self.refresh()
+
+    def refresh(self, _=None):
+        self.plt.cla()
+        event = tk_event.PassingRateEvent(self.station).start([], [], [], [], self)
+        self.station.push_event(event)
+
+
+class StatisticsPassRateTypeProgram(StatisticsUserBaseProgram):
+    def __init__(self, station, win, color):
+        super(StatisticsPassRateTypeProgram, self).__init__(station, win, color, "通过率-按类型")
+
+    def show_result(self, lst: List[Tuple[bytes, any]]):
+        data_1, data_2, data_3, data_4 = [1.0, 0.0], [1.0, 0.0], [1.0, 0.0], [1.0, 0.0]
+
+        for i in lst:
+            tmp: bytes = i[0]
+            type_ = tmp.decode('utf-8')
+            if type_ == '1':
+                data_1 = [float(i[1]), 1 - float(i[1])]
+            elif type_ == '2':
+                data_2 = [float(i[1]), 1 - float(i[1])]
+            elif type_ == '3':
+                data_3 = [float(i[1]), 1 - float(i[1])]
+            elif type_ == '4':
+                data_4 = [float(i[1]), 1 - float(i[1])]
+
+        legend_text = []
+        for data, r, s in zip([data_1, data_2, data_3, data_4], [0.3, 0.6, 0.9, 1.2], [0, 15, 30, 45]):
+            res = self.plt.pie(data, radius=r, pctdistance=0.7,  # 不显示文字
+                               shadow=True, startangle=s, autopct="%6.3f%%", wedgeprops=dict(width=0.3, edgecolor="w"))
+            legend_text += res[0]
+
+        label = []
+        for i in GarbageType.GarbageTypeStrList_ch[1:]:
+            label.append(f"{i}-通过")
+            label.append(f"{i}-不通过")
+
+        self.plt.legend(legend_text, label)
+        self.plt.set_title("全局垃圾分类通过率")  # 设置标题以及其位置和字体大小
+        self.canvas.draw()
+        self.toolbar.update()
+
+    def export(self):
+        self.station.show_msg("保存数据", f"数据不支持导出")
+        return
+
+    def to_program(self):
+        self.refresh()
+
+    def refresh(self, _=None):
+        self.plt.cla()
+        event = tk_event.PassingRateEvent(self.station).start(["GarbageType"],
+                                                              [],
+                                                              ["g.GarbageType=garbage.GarbageType"],
+                                                              ["GarbageType"], self)
+        self.station.push_event(event)
+
+
+class StatisticsPassRateLocProgram(StatisticsUserBaseProgram):
+    def __init__(self, station, win, color):
+        super(StatisticsPassRateLocProgram, self).__init__(station, win, color, "通过率-按区域")
+        self.loc_frame = tk.Frame(self.frame)
+        self.loc_title = tk.Label(self.loc_frame)
+        self.loc_enter = tk.Entry(self.loc_frame), tk.StringVar()
+
+    def conf_gui(self, n: int = 1):
+        super(StatisticsPassRateLocProgram, self).conf_gui(n)
+        title_font = make_font(size=16)
+
+        self.loc_frame['bg'] = self.bg_color
+        self.loc_frame['bd'] = 5
+        self.loc_frame['relief'] = "ridge"
+        self.loc_frame.place(relx=0.0, rely=0.92, relwidth=0.33, relheight=0.07)
+
+        self.loc_title['font'] = title_font
+        self.loc_title['text'] = "区域:"
+        self.loc_title['bg'] = self.bg_color
+        self.loc_title['anchor'] = 'e'
+
+        self.loc_enter[0]['font'] = title_font
+        self.loc_enter[0]['textvariable'] = self.loc_enter[1]
+
+        self.loc_title.place(relx=0.0, rely=0.02, relwidth=0.3, relheight=0.96)
+        self.loc_enter[0].place(relx=0.3, rely=0.02, relwidth=0.7, relheight=0.96)
+
+    def show_result(self, lst: np.array):
+        passing = float(lst[0][0])
+
+        label = ["通过", "未通过"]
+        not_passing = 1 - passing
+        data = [passing, not_passing]
+
+        res = self.plt.pie(data, radius=1, pctdistance=0.7, textprops=dict(color='w'),  # 不显示文字
+                           shadow=True, startangle=45, autopct="%6.3f%%", wedgeprops=dict(width=0.6, edgecolor="w"))
+        self.plt.legend(res[0], label, loc="lower left")
+        self.canvas.draw()
+        self.toolbar.update()
+
+    def to_program(self):
+        self.refresh()
+
+    def refresh(self, _=None):
+        where = self.loc_enter[1].get()
+        if len(where) == 0:
+            where = "全局"
+            where_ = []
+        else:
+            where_ = [f"Location='{where}'"]
+
+        self.plt.cla()
+        self.plt.set_title(f"{where}垃圾分类通过率")  # 设置标题以及其位置和字体大小
+        event = tk_event.PassingRateEvent(self.station).start([], where_, where_, [], self)
+        self.station.push_event(event)
+
+
+class StatisticsPassRateTypeAndLocProgram(StatisticsUserBaseProgram):
+    def __init__(self, station, win, color):
+        super(StatisticsPassRateTypeAndLocProgram, self).__init__(station, win, color, "通过率-按类型和区域")
+        self.loc_frame = tk.Frame(self.frame)
+        self.loc_title = tk.Label(self.loc_frame)
+        self.loc_enter = tk.Entry(self.loc_frame), tk.StringVar()
+
+    def conf_gui(self, n: int = 1):
+        super(StatisticsPassRateTypeAndLocProgram, self).conf_gui(n)
+        title_font = make_font(size=16)
+
+        self.loc_frame['bg'] = self.bg_color
+        self.loc_frame['relief'] = "ridge"
+        self.loc_frame['bd'] = 5
+        self.loc_frame.place(relx=0.0, rely=0.92, relwidth=0.33, relheight=0.07)
+
+        self.loc_title['font'] = title_font
+        self.loc_title['bg'] = self.bg_color
+        self.loc_title['text'] = "区域:"
+        self.loc_title['anchor'] = 'e'
+
+        self.loc_enter[0]['font'] = title_font
+        self.loc_enter[0]['textvariable'] = self.loc_enter[1]
+
+        self.loc_title.place(relx=0.0, rely=0.02, relwidth=0.3, relheight=0.96)
+        self.loc_enter[0].place(relx=0.3, rely=0.02, relwidth=0.7, relheight=0.96)
+
+    def show_result(self, lst: List[Tuple[bytes, any]]):
+        data_1, data_2, data_3, data_4 = [1.0, 0.0], [1.0, 0.0], [1.0, 0.0], [1.0, 0.0]
+
+        for i in lst:
+            tmp: bytes = i[0]
+            type_ = tmp.decode('utf-8')
+            if type_ == '4':
+                data_4 = [float(i[1]), 1 - float(i[1])]
+            elif type_ == '3':
+                data_3 = [float(i[1]), 1 - float(i[1])]
+            elif type_ == '2':
+                data_2 = [float(i[1]), 1 - float(i[1])]
+            elif type_ == '1':
+                data_1 = [float(i[1]), 1 - float(i[1])]
+
+        legend_text = []
+        for data, r, s in zip([data_1, data_2, data_3, data_4], [0.3, 0.6, 0.9, 1.2], [5, 20, 35, 50]):
+            res = self.plt.pie(data, radius=r, pctdistance=0.7,  # 不显示文字
+                               shadow=True, startangle=s, autopct="%6.3f%%", wedgeprops=dict(width=0.3, edgecolor="w"))
+            legend_text += res[0]
+
+        label = []
+        for i in GarbageType.GarbageTypeStrList_ch[1:]:
+            label.append(f"{i}-通过")
+            label.append(f"{i}-不通过")
+
+        self.plt.legend(legend_text, label)
+        self.canvas.draw()
+        self.toolbar.update()
+
+    def export(self):
+        self.station.show_msg("保存数据", f"数据不支持导出")
+        return
+
+    def to_program(self):
+        self.refresh()
+
+    def refresh(self, _=None):
+        where = self.loc_enter[1].get()
+        if len(where) == 0:
+            where = "全局"
+            where_ = []
+        else:
+            where_ = [f"Location='{where}'"]
+
+        self.plt.cla()
+        self.plt.set_title(f"{where}垃圾分类通过率")  # 设置标题以及其位置和字体大小
+        event = tk_event.PassingRateEvent(self.station).start(["GarbageType"],
+                                                              where_,
+                                                              where_ + ["g.GarbageType=garbage.GarbageType"],
+                                                              ["GarbageType"], self)
+        self.station.push_event(event)
+
+
 all_program = [WelcomeProgram, CreateNormalUserProgram, CreateManagerUserProgram, CreateAutoNormalUserProgram,
                CreateGarbageProgram, DeleteUserProgram, DeleteUsersProgram, DeleteGarbageProgram,
                DeleteGarbageMoreProgram, DeleteAllGarbageProgram, SearchUserProgram, SearchUserAdvancedProgram,
@@ -2371,4 +2592,6 @@ all_program = [WelcomeProgram, CreateNormalUserProgram, CreateManagerUserProgram
                StatisticsTimeLocProgram, StatisticsTimeTypeProgram, StatisticsTimeTypeLocProgram,
                StatisticsTimeCheckResultProgram, StatisticsTimeCheckResultAndTypeProgram,
                StatisticsTimeCheckResultAndLocProgram, StatisticsTimeDetailProgram, StatisticsUserTinyProgram,
-               StatisticsUserLargeProgram, StatisticsScoreDistributedProgram, StatisticsReputationDistributedProgram]
+               StatisticsUserLargeProgram, StatisticsScoreDistributedProgram, StatisticsReputationDistributedProgram,
+               StatisticsPassRateGlobalProgram, StatisticsPassRateTypeProgram, StatisticsPassRateLocProgram,
+               StatisticsPassRateTypeAndLocProgram]

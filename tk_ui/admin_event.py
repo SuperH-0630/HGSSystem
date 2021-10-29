@@ -737,3 +737,40 @@ class ScoreReputationDistributedEvent(AdminEventBase):
         else:
             lst = [int(i[0]) for i in res]
             self._program.show_result(lst)
+
+
+class PassingRateEvent(AdminEventBase):
+    def func(self, columns, where, where_select, order_by):
+        where_str = " AND ".join(["g.CheckResult is not null", *where_select])
+        columns += [f"get_avg(count(GarbageID), "
+                    f"(SELECT count(g.GarbageID) "
+                    f"FROM garbage AS g WHERE {where_str})) AS count"]
+        where += ["CheckResult is not null", "CheckResult=1"]
+        cur = self._db.search(columns=columns,
+                              table="garbage",
+                              where=where,
+                              order_by=[(i, "DESC") for i in order_by] + [("count", "DESC")],
+                              group_by=order_by if len(order_by) != 0 else None)
+        if cur is None:
+            return None
+        return cur.fetchall()
+
+    def __init__(self, gb_station):
+        super().__init__(gb_station)
+        self.thread = None
+        self._program: Optional[admin_program.StatisticsScoreDistributedProgram] = None
+
+    def start(self, columns, where, where_select, order_by, program):
+        self.thread = TkThreading(self.func, columns, where, where_select, order_by)
+        self._program = program
+        return self
+
+    def is_end(self) -> bool:
+        return not self.thread.is_alive()
+
+    def done_after_event(self):
+        res: Optional[List] = self.thread.wait_event()
+        if res is None:
+            self.station.show_warning("数据分析", "数据获取时发生错误")
+        else:
+            self._program.show_result(res)

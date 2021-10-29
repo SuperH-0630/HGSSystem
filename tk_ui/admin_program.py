@@ -2249,7 +2249,6 @@ class StatisticsUserLargeProgram(StatisticsUserBaseProgram):
 
     def show_result(self, lst: np.array):
         self.export_lst = lst
-        print("HHHH")
         x_label = [f'{i * 10}' for i in range(0, 51, 10)]
         y_label = [f'{i * 10}' for i in range(0, 101, 20)]
 
@@ -2333,7 +2332,7 @@ class StatisticsReputationDistributedProgram(StatisticsUserBaseProgram):
         super(StatisticsReputationDistributedProgram, self).__init__(station, win, color, "垃圾分类信用分布")
 
     def show_result(self, lst: np.array):
-        bins = [i for i in range(0, 501, 10)]
+        bins = [i for i in range(0, 1001, 20)]
         res = self.plt.hist(lst, bins)
         self.export_lst = res[0]
 

@@ -51,13 +51,7 @@ def search_from_user_view(columns, where: str, db: DB):
                     where=where)
     if cur is None:
         return None
-    result = cur.fetchall()
-    re = []
-    for res in result:
-        n = [res[a] for a in range(5)]
-        n.append("True" if res[5] == DBBit.BIT_1 else "False")
-        re.append(n)
-    return re
+    return cur.fetchall()
 
 
 def find_user_by_id(uid: uid_t, db: DB) -> Optional[User]:

@@ -2,11 +2,12 @@ import time
 import numpy as np
 
 from tool.type_ import *
+from sql import DBBit
 from sql.db import DB
 from sql.user import find_user_by_name
 
 from core.user import User
-from core.garbage import GarbageBag
+from core.garbage import GarbageBag, GarbageType
 
 from .event import TkEventBase, TkThreading
 from . import admin
@@ -366,6 +367,13 @@ class DelAllGarbageEvent(AdminEventBase):
             self.station.show_warning("删除失败", f"删除所有垃圾袋失败")
 
 
+def set_user_search_result(i):
+    i = list(i)
+    if i[-1] is not None:
+        i[-1] = "是" if i[-1] == DBBit.BIT_1 else "否"
+    return i
+
+
 class SearchUserEvent(AdminEventBase):
     def func(self, columns, uid, name, phone):
         return self.station.search_user(columns, uid, name, phone)
@@ -387,6 +395,7 @@ class SearchUserEvent(AdminEventBase):
         for i in self.program.view.get_children():
             self.program.view.delete(i)
         for i in res:
+            i = set_user_search_result(i)
             self.program.view.insert('', 'end', values=i)
 
 
@@ -404,14 +413,25 @@ class SearchUserAdvancedEvent(AdminEventBase):
         return self
 
     def done_after_event(self):
-        res: list[list] = self.thread.wait_event()
+        res: Optional[List[List[any]]] = self.thread.wait_event()
         if res is None or self.program is None:
             self.station.show_warning("高级搜索失败", f"高级搜索用户失败")
             return
         for i in self.program.view.get_children():
             self.program.view.delete(i)
         for i in res:
+            i = set_user_search_result(i)
             self.program.view.insert('', 'end', values=i)
+
+
+def set_garbage_search_result(i):
+    i = list(i)
+    if i[-1] is not None:
+        i[-1] = "投放正确" if i[-1] == DBBit.BIT_1 else "投放错误"
+    if i[-2] is not None:
+        tmp: bytes = i[-2]
+        i[-2] = GarbageType.GarbageTypeStrList_ch[int(tmp.decode('utf-8'))]
+    return i
 
 
 class SearchGarbageEvent(AdminEventBase):
@@ -435,6 +455,7 @@ class SearchGarbageEvent(AdminEventBase):
         for i in self.program.view.get_children():
             self.program.view.delete(i)
         for i in res:
+            i = set_garbage_search_result(i)
             self.program.view.insert('', 'end', values=i)
 
 
@@ -459,6 +480,7 @@ class SearchGarbageAdvancedEvent(AdminEventBase):
         for i in self.program.view.get_children():
             self.program.view.delete(i)
         for i in res:
+            i = set_garbage_search_result(i)
             self.program.view.insert('', 'end', values=i)
 
 
@@ -483,6 +505,7 @@ class SearchAdvancedEvent(AdminEventBase):
         for i in self.program.view.get_children():
             self.program.view.delete(i)
         for i in res:
+            i = set_garbage_search_result(i)
             self.program.view.insert('', 'end', values=i)
 
 

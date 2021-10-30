@@ -21,13 +21,13 @@ class RankWebsite:
         res = []
         for index in range(cur.rowcount):
             i = cur.fetchone()
-            res.append((f"NO.{index + 1}", i[1], i[0][:Config.tk_show_uid_len], str(i[3]), str(i[2])))
+            res.append((f"{index + 1}", i[1], i[0][:Config.tk_show_uid_len], str(i[3]), str(i[2])))
         return res
 
     def run(self,
             host: Optional[str] = None,
             port: Optional[int] = None,
-            debug: Optional[bool] = None,
+            debug: Optional[bool] = True,
             load_dotenv: bool = True,
             **options,
             ):

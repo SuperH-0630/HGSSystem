@@ -1,26 +1,16 @@
-{% macro get_rank_head(heads) %}
-    <thead class="rank_table">
-    <tr class="rank_table">
-        {% for head in heads %}
-            <th class="rank_table" scope="col">{{ head|safe }}</th>
-        {% endfor %}
-    </tr>
-    </thead>
-{% endmacro %}
-
 {% macro _get_rank(infos) %}
-    <tr class="rank_table">
-        <th class="rank_table" scope="row"> {{ infos[0]|safe }} </th>
-        {% for info in infos[1:] %}
-            <td class="rank_table"> {{ info|safe }} </td>
-        {% endfor %}
-    </tr>
+    <li id="ranking-item-{{ infos[0] }}" class="ranking-item">
+        <p class="ranking-no"> {{ infos[0] }} </p>
+        <p class="ranking-name"> &nbsp;&nbsp;&nbsp;&nbsp;{{ infos[1] }} </p>
+        <br>
+        <p class="ranking-uid"> {{ infos[1] }} </p>
+        <p class="ranking-reputation"> &nbsp;&nbsp;&nbsp;&nbsp;Reputation: {{ infos[3] }} </p>
+        <p class="ranking-score"> &nbsp;&nbsp;&nbsp;&nbsp;Score: {{ infos[4] }} </p>
+    </li>
 {% endmacro %}
 
 {% macro get_rank(info_lines) %}
-    <tbody class="rank_table">
     {% for line in info_lines %}
         {{ _get_rank(line) }}
     {% endfor %}
-    </tbody>
 {% endmacro %}

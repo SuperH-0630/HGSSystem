@@ -1,13 +1,102 @@
 html {
     font-size: 15px;
-    font-family: 'Open Sans', sans-serif;
-    background-color: #F0FFF0;
+    font-family: 'Noto Sans SC', sans-serif;
 }
 
-h1, h2 {
+ul.top-nav {
+    background-color: #F08080;
     text-align: center;
 }
 
-div.welcome {
+li.top-nav-item {
+    display: inline-block;
+    padding: 20px 20px;
+}
+
+a.top-nav-item {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+a.top-nav-item, a.top-nav-item:hover, a.top-nav-item:active, a.top-nav-item:link, a.top-nav-item:visited {
+    text-decoration: none;
+    color: #FFFFFF;
+}
+
+a.top-nav-item:hover, a.top-nav-item:active {
+    text-decoration: none;
+    color: #800080;
+}
+
+@keyframes logo-run {
+    0% {
+        left: 0;
+    }
+    50% {
+        left: 100%;
+        transform: translateX(-100%);
+    }
+    100% {
+        left: 0;
+    }
+}
+
+section.logo {
+    position: relative;
+    height: 200px;
+}
+
+img.logo {
+    position: absolute;
+    left: 0;
+    max-height: 200px;
+    max-width: 200px;
+    animation: logo-run 15s infinite;
+}
+
+#bottom-nav {
+    position: fixed;
+    top: 95%;
+    background-color: black;
     text-align: center;
+    vertical-align: center;
+    height: 5%;
+    width: 100%;
+}
+
+.bottom-nav-item {
+    display: block;
+    font-size: 15px;
+    color: #FFFFFF;
+}
+
+a#github-link, a#github-link:hover, a#github-link:active, a#github-link:link, a#github-link:visited {
+    text-decoration: none;
+    color: #FFFFFF;
+}
+
+a#github-link:hover, a#github-link:active {
+    text-decoration: none;
+    color: #800080;
+}
+
+#last-p {
+    margin-top: 5%;
+}
+
+@media all and (max-width: 992px) {
+    /* 小屏幕(手机) */
+    #main {
+        position: relative;
+        left: 3%;
+        width: 94%;
+    }
+}
+
+@media not all and (max-width: 992px) {
+    #main {
+        position: relative;
+        left: 30%;
+        width: 40%;
+    }
 }

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %} 首页 {% endblock %}
+{% block h1_title %} 欢迎 {% endblock %}
+
+{% block style %}
+    {{ super() }}
+    <link href="{{ url_for('static', filename='styles/start.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+
+    <h2 class="hello"> 本站介绍 </h2>
+    <p class="hello"> 欢迎访问 {{ loc }} 垃圾站的在线网站，这里将展示 {{ loc }} 垃圾站的信息。 </p>
+    <p class="hello"> 高分榜和警示榜将展示在本垃圾站投放垃圾的用户的信用和积分排行。 </p>
+    <p class="hello"> 祝您浏览愉快。 </p>
+
+    <h2 class="hello"> 高分榜 </h2>
+    <p class="hello">
+        高分榜将用户正序排行，显示高分用户。
+    </p>
+
+    <h2 class="hello"> 警示榜 </h2>
+    <p class="hello">
+        警示榜将用户倒序排行，显示低分用户。
+    </p>
+
+    <h2 class="hello"> Q&A </h2>
+    <h3 class="hello"> 什么是HGSSystem垃圾站系统？</h3>
+    <p class="hello">
+        HGSSystem是开源的垃圾站用户积分和信用评估系统。
+        他会记录使用者每次垃圾投放的情况（是否正确投放）然后评估用户的垃圾分类信用，同时给予用户一定的积分供其在积分商城消费。
+        HGSSystem的信用评估是基于贝叶斯公式计算的。
+    </p>
+
+    <h3 class="hello"> HGSSystem的全称是什么？</h3>
+    <p class="hello"> HGSSystem的全称是 HGSSystem is Garbage Sorting System。这是一个递归的名称。</p>
+
+    <h3 class="hello"> 标题Logo为什么是反的？</h3>
+    <p class="hello"> 确实是我有意为之。 </p>
+{% endblock %}

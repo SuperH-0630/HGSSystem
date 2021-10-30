@@ -1,13 +1,22 @@
 {% extends "base.html" %}
 
-{% block title %} 排行榜 {% endblock %}
+{% block title %} Hello-HGSSystem {% endblock %}
 
-{% block content %}
+{% block style %}
     {{ super() }}
+    <link href="{{ url_for('static', filename='styles/index.css') }}" rel="stylesheet">
+{% endblock %}
 
-    <div class="welcome">
-        <h2>欢迎</h2>
-        <p>欢迎查阅 {{ loc }} 地区的垃圾分类榜单</p>
-        <p>目前支持的榜单包括：高分榜和警示榜</p>
-    </div>
+{% block nav %} {% endblock %}
+{% block bnav %} {% endblock %}
+{% block h1_title_ %} {% endblock %}
+
+{% block content_ %}
+    <section id="base">
+        <h1 id="title-1"> 欢迎，HGSSystem在线系统 </h1>
+        <h2 id="title-2"> {{ loc }} 站 </h2>
+        <form method="get" action="{{ url_for('main.start') }}">
+            <input id="btn" type="submit" value="开始">
+        </form>
+    </section>
 {% endblock %}

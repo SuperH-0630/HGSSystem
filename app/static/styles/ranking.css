@@ -1,28 +1,31 @@
-.rank_table {
-    background-color: #E9967A;
-    font-size: 17px;
+section#ranking-section {
+    position: relative;
+    left: 30%;
+    width: 40%;
 }
 
-table.rank_table {
-    border-width: 5px;
-    border-color: #F4A460;
+li#ranking-item-1 {
+    background-color: #eaff56;
+}
+
+li#ranking-item-2 {
+    background-color: #ffa631;
+}
+
+li#ranking-item-3 {
+    background-color: #ff7500;
+}
+
+li.ranking-item {
+    border-width: 2px;
     border-style: ridge;
-
-    padding: 5px 5px;
-    margin: 5px 5% 5px;
-    width: 90%;
+    border-color: #F08080;
+    margin: 3% auto;
+    text-align: center;
 }
 
-tr.rank_table {
-    text-align: left;
-
-}
-
-td.rank_table {
-    text-align: left;
-}
-
-caption.rank_table {
-    font-size: 30px;
-    background-color: #F0FFF0;
+p.ranking-no, p.ranking-name, p.ranking-uid, p.ranking-score, p.ranking-reputation {
+    display: inline-block;
+    font-size: 17px;
+    font-weight: bold;
 }

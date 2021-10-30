@@ -1,39 +1,74 @@
-{% import "macro.html" as macro %}
+{% import "macro.html" as macro %}  <!-- 导入宏 -->
 
 <!DOCTYPE html>
 <html lang="ch">
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
+
+    <!-- 针对移动端的优化 width为设备大小, user-scalable不允许用户缩放 initial-scale首次加载缩放大小为1.0 -->
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+
+    <!--  针对ie的设置  -->
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
     {% block font %}
+        <!-- Google Font 字体设置 -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,500;1,300&display=swap"
-              rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@100;300&display=swap" rel="stylesheet">
     {% endblock %}
+
 
     {% block style %}
+        <link href="{{ url_for('static', filename='styles/reset.css') }}" rel="stylesheet">
         <link href="{{ url_for('static', filename='styles/base.css') }}" rel="stylesheet">
-        <link href="{{ url_for('static', filename='styles/nav.css') }}" rel="stylesheet">
+        <link href="{{ url_for('static', filename='styles/ranking.css') }}" rel="stylesheet">
     {% endblock %}
 
-    <title> HG: {% block  title %} HGSSystem {% endblock %} </title>
+    {% block head %} {% endblock %}
+
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    <title> {% block  title %} HGSSystem {% endblock %} </title>
 </head>
 
 <body>
 
-{% block navbar %}
-    <nav id="nav">
-        <ul>
-            <li><h1 class="nav-h1"> HGSSystem-在线榜单 </h1></li>
-            <li><a class="nav-item" href="{{ url_for('main.index') }}">首页</a></li>
-            <li><a class="nav-item" href="{{ url_for('main.rank_up') }}">高分榜</a></li>
-            <li><a class="nav-item" href="{{ url_for('main.rank_down') }}">警示榜</a></li>
+{% block nav %}
+    <nav id="top-nav">
+        <section class="logo">
+            <img class="logo" src=" {{ url_for('static', filename='images/HGSSystem.png') }} " alt="HGSSystem Logo">
+        </section>
+        <ul class="top-nav">
+            <li class="top-nav-item"><a class="top-nav-item" href="{{ url_for('main.start') }}"> 首页 </a></li>
+            <li class="top-nav-item"><a class="top-nav-item" href="{{ url_for('main.rank_up') }}"> 高分榜 </a></li>
+            <li class="top-nav-item"><a class="top-nav-item" href="{{ url_for('main.rank_down') }}"> 警告榜 </a></li>
+            <li class="top-nav-item"><a class="top-nav-item"> 积分商城 </a></li>
         </ul>
     </nav>
 {% endblock %}
 
-{% block content %}{% endblock %}
+<article>
+    {% block h1_title_ %}
+        <section style="text-align: center">
+            <h1 style=";font-size: 35px;font-weight: bold;margin: 3% auto 4%;"> {% block h1_title %} {% endblock %}</h1>
+        </section>
+    {% endblock %}
+    {% block content_ %}
+        <section id="main">
+            {% block content %}{% endblock %}
+        </section>
+    {% endblock %}
+</article>
+
+{% block bnav %}
+    <nav id="bottom-nav">
+        <p class="bottom-nav-item"> 版权归属 (c) SuperHuan<br>在
+            <a id="github-link" href="https://github.com/SuperH-0630/HGSSystem">Github</a>上查看</p>
+    </nav>
+{% endblock %}
+
+<p id="last-p"></p>  <!-- 占位作用 -->
 
 </body>
 </html>

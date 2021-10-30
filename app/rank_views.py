@@ -14,20 +14,23 @@ def index():
     return render_template("index.html", loc=Config.base_location)
 
 
+@main.route('/start')
+def start():
+    return render_template("start.html", loc=Config.base_location)
+
+
 @main.route('/rank_up')
 def rank_up():
     global rank_website
-    head = ["#", "UserName", "UserID", "Reputation", "Score"]
     data = rank_website.get_rank("DESC")
-    return render_template("ranking.html", rank_head=head, rank_info=data, ranking_name="高分榜")
+    return render_template("ranking.html", rank_info=data, ranking_name="高分榜")
 
 
 @main.route('/rank_down')
 def rank_down():
     global rank_website
-    head = ["#", "UserName", "UserID", "Reputation", "Score"]
     data = rank_website.get_rank("ASC")
-    return render_template("ranking.html", rank_head=head, rank_info=data, ranking_name="警示榜")
+    return render_template("ranking.html", rank_info=data, ranking_name="警示榜")
 
 
 @main.app_errorhandler(404)

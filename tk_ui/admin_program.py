@@ -2110,6 +2110,8 @@ class StatisticsTimeCheckResultProgram(StatisticsTimeProgramBase):
 
     @staticmethod
     def get_name(i: Tuple):
+        if i[2] is None:
+            return 'None'
         data: bytes = i[2]
         return 'Pass' if data == DBBit.BIT_1 else 'Fail'
 
@@ -2131,8 +2133,13 @@ class StatisticsTimeCheckResultAndTypeProgram(StatisticsTimeProgramBase):
     def get_name(i: Tuple):
         data_1: bytes = i[2]
         data_2: bytes = i[3]
-        return ((f'Pass' if data_1 == DBBit.BIT_1 else 'Fail') +
-                f'-{GarbageType.GarbageTypeStrList_ch[int(data_2.decode("utf-8"))]}')
+        if data_1 is None:
+            tmp = 'None'
+        elif data_1 == DBBit.BIT_1:
+            tmp = 'Pass'
+        else:
+            tmp = 'Fail'
+        return tmp + f'-{GarbageType.GarbageTypeStrList_ch[int(data_2.decode("utf-8"))]}'
 
 
 class StatisticsTimeCheckResultAndLocProgram(StatisticsTimeProgramBase):
@@ -2150,6 +2157,8 @@ class StatisticsTimeCheckResultAndLocProgram(StatisticsTimeProgramBase):
 
     @staticmethod
     def get_name(i: Tuple):
+        if i[2] is None:
+            return 'None'
         data_1: bytes = i[2]
         return (f'Pass' if data_1 == DBBit.BIT_1 else 'Fail') + f"-{i[3]}"
 
@@ -2172,8 +2181,13 @@ class StatisticsTimeDetailProgram(StatisticsTimeProgramBase):
     def get_name(i: Tuple):
         data_1: bytes = i[2]
         data_2: bytes = i[3]
-        return ((f'Pass' if data_1 == DBBit.BIT_1 else 'Fail') +
-                f'-{GarbageType.GarbageTypeStrList_ch[int(data_2.decode("utf-8"))]}' + f'-{i[4]}')
+        if data_1 is None:
+            tmp = 'None'
+        elif data_1 == DBBit.BIT_1:
+            tmp = 'Pass'
+        else:
+            tmp = 'Fail'
+        return tmp + f'-{GarbageType.GarbageTypeStrList_ch[int(data_2.decode("utf-8"))]}' + f'-{i[4]}'
 
 
 class StatisticsUserBaseProgram(AdminProgram):
@@ -2743,8 +2757,8 @@ class StatisticsDateProgramBase(StatisticsTimeProgramBase):
 
 
 class StatisticsDateTypeProgram(StatisticsDateProgramBase):
-    def __init__(self, station, win, color):
-        super().__init__(station, win, color, "最近7日-按投放类型")
+    def __init__(self, station, win, color, title):
+        super().__init__(station, win, color, title)
         self._conf("#abc88b", 7, 1)
         self.color_show_dict[GarbageType.GarbageTypeStrList_ch[1]] = "#00BFFF"
         self.color_show_dict[GarbageType.GarbageTypeStrList_ch[2]] = "#32CD32"
@@ -2766,8 +2780,8 @@ class StatisticsDateTypeProgram(StatisticsDateProgramBase):
 
 
 class StatisticsDateLocProgram(StatisticsDateProgramBase):
-    def __init__(self, station, win, color):
-        super().__init__(station, win, color, "最近7日-按投放区域")
+    def __init__(self, station, win, color, title):
+        super().__init__(station, win, color, title)
         self._conf("#abc88b", 7, 1)
 
     def refresh(self):
@@ -2780,8 +2794,8 @@ class StatisticsDateLocProgram(StatisticsDateProgramBase):
 
 
 class StatisticsDateTypeLocProgram(StatisticsDateProgramBase):
-    def __init__(self, station, win, color):
-        super().__init__(station, win, color, "最近7日-按投放类型和区域")
+    def __init__(self, station, win, color, title):
+        super().__init__(station, win, color, title)
         self._conf("#abc88b", 7, 1)
 
     def refresh(self):
@@ -2799,8 +2813,8 @@ class StatisticsDateTypeLocProgram(StatisticsDateProgramBase):
 
 
 class StatisticsDateCheckResultProgram(StatisticsDateProgramBase):
-    def __init__(self, station, win, color):
-        super().__init__(station, win, color, "最近7日-按检查结果")
+    def __init__(self, station, win, color, title):
+        super().__init__(station, win, color, title)
         self._conf("#abc88b", 7, 1)
         self.color_show_dict['Pass'] = "#00BFFF"
         self.color_show_dict['Fail'] = "#DC143C"
@@ -2815,13 +2829,15 @@ class StatisticsDateCheckResultProgram(StatisticsDateProgramBase):
 
     @staticmethod
     def get_name(i: Tuple):
+        if i[2] is None:
+            return 'None'
         data: int = i[2]  # 返回garbage表时, BIT类型都是按bytes回传的, 但garbage_7和garbage_30会以int的方式回传
         return 'Pass' if data == 1 else 'Fail'
 
 
 class StatisticsDateCheckResultAndTypeProgram(StatisticsDateProgramBase):
-    def __init__(self, station, win, color):
-        super().__init__(station, win, color, "最近7日-按检查结果和类型")
+    def __init__(self, station, win, color, title):
+        super().__init__(station, win, color, title)
         self._conf("#abc88b", 7, 1)
 
     def refresh(self):
@@ -2836,13 +2852,18 @@ class StatisticsDateCheckResultAndTypeProgram(StatisticsDateProgramBase):
     def get_name(i: Tuple):
         data_1: int = i[2]
         data_2: bytes = i[3]
-        return ((f'Pass' if data_1 == 1 else 'Fail') +
-                f'-{GarbageType.GarbageTypeStrList_ch[int(data_2.decode("utf-8"))]}')
+        if data_1 is None:
+            tmp = 'None'
+        elif data_1 == DBBit.BIT_1:
+            tmp = 'Pass'
+        else:
+            tmp = 'Fail'
+        return tmp + f'-{GarbageType.GarbageTypeStrList_ch[int(data_2.decode("utf-8"))]}'
 
 
 class StatisticsDateCheckResultAndLocProgram(StatisticsDateProgramBase):
-    def __init__(self, station, win, color):
-        super().__init__(station, win, color, "最近7日-按检查结果和区域")
+    def __init__(self, station, win, color, title):
+        super().__init__(station, win, color, title)
         self._conf("#abc88b", 7, 1)
 
     def refresh(self):
@@ -2856,12 +2877,18 @@ class StatisticsDateCheckResultAndLocProgram(StatisticsDateProgramBase):
     @staticmethod
     def get_name(i: Tuple):
         data_1: int = i[2]
-        return (f'Pass' if data_1 == 1 else 'Fail') + f"-{i[3]}"
+        if data_1 is None:
+            tmp = 'None'
+        elif data_1 == DBBit.BIT_1:
+            tmp = 'Pass'
+        else:
+            tmp = 'Fail'
+        return tmp + f"-{i[3]}"
 
 
 class StatisticsDateDetailProgram(StatisticsDateProgramBase):
-    def __init__(self, station, win, color):
-        super().__init__(station, win, color, "最近7日-详细分类")
+    def __init__(self, station, win, color, title):
+        super().__init__(station, win, color, title)
         self._conf("#abc88b", 7, 1)
 
     def refresh(self):
@@ -2877,8 +2904,109 @@ class StatisticsDateDetailProgram(StatisticsDateProgramBase):
     def get_name(i: Tuple):
         data_1: int = i[2]
         data_2: bytes = i[3]
-        return ((f'Pass' if data_1 == 1 else 'Fail') +
-                f'-{GarbageType.GarbageTypeStrList_ch[int(data_2.decode("utf-8"))]}' + f'-{i[4]}')
+        if data_1 is None:
+            tmp = 'None'
+        elif data_1 == DBBit.BIT_1:
+            tmp = 'Pass'
+        else:
+            tmp = 'Fail'
+        return tmp + f'-{GarbageType.GarbageTypeStrList_ch[int(data_2.decode("utf-8"))]}' + f'-{i[4]}'
+
+
+class StatisticsDate7TypeProgram(StatisticsDateTypeProgram):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "最近7日-按投放类型")
+        self._conf("#abc88b", 7, 1)
+        self.color_show_dict[GarbageType.GarbageTypeStrList_ch[1]] = "#00BFFF"
+        self.color_show_dict[GarbageType.GarbageTypeStrList_ch[2]] = "#32CD32"
+        self.color_show_dict[GarbageType.GarbageTypeStrList_ch[3]] = "#DC143C"
+        self.color_show_dict[GarbageType.GarbageTypeStrList_ch[4]] = "#A9A9A9"
+
+
+class StatisticsDate7LocProgram(StatisticsDateLocProgram):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "最近7日-按投放区域")
+        self._conf("#abc88b", 7, 1)
+
+
+class StatisticsDate7TypeLocProgram(StatisticsDateTypeLocProgram):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "最近7日-按投放类型和区域")
+        self._conf("#abc88b", 7, 1)
+
+
+class StatisticsDate7CheckResultProgram(StatisticsDateCheckResultProgram):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "最近7日-按检查结果")
+        self._conf("#abc88b", 7, 1)
+        self.color_show_dict['Pass'] = "#00BFFF"
+        self.color_show_dict['Fail'] = "#DC143C"
+
+
+class StatisticsDate7CheckResultAndTypeProgram(StatisticsDateCheckResultAndTypeProgram):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "最近7日-按检查结果和类型")
+        self._conf("#abc88b", 7, 1)
+
+
+class StatisticsDate7CheckResultAndLocProgram(StatisticsDateCheckResultAndLocProgram):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "最近7日-按检查结果和区域")
+        self._conf("#abc88b", 7, 1)
+
+
+class StatisticsDate7DetailProgram(StatisticsDateDetailProgram):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "最近7日-详细分类")
+        self._conf("#abc88b", 7, 1)
+
+
+class StatisticsDate30TypeProgram(StatisticsDateTypeProgram):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "最近30日-按投放类型")
+        self._conf("#abc88b", 30, 5)
+        self.color_show_dict[GarbageType.GarbageTypeStrList_ch[1]] = "#00BFFF"
+        self.color_show_dict[GarbageType.GarbageTypeStrList_ch[2]] = "#32CD32"
+        self.color_show_dict[GarbageType.GarbageTypeStrList_ch[3]] = "#DC143C"
+        self.color_show_dict[GarbageType.GarbageTypeStrList_ch[4]] = "#A9A9A9"
+
+
+class StatisticsDate30LocProgram(StatisticsDateLocProgram):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "最近30日-按投放区域")
+        self._conf("#abc88b", 30, 5)
+
+
+class StatisticsDate30TypeLocProgram(StatisticsDateTypeLocProgram):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "最近30日-按投放类型和区域")
+        self._conf("#abc88b", 30, 5)
+
+
+class StatisticsDate30CheckResultProgram(StatisticsDateCheckResultProgram):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "最近30日-按检查结果")
+        self._conf("#abc88b", 30, 5)
+        self.color_show_dict['Pass'] = "#00BFFF"
+        self.color_show_dict['Fail'] = "#DC143C"
+
+
+class StatisticsDate30CheckResultAndTypeProgram(StatisticsDateCheckResultAndTypeProgram):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "最近30日-按检查结果和类型")
+        self._conf("#abc88b", 30, 5)
+
+
+class StatisticsDate30CheckResultAndLocProgram(StatisticsDateCheckResultAndLocProgram):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "最近30日-按检查结果和区域")
+        self._conf("#abc88b", 30, 5)
+
+
+class StatisticsDate30DetailProgram(StatisticsDateDetailProgram):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "最近30日-详细分类")
+        self._conf("#abc88b", 30, 5)
 
 
 all_program = [WelcomeProgram, CreateNormalUserProgram, CreateManagerUserProgram, CreateAutoNormalUserProgram,
@@ -2892,6 +3020,10 @@ all_program = [WelcomeProgram, CreateNormalUserProgram, CreateManagerUserProgram
                StatisticsTimeCheckResultAndLocProgram, StatisticsTimeDetailProgram, StatisticsUserTinyProgram,
                StatisticsUserLargeProgram, StatisticsScoreDistributedProgram, StatisticsReputationDistributedProgram,
                StatisticsPassRateGlobalProgram, StatisticsPassRateTypeProgram, StatisticsPassRateLocProgram,
-               StatisticsPassRateTypeAndLocProgram, StatisticsDateTypeProgram, StatisticsDateLocProgram,
-               StatisticsDateTypeLocProgram, StatisticsDateCheckResultProgram, StatisticsDateCheckResultAndTypeProgram,
-               StatisticsDateCheckResultAndLocProgram, StatisticsDateDetailProgram]
+               StatisticsPassRateTypeAndLocProgram, StatisticsDate7TypeProgram, StatisticsDate7LocProgram,
+               StatisticsDate7TypeLocProgram, StatisticsDate7CheckResultProgram,
+               StatisticsDate7CheckResultAndTypeProgram, StatisticsDate7CheckResultAndLocProgram,
+               StatisticsDate7DetailProgram, StatisticsDate30TypeProgram, StatisticsDate30LocProgram,
+               StatisticsDate30TypeLocProgram, StatisticsDate30CheckResultProgram,
+               StatisticsDate30CheckResultAndTypeProgram, StatisticsDate30CheckResultAndLocProgram,
+               StatisticsDate30DetailProgram]

@@ -1,7 +1,7 @@
 import os.path
 import time
 import tempfile
-import cv2
+import cv2.cv2 as cv2
 import random
 import traceback
 import abc
@@ -23,7 +23,7 @@ from sql.user import update_user, find_user_by_id
 from sql.garbage import update_garbage
 
 from equipment.scan import HGSCapture, HGSQRCoder
-from equipment.aliyun import oss_file, garbage_search, ClientException, ServerException
+from equipment.aliyun import Aliyun, AliyunClientException, AliyunServerException
 
 from .event import TkEventMain
 
@@ -50,10 +50,12 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
                  db: DB,
                  cap: HGSCapture,
                  qr: HGSQRCoder,
+                 aliyun: Aliyun,
                  loc: location_t = Config.base_location):
         self._db: DB = db
         self._cap: HGSCapture = cap
         self._qr: HGSQRCoder = qr
+        self._aliyun: Aliyun = aliyun
         self._loc: location_t = loc
 
         self._user: Optional[User] = None  # 操作者
@@ -365,12 +367,11 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
         event = tk_event.RankingEvent(self)
         self.push_event(event)
 
-    @staticmethod
-    def search_core(temp_dir: tempfile.TemporaryDirectory, file_path: str) -> Optional[Dict]:
+    def search_core(self, temp_dir: tempfile.TemporaryDirectory, file_path: str) -> Optional[Dict]:
         try:
-            img_url = oss_file(file_path, "jpg", True)
-            res = garbage_search(img_url)
-        except (ClientException, ServerException):
+            img_url = self._aliyun.oss_file(file_path, "jpg", True)
+            res = self._aliyun.garbage_search(img_url)
+        except (AliyunClientException, AliyunServerException):
             return None
         else:
             return res
@@ -511,11 +512,12 @@ class GarbageStation(GarbageStationBase):
                  db: DB,
                  cap: HGSCapture,
                  qr: HGSQRCoder,
+                 aliyun: Aliyun,
                  loc: location_t = Config.base_location,
                  refresh_delay: int = Config.tk_refresh_delay):
         self.init_after_run_list: List[Tuple[int, Callable, Tuple]] = []
 
-        super(GarbageStation, self).__init__(db, cap, qr, loc)
+        super(GarbageStation, self).__init__(db, cap, qr, aliyun, loc)
         self.refresh_delay = refresh_delay
 
         self._window = tk.Tk()  # 系统窗口

@@ -27,33 +27,37 @@ p_args = parser.parse_args()
 
 if p_args.mysql_url is None or p_args.mysql_name is None or p_args.mysql_passwd is None:
     res = os.environ.get('HGSSystem_MySQL')
-    if res is None:
-        warnings.warn("未找到MySQL地址")
-        exit(1)
-    res = res.split(';')
-    if len(res) == 4:
-        p_args.mysql_url = [res[0]]
-        p_args.mysql_name = [res[1]]
-        p_args.mysql_passwd = [res[2]]
-        p_args.mysql_port = [res[3]]
-    elif len(res) == 3:
-        p_args.mysql_url = [res[0]]
-        p_args.mysql_name = [res[1]]
-        p_args.mysql_passwd = [res[2]]
-        p_args.mysql_port = [None]
+    if res is not None:
+        res = res.split(';')
+        if len(res) == 4:
+            p_args.mysql_url = [res[0]]
+            p_args.mysql_name = [res[1]]
+            p_args.mysql_passwd = [res[2]]
+            p_args.mysql_port = [res[3]]
+        elif len(res) == 3:
+            p_args.mysql_url = [res[0]]
+            p_args.mysql_name = [res[1]]
+            p_args.mysql_passwd = [res[2]]
+            p_args.mysql_port = [None]
+        else:
+            warnings.warn("MYSQL地址错误")
+            exit(1)
     else:
-        warnings.warn("MYSQL地址错误")
-        exit(1)
+        p_args.mysql_url = [None]
+        p_args.mysql_name = [None]
+        p_args.mysql_passwd = [None]
+        p_args.mysql_port = [None]
 
 if p_args.aliyun_key is None or p_args.aliyun_secret is None:
     res = os.environ.get('HGSSystem_Aliyun')
-    if res is None:
-        warnings.warn("未找到阿里云认证")
-        exit(1)
-    res = res.split(';')
-    if len(res) == 2:
-        p_args.aliyun_key = [res[0]]
-        p_args.aliyun_secret = [res[1]]
+    if res is not None:
+        res = res.split(';')
+        if len(res) == 2:
+            p_args.aliyun_key = [res[0]]
+            p_args.aliyun_secret = [res[1]]
+        else:
+            warnings.warn("阿里云认证错误")
+            exit(1)
     else:
-        warnings.warn("阿里云认证错误")
-        exit(1)
+        p_args.aliyun_key = [None]
+        p_args.aliyun_secret = [None]

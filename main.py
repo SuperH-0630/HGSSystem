@@ -31,9 +31,17 @@ def main():
 
     from sql.db import DB
 
+    if Config.mysql_url is None or Config.mysql_name is None:
+        print("MySQL 错误")
+        exit(1)
     mysql = DB()
 
     if program_name == "garbage":
+        from equipment.aliyun import Aliyun
+        if Config.aliyun_key is None or Config.aliyun_secret is None:
+            print("Aliyun key 错误")
+            exit(1)
+
         try:
             from equipment.scan import HGSCapture, HGSQRCoder
             import tk_ui.station as garbage_station
@@ -41,9 +49,10 @@ def main():
             can_not_load("垃圾站系统")
             sys.exit(1)
 
+        aliyun = Aliyun()
         cap = HGSCapture()
         qr = HGSQRCoder(cap)
-        station = garbage_station.GarbageStation(mysql, cap, qr)
+        station = garbage_station.GarbageStation(mysql, cap, qr, aliyun)
         station.mainloop()
     elif program_name == "ranking":
         try:

@@ -1,6 +1,6 @@
 import time
 import threading
-import cv2 as cv2
+import cv2.cv2 as cv2
 
 from conf import Config
 import qrcode

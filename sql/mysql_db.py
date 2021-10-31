@@ -3,16 +3,18 @@ import threading
 import traceback
 
 from conf import Config
-from .base_db import HGSDatabase, DBCloseException
+from .base_db import HGSDatabase, DBException, DBCloseException
 from tool.type_ import *
 
 
 class MysqlDB(HGSDatabase):
     def __init__(self,
-                 host: str = Config.mysql_url,
-                 name: str = Config.mysql_name,
-                 passwd: str = Config.mysql_passwd,
-                 port: str = Config.mysql_port):
+                 host: Optional[str] = Config.mysql_url,
+                 name: Optional[str] = Config.mysql_name,
+                 passwd: Optional[str] = Config.mysql_passwd,
+                 port: Optional[str] = Config.mysql_port):
+        if host is None or name is None:
+            raise DBException
         super(MysqlDB, self).__init__(host, name, passwd, port)
         try:
             self._db = pymysql.connect(user=self._name,

@@ -2389,7 +2389,7 @@ class StatisticsPassRateGlobalProgram(StatisticsUserBaseProgram):
         label = ["通过", "未通过"]
 
         res = self.plt.pie(data, radius=1, pctdistance=0.7, textprops=dict(color='w'),  # 不显示文字
-                           shadow=True, startangle=45, autopct="%6.3f%%", wedgeprops=dict(width=0.6, edgecolor="w"))
+                           startangle=45, autopct="%6.3f%%", wedgeprops=dict(width=0.6, edgecolor="w"))
         self.plt.legend(res[0], label, loc="lower left")
         self.plt.set_title("全局垃圾分类通过率")  # 设置标题以及其位置和字体大小
         self.canvas.draw()
@@ -2430,7 +2430,7 @@ class StatisticsPassRateTypeProgram(StatisticsUserBaseProgram):
         legend_text = []
         for data, r, s in zip([data_1, data_2, data_3, data_4], [0.3, 0.6, 0.9, 1.2], [0, 15, 30, 45]):
             res = self.plt.pie(data, radius=r, pctdistance=0.7,  # 不显示文字
-                               shadow=True, startangle=s, autopct="%6.3f%%", wedgeprops=dict(width=0.3, edgecolor="w"))
+                               startangle=s, autopct="%6.3f%%", wedgeprops=dict(width=0.3, edgecolor="w"))
             legend_text += res[0]
 
         label = []
@@ -2494,7 +2494,7 @@ class StatisticsPassRateLocProgram(StatisticsUserBaseProgram):
         data = [passing, not_passing]
 
         res = self.plt.pie(data, radius=1, pctdistance=0.7, textprops=dict(color='w'),  # 不显示文字
-                           shadow=True, startangle=45, autopct="%6.3f%%", wedgeprops=dict(width=0.6, edgecolor="w"))
+                           startangle=45, autopct="%6.3f%%", wedgeprops=dict(width=0.6, edgecolor="w"))
         self.plt.legend(res[0], label, loc="lower left")
         self.canvas.draw()
         self.toolbar.update()
@@ -2561,7 +2561,7 @@ class StatisticsPassRateTypeAndLocProgram(StatisticsUserBaseProgram):
         legend_text = []
         for data, r, s in zip([data_1, data_2, data_3, data_4], [0.3, 0.6, 0.9, 1.2], [5, 20, 35, 50]):
             res = self.plt.pie(data, radius=r, pctdistance=0.7,  # 不显示文字
-                               shadow=True, startangle=s, autopct="%6.3f%%", wedgeprops=dict(width=0.3, edgecolor="w"))
+                               startangle=s, autopct="%6.3f%%", wedgeprops=dict(width=0.3, edgecolor="w"))
             legend_text += res[0]
 
         label = []

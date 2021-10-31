@@ -806,6 +806,7 @@ class CountDateEvent(AdminEventBase):
 
     def func(self, days: int, column: List, get_name: Callable):
         res = {}
+        start = time.strftime("%Y-%m-%d", time.localtime(time.time()))
         cur = self._db.search(columns=["days", "count(GarbageID) AS count", *column],
                               table=f"garbage_{days}d",
                               group_by=["days", *column],
@@ -813,6 +814,10 @@ class CountDateEvent(AdminEventBase):
                               where="UseTime IS NOT NULL")
         if cur is None:
             return None
+        end = time.strftime("%Y-%m-%d", time.localtime(time.time()))
+        if end != start:  # 时间校验, 确保调用前后时间一致
+            return None
+
         loc_list = cur.fetchall()
         loc_type = []
         for i in loc_list:
@@ -824,12 +829,12 @@ class CountDateEvent(AdminEventBase):
             res[name] = lst
         res['res_type'] = loc_type
 
-        return res, loc_list
+        return res, loc_list, end
 
     def __init__(self, gb_station):
         super().__init__(gb_station)
         self.thread = None
-        self._program: Optional[admin_program.StatisticsTimeProgramBase] = None
+        self._program: Optional[admin_program.StatisticsDateProgramBase] = None
 
     def start(self, days, column: List, get_name: Callable, program):
         self.thread = TkThreading(self.func, days, column, get_name)
@@ -840,8 +845,8 @@ class CountDateEvent(AdminEventBase):
         return not self.thread.is_alive()
 
     def done_after_event(self):
-        res: Optional[Tuple[Dict[str, str], List]] = self.thread.wait_event()
+        res: Optional[Tuple[Dict[str, str], List, str]] = self.thread.wait_event()
         if res is None:
             self.station.show_warning("数据分析", "数据获取时发生错误")
         else:
-            self._program.show_result(res[0], res[1])
+            self._program.show_result(res[0], res[1], res[2])

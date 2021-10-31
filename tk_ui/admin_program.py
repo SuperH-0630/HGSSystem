@@ -1,4 +1,5 @@
 import abc
+import datetime
 import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter.filedialog import askdirectory, askopenfilename, asksaveasfilename
@@ -1761,7 +1762,7 @@ class StatisticsTimeProgramBase(AdminProgram):
         self.figure = Figure(dpi=100)
         self.plt_1: Axes = self.figure.add_subplot(211)  # 添加子图:2行1列第1个
         self.plt_2: Axes = self.figure.add_subplot(212, sharex=self.plt_1)  # 添加子图:2行1列第2个 (共享x轴)
-        self.figure.subplots_adjust(hspace=0.5)
+        self.figure.subplots_adjust(hspace=0.7)
 
         self.canvas = FigureCanvasTkAgg(self.figure, master=self.figure_frame)
         self.canvas_tk = self.canvas.get_tk_widget()
@@ -2016,7 +2017,7 @@ class StatisticsTimeProgramBase(AdminProgram):
         self.plt_2.set_yticks(y_ticks)
         self.plt_2.set_yticklabels(y_ticklabels)
 
-        self.plt_2.set_title(f"{self.program_title}折现图")
+        self.plt_2.set_title(f"{self.program_title}折线图")
 
         self.canvas.draw()
         self.toolbar.update()
@@ -2676,7 +2677,11 @@ class StatisticsDateProgramBase(StatisticsTimeProgramBase):
                 f.write(f"{i[0]}, {i[1]}, {func(i)}\n")
         self.station.show_msg("保存数据", f"数据导出成功\n保存位置:\n  {path}")
 
-    def show_result(self, res: Dict[str, any], lst: List):
+    def show_result(self, res: Dict[str, any], lst: List, end_time: Optional[str] = None):
+        if end_time is None:
+            end_time = datetime.datetime.now()
+        else:
+            end_time = datetime.datetime.strptime(end_time, '%Y-%m-%d')
         bottom = np.zeros(self._days)
         label_num = [i for i in range(self._days)]
         label_str = [f"{i}" for i in range(self._days)]
@@ -2714,9 +2719,14 @@ class StatisticsDateProgramBase(StatisticsTimeProgramBase):
             self.plt_1.legend(loc="upper left")
             self.plt_2.legend(loc="upper left")
 
+        x_label = []
+        for i in range(self._days - 1, -1, -self._days_sep):
+            d = end_time - datetime.timedelta(days=i)
+            x_label.append(d.strftime("%Y-%m-%d"))
+
         self.plt_1.set_xlim(-1, self._days)
         self.plt_1.set_xticks([i for i in range(0, self._days, self._days_sep)])
-        self.plt_1.set_xticklabels([f"{i}d" for i in range(self._days - 1, -1, -self._days_sep)])  # 倒序
+        self.plt_1.set_xticklabels(x_label, rotation=20)  # 倒序
 
         self.plt_1.set_ylim(0, max_y_plot + max_y_plot * 0.1)
         step = ceil(max_y_plot / 4)  # 向上取整
@@ -2731,11 +2741,11 @@ class StatisticsDateProgramBase(StatisticsTimeProgramBase):
         self.plt_1.set_yticks(y_ticks)
         self.plt_1.set_yticklabels(y_ticklabels)
 
-        self.plt_1.set_title(f"{self.program_title}折现图")
+        self.plt_1.set_title(f"{self.program_title}折线图")
 
         self.plt_2.set_xlim(-1, self._days)
         self.plt_2.set_xticks([i for i in range(0, self._days, self._days_sep)])
-        self.plt_2.set_xticklabels([f"{i}d" for i in range(self._days - 1, -1, -self._days_sep)])
+        self.plt_2.set_xticklabels(x_label, rotation=20)
 
         max_y_bar = int(max(bottom.max(), max_y_bar))
         self.plt_2.set_ylim(0, max_y_bar + max_y_bar * 0.1)

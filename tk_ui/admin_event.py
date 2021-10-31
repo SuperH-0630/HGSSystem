@@ -585,7 +585,7 @@ class UpdateGarbageCheckEvent(AdminEventBase):
             self.station.show_msg("更新成功", f"成功更新{res}个垃圾袋-检测结果")
 
 
-class CountThrowTimeEvent(AdminEventBase):
+class CountTimeEvent(AdminEventBase):
     """
     任务: 按时段统计数据
     """
@@ -615,7 +615,7 @@ class CountThrowTimeEvent(AdminEventBase):
     def __init__(self, gb_station):
         super().__init__(gb_station)
         self.thread = None
-        self._program: Optional[admin_program.StatisticsTimeBaseProgram] = None
+        self._program: Optional[admin_program.StatisticsTimeProgramBase] = None
 
     def start(self, column: List, get_name: Callable, program):
         self.thread = TkThreading(self.func, column, get_name)
@@ -797,3 +797,51 @@ class PassingRateEvent(AdminEventBase):
             self.station.show_warning("数据分析", "数据获取时发生错误")
         else:
             self._program.show_result(res)
+
+
+class CountDateEvent(AdminEventBase):
+    """
+    任务: 按日期统计数据
+    """
+
+    def func(self, days: int, column: List, get_name: Callable):
+        res = {}
+        cur = self._db.search(columns=["days", "count(GarbageID) AS count", *column],
+                              table=f"garbage_{days}d",
+                              group_by=["days", *column],
+                              order_by=[(c, "DESC") for c in column] + [("days", "ASC")],
+                              where="UseTime IS NOT NULL")
+        if cur is None:
+            return None
+        loc_list = cur.fetchall()
+        loc_type = []
+        for i in loc_list:
+            name = get_name(i)
+            if name not in loc_type:
+                loc_type.append(name)
+            lst: List = res.get(name, list())
+            lst.append(i)
+            res[name] = lst
+        res['res_type'] = loc_type
+
+        return res, loc_list
+
+    def __init__(self, gb_station):
+        super().__init__(gb_station)
+        self.thread = None
+        self._program: Optional[admin_program.StatisticsTimeProgramBase] = None
+
+    def start(self, days, column: List, get_name: Callable, program):
+        self.thread = TkThreading(self.func, days, column, get_name)
+        self._program = program
+        return self
+
+    def is_end(self) -> bool:
+        return not self.thread.is_alive()
+
+    def done_after_event(self):
+        res: Optional[Tuple[Dict[str, str], List]] = self.thread.wait_event()
+        if res is None:
+            self.station.show_warning("数据分析", "数据获取时发生错误")
+        else:
+            self._program.show_result(res[0], res[1])

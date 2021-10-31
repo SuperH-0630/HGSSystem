@@ -118,6 +118,35 @@ SELECT garbage_user.GarbageID       AS GarbageID,
 FROM garbage_user
          LEFT JOIN garbage_checker on garbage_user.GarbageID = garbage_checker.GarbageID;
 
+DROP VIEW IF EXISTS garbage_7d;
+CREATE VIEW garbage_7d AS
+SELECT (TO_DAYS(NOW()) - TO_DAYS(UseTime)) AS days,
+       GarbageID,
+       CreateTime,
+       Flat,
+       UserID,
+       UseTime,
+       GarbageType,
+       Location,
+       CheckResult,
+       CheckerID
+FROM garbage
+WHERE TO_DAYS(NOW()) - TO_DAYS(UseTime) < 7;
+
+DROP VIEW IF EXISTS garbage_30d;
+CREATE VIEW garbage_30d AS
+SELECT (TO_DAYS(NOW()) - TO_DAYS(UseTime)) AS days,
+       GarbageID,
+       CreateTime,
+       Flat,
+       UserID,
+       UseTime,
+       GarbageType,
+       Location,
+       CheckResult,
+       CheckerID
+FROM garbage
+WHERE TO_DAYS(NOW()) - TO_DAYS(UseTime) < 30;
 
 -- 创建函数
 CREATE FUNCTION get_avg(num1 int, num2 int)

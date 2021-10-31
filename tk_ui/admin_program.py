@@ -2,7 +2,7 @@ import abc
 import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter.filedialog import askdirectory, askopenfilename, asksaveasfilename
-import random
+from math import ceil
 
 import matplotlib.pyplot
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
@@ -1509,9 +1509,9 @@ class UpdateUserProgramBase(AdminProgram):
         set_tk_disable_from_list(self.enter, flat='normal')
 
 
-class UpdateUserScoreBase(UpdateUserProgramBase):
+class UpdateUserScore(UpdateUserProgramBase):
     def __init__(self, station, win, color):
-        super(UpdateUserScoreBase, self).__init__(station, win, color, "更新用户-积分")
+        super(UpdateUserScore, self).__init__(station, win, color, "更新用户-积分")
         self._conf(["用户ID:", "积分:"], "#afdfe4")
 
     def update_by_uid(self):
@@ -1527,9 +1527,9 @@ class UpdateUserScoreBase(UpdateUserProgramBase):
         self.station.push_event(event)
 
 
-class UpdateUserReputationBase(UpdateUserProgramBase):
+class UpdateUserReputation(UpdateUserProgramBase):
     def __init__(self, station, win, color):
-        super(UpdateUserReputationBase, self).__init__(station, win, color, "更新用户-垃圾分类信用")
+        super(UpdateUserReputation, self).__init__(station, win, color, "更新用户-垃圾分类信用")
         self._conf(["用户ID:", "垃圾分类信用:"], "#f8aba6")
 
     def update_by_uid(self):
@@ -1751,7 +1751,7 @@ class UpdateGarbageCheckResultProgram(AdminProgram):
         self.where_enter['state'] = 'normal'
 
 
-class StatisticsTimeBaseProgram(AdminProgram):
+class StatisticsTimeProgramBase(AdminProgram):
     def __init__(self, station, win, color, title: str):
         super().__init__(station, win, color, title)
 
@@ -1956,7 +1956,7 @@ class StatisticsTimeBaseProgram(AdminProgram):
 
                 y = [0 for _ in range(24)]
                 for i in res_count:
-                    y[int(i[0])] = int(i[1])
+                    y[int(i[0])] += int(i[1])
 
                 self.color_show_dict[res_type] = color
                 self.plt_1.bar(label_num, y,
@@ -2005,21 +2005,21 @@ class StatisticsTimeBaseProgram(AdminProgram):
         self.btn_hide['state'] = 'normal'
 
 
-class StatisticsTimeLocProgram(StatisticsTimeBaseProgram):
+class StatisticsTimeLocProgram(StatisticsTimeProgramBase):
     def __init__(self, station, win, color):
         super().__init__(station, win, color, "时段分析-按投放区域")
         self._conf("#abc88b")
 
     def refresh(self):
         super().refresh()
-        event = tk_event.CountThrowTimeEvent(self.station).start(["Location"], lambda i: i[2], self)
+        event = tk_event.CountTimeEvent(self.station).start(["Location"], lambda i: i[2], self)
         self.station.push_event(event)
 
     def export(self, *_, **__):
         super().export("Location", lambda i: i[2])
 
 
-class StatisticsTimeTypeProgram(StatisticsTimeBaseProgram):
+class StatisticsTimeTypeProgram(StatisticsTimeProgramBase):
     def __init__(self, station, win, color):
         super().__init__(station, win, color, "时段分析-按投放类型")
         self._conf("#abc88b")
@@ -2030,7 +2030,7 @@ class StatisticsTimeTypeProgram(StatisticsTimeBaseProgram):
 
     def refresh(self):
         super().refresh()
-        event = tk_event.CountThrowTimeEvent(self.station).start(["GarbageType"], self.get_name, self)
+        event = tk_event.CountTimeEvent(self.station).start(["GarbageType"], self.get_name, self)
         self.station.push_event(event)
 
     def export(self, *_, **__):
@@ -2042,14 +2042,14 @@ class StatisticsTimeTypeProgram(StatisticsTimeBaseProgram):
         return GarbageType.GarbageTypeStrList_ch[int(data.decode('utf-8'))]
 
 
-class StatisticsTimeTypeLocProgram(StatisticsTimeBaseProgram):
+class StatisticsTimeTypeLocProgram(StatisticsTimeProgramBase):
     def __init__(self, station, win, color):
         super().__init__(station, win, color, "时段分析-按投放类型和区域")
         self._conf("#abc88b")
 
     def refresh(self):
         super().refresh()
-        event = tk_event.CountThrowTimeEvent(self.station).start(["GarbageType", "Location"], self.get_name, self)
+        event = tk_event.CountTimeEvent(self.station).start(["GarbageType", "Location"], self.get_name, self)
         self.station.push_event(event)
 
     def export(self, *_, **__):
@@ -2061,7 +2061,7 @@ class StatisticsTimeTypeLocProgram(StatisticsTimeBaseProgram):
         return f"{GarbageType.GarbageTypeStrList_ch[int(data.decode('utf-8'))]}-{i[3]}"
 
 
-class StatisticsTimeCheckResultProgram(StatisticsTimeBaseProgram):
+class StatisticsTimeCheckResultProgram(StatisticsTimeProgramBase):
     def __init__(self, station, win, color):
         super().__init__(station, win, color, "时段分析-按检查结果")
         self._conf("#abc88b")
@@ -2070,7 +2070,7 @@ class StatisticsTimeCheckResultProgram(StatisticsTimeBaseProgram):
 
     def refresh(self):
         super().refresh()
-        event = tk_event.CountThrowTimeEvent(self.station).start(["CheckResult"], self.get_name, self)
+        event = tk_event.CountTimeEvent(self.station).start(["CheckResult"], self.get_name, self)
         self.station.push_event(event)
 
     def export(self, *_, **__):
@@ -2082,14 +2082,14 @@ class StatisticsTimeCheckResultProgram(StatisticsTimeBaseProgram):
         return 'Pass' if data == DBBit.BIT_1 else 'Fail'
 
 
-class StatisticsTimeCheckResultAndTypeProgram(StatisticsTimeBaseProgram):
+class StatisticsTimeCheckResultAndTypeProgram(StatisticsTimeProgramBase):
     def __init__(self, station, win, color):
         super().__init__(station, win, color, "时段分析-按检查结果和类型")
         self._conf("#abc88b")
 
     def refresh(self):
         super().refresh()
-        event = tk_event.CountThrowTimeEvent(self.station).start(["CheckResult", "GarbageType"], self.get_name, self)
+        event = tk_event.CountTimeEvent(self.station).start(["CheckResult", "GarbageType"], self.get_name, self)
         self.station.push_event(event)
 
     def export(self, *_, **__):
@@ -2103,14 +2103,14 @@ class StatisticsTimeCheckResultAndTypeProgram(StatisticsTimeBaseProgram):
                 f'-{GarbageType.GarbageTypeStrList_ch[int(data_2.decode("utf-8"))]}')
 
 
-class StatisticsTimeCheckResultAndLocProgram(StatisticsTimeBaseProgram):
+class StatisticsTimeCheckResultAndLocProgram(StatisticsTimeProgramBase):
     def __init__(self, station, win, color):
         super().__init__(station, win, color, "时段分析-按检查结果和区域")
         self._conf("#abc88b")
 
     def refresh(self):
         super().refresh()
-        event = tk_event.CountThrowTimeEvent(self.station).start(["CheckResult", "Location"], self.get_name, self)
+        event = tk_event.CountTimeEvent(self.station).start(["CheckResult", "Location"], self.get_name, self)
         self.station.push_event(event)
 
     def export(self, *_, **__):
@@ -2122,14 +2122,14 @@ class StatisticsTimeCheckResultAndLocProgram(StatisticsTimeBaseProgram):
         return (f'Pass' if data_1 == DBBit.BIT_1 else 'Fail') + f"-{i[3]}"
 
 
-class StatisticsTimeDetailProgram(StatisticsTimeBaseProgram):
+class StatisticsTimeDetailProgram(StatisticsTimeProgramBase):
     def __init__(self, station, win, color):
         super().__init__(station, win, color, "时段分析-详细分类")
         self._conf("#abc88b")
 
     def refresh(self):
         super().refresh()
-        event = tk_event.CountThrowTimeEvent(self.station)
+        event = tk_event.CountTimeEvent(self.station)
         event.start(["CheckResult", "GarbageType", "Location"], self.get_name, self)
         self.station.push_event(event)
 
@@ -2612,15 +2612,254 @@ class StatisticsPassRateTypeAndLocProgram(StatisticsUserBaseProgram):
         self.station.push_event(event)
 
 
+class StatisticsDateProgramBase(StatisticsTimeProgramBase):
+    def _conf(self, bg_color, days: int = 7, days_sep: int = 1):
+        super(StatisticsDateProgramBase, self)._conf(bg_color)
+        self._days = days
+        self._days_sep = days_sep
+
+    def export(self, title, func: Callable):
+        path = asksaveasfilename(title='选择CSV文件保存位置', filetypes=[("CSV", ".csv")])
+        if not path.endswith(".csv"):
+            path += ".csv"
+        with open(path, "w") as f:
+            f.write(f"Days, Count, {title}\n")
+            for i in self.export_lst:
+                f.write(f"{i[0]}, {i[1]}, {func(i)}\n")
+        self.station.show_msg("保存数据", f"数据导出成功\n保存位置:\n  {path}")
+
+    def show_result(self, res: Dict[str, any], lst: List):
+        bottom = np.zeros(self._days)
+        label_num = [i for i in range(self._days)]
+        label_str = [f"{i}" for i in range(self._days)]
+
+        res_type_lst: List = res['res_type']
+        self.export_lst = lst
+        max_y_plot = 1  # max_y的最大值
+        max_y_bar = 1  # max_y的最大值
+        for res_type in res_type_lst:
+            res_count: Tuple[str] = res[res_type]
+            if len(res_count) != 0:
+                color = self.check_show(res_type)
+                if color is None:
+                    continue
+
+                y = [0 for _ in range(self._days)]
+                for i in range(0, len(res_count)):  # 反向迭代列表
+                    index = self._days - res_count[i - 1][0] - 1  # 反向排序
+                    y[index] += int(res_count[i - 1][1])
+
+                max_y_plot = max(max(y), max_y_plot)
+                self.color_show_dict[res_type] = color
+                self.plt_1.plot(label_num, y,
+                                color=color,
+                                label=res_type)
+                self.plt_2.bar(label_num, y,
+                               color=color,
+                               align="center",
+                               bottom=bottom,
+                               tick_label=label_str,
+                               label=res_type)
+                bottom += np.array(y)
+
+        if self.legend_show[1].get() == 1:  # 显示图例
+            self.plt_1.legend(loc="upper left")
+            self.plt_2.legend(loc="upper left")
+
+        self.plt_1.set_xlim(-1, self._days)
+        self.plt_1.set_xticks([i for i in range(0, self._days, self._days_sep)])
+        self.plt_1.set_xticklabels([f"{i}d" for i in range(self._days - 1, -1, -self._days_sep)])  # 倒序
+
+        self.plt_1.set_ylim(0, max_y_plot + max_y_plot * 0.1)
+        step = ceil(max_y_plot / 4)  # 向上取整
+        if step > 0:
+            y_ticks = [i for i in range(0, max_y_plot, step)]
+            y_ticklabels = [f'{i}' for i in range(0, max_y_plot, step)]
+        else:
+            y_ticks = []
+            y_ticklabels = []
+        y_ticks.append(max_y_plot)
+        y_ticklabels.append(f"{max_y_plot}")
+        self.plt_1.set_yticks(y_ticks)
+        self.plt_1.set_yticklabels(y_ticklabels)  # 倒序
+
+        self.plt_1.set_title(f"{self.program_title}折现图")
+
+        self.plt_2.set_xlim(-1, self._days)
+        self.plt_2.set_xticks([i for i in range(0, self._days, self._days_sep)])
+        self.plt_2.set_xticklabels([f"{i}d" for i in range(self._days - 1, -1, -self._days_sep)])
+
+        max_y_bar = int(max(bottom.max(), max_y_bar))
+        self.plt_2.set_ylim(0, max_y_bar + max_y_bar * 0.1)
+        step = ceil(max_y_bar / 4)  # 向上取整
+        if step > 0:
+            y_ticks = [i for i in range(0, max_y_bar, step)]
+            y_ticklabels = [f'{i}' for i in range(0, max_y_bar, step)]
+        else:
+            y_ticks = []
+            y_ticklabels = []
+        y_ticks.append(max_y_bar)
+        y_ticklabels.append(f"{max_y_bar}")
+        self.plt_2.set_yticks(y_ticks)
+        self.plt_2.set_yticklabels(y_ticklabels)  # 倒序
+
+        self.plt_2.set_title(f"{self.program_title}柱状图")
+
+        self.canvas.draw()
+        self.toolbar.update()
+        self.update_listbox()
+
+
+class StatisticsDateTypeProgram(StatisticsDateProgramBase):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "最近7日-按投放类型")
+        self._conf("#abc88b", 7, 1)
+        self.color_show_dict[GarbageType.GarbageTypeStrList_ch[1]] = "#00BFFF"
+        self.color_show_dict[GarbageType.GarbageTypeStrList_ch[2]] = "#32CD32"
+        self.color_show_dict[GarbageType.GarbageTypeStrList_ch[3]] = "#DC143C"
+        self.color_show_dict[GarbageType.GarbageTypeStrList_ch[4]] = "#A9A9A9"
+
+    def refresh(self):
+        super().refresh()
+        event = tk_event.CountDateEvent(self.station).start(7, ["GarbageType"], self.get_name, self)
+        self.station.push_event(event)
+
+    def export(self, *_, **__):
+        super().export("Type", self.get_name)
+
+    @staticmethod
+    def get_name(i: Tuple):
+        data: bytes = i[2]
+        return GarbageType.GarbageTypeStrList_ch[int(data.decode('utf-8'))]
+
+
+class StatisticsDateLocProgram(StatisticsDateProgramBase):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "最近7日-按投放区域")
+        self._conf("#abc88b", 7, 1)
+
+    def refresh(self):
+        super().refresh()
+        event = tk_event.CountDateEvent(self.station).start(7, ["Location"], lambda i: i[2], self)
+        self.station.push_event(event)
+
+    def export(self, *_, **__):
+        super().export("Location", lambda i: i[2])
+
+
+class StatisticsDateTypeLocProgram(StatisticsDateProgramBase):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "最近7日-按投放类型和区域")
+        self._conf("#abc88b", 7, 1)
+
+    def refresh(self):
+        super().refresh()
+        event = tk_event.CountDateEvent(self.station).start(7, ["GarbageType", "Location"], self.get_name, self)
+        self.station.push_event(event)
+
+    def export(self, *_, **__):
+        super().export("Type-Location", self.get_name)
+
+    @staticmethod
+    def get_name(i: Tuple):
+        data: bytes = i[2]
+        return f"{GarbageType.GarbageTypeStrList_ch[int(data.decode('utf-8'))]}-{i[3]}"
+
+
+class StatisticsDateCheckResultProgram(StatisticsDateProgramBase):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "最近7日-按检查结果")
+        self._conf("#abc88b", 7, 1)
+        self.color_show_dict['Pass'] = "#00BFFF"
+        self.color_show_dict['Fail'] = "#DC143C"
+
+    def refresh(self):
+        super().refresh()
+        event = tk_event.CountDateEvent(self.station).start(7, ["CheckResult"], self.get_name, self)
+        self.station.push_event(event)
+
+    def export(self, *_, **__):
+        super().export("Result", self.get_name)
+
+    @staticmethod
+    def get_name(i: Tuple):
+        data: int = i[2]  # 返回garbage表时, BIT类型都是按bytes回传的, 但garbage_7和garbage_30会以int的方式回传
+        return 'Pass' if data == 1 else 'Fail'
+
+
+class StatisticsDateCheckResultAndTypeProgram(StatisticsDateProgramBase):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "最近7日-按检查结果和类型")
+        self._conf("#abc88b", 7, 1)
+
+    def refresh(self):
+        super().refresh()
+        event = tk_event.CountDateEvent(self.station).start(7, ["CheckResult", "GarbageType"], self.get_name, self)
+        self.station.push_event(event)
+
+    def export(self, *_, **__):
+        super().export("Result-Location", self.get_name)
+
+    @staticmethod
+    def get_name(i: Tuple):
+        data_1: int = i[2]
+        data_2: bytes = i[3]
+        return ((f'Pass' if data_1 == 1 else 'Fail') +
+                f'-{GarbageType.GarbageTypeStrList_ch[int(data_2.decode("utf-8"))]}')
+
+
+class StatisticsDateCheckResultAndLocProgram(StatisticsDateProgramBase):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "最近7日-按检查结果和区域")
+        self._conf("#abc88b", 7, 1)
+
+    def refresh(self):
+        super().refresh()
+        event = tk_event.CountDateEvent(self.station).start(7, ["CheckResult", "Location"], self.get_name, self)
+        self.station.push_event(event)
+
+    def export(self, *_, **__):
+        super().export("Result-Type", self.get_name)
+
+    @staticmethod
+    def get_name(i: Tuple):
+        data_1: int = i[2]
+        return (f'Pass' if data_1 == 1 else 'Fail') + f"-{i[3]}"
+
+
+class StatisticsDateDetailProgram(StatisticsDateProgramBase):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "最近7日-详细分类")
+        self._conf("#abc88b", 7, 1)
+
+    def refresh(self):
+        super().refresh()
+        event = tk_event.CountDateEvent(self.station)
+        event.start(7, ["CheckResult", "GarbageType", "Location"], self.get_name, self)
+        self.station.push_event(event)
+
+    def export(self, *_, **__):
+        super().export("Detail", self.get_name)
+
+    @staticmethod
+    def get_name(i: Tuple):
+        data_1: int = i[2]
+        data_2: bytes = i[3]
+        return ((f'Pass' if data_1 == 1 else 'Fail') +
+                f'-{GarbageType.GarbageTypeStrList_ch[int(data_2.decode("utf-8"))]}' + f'-{i[4]}')
+
+
 all_program = [WelcomeProgram, CreateNormalUserProgram, CreateManagerUserProgram, CreateAutoNormalUserProgram,
                CreateGarbageProgram, DeleteUserProgram, DeleteUsersProgram, DeleteGarbageProgram,
                DeleteGarbageMoreProgram, DeleteAllGarbageProgram, SearchUserProgram, SearchUserAdvancedProgram,
-               SearchGarbageProgram, SearchGarbageAdvancedProgram, SearchAdvancedProgram, UpdateUserScoreBase,
-               UpdateUserReputationBase, UpdateGarbageTypeProgram, UpdateGarbageCheckResultProgram,
+               SearchGarbageProgram, SearchGarbageAdvancedProgram, SearchAdvancedProgram, UpdateUserScore,
+               UpdateUserReputation, UpdateGarbageTypeProgram, UpdateGarbageCheckResultProgram,
                ExportGarbageProgram, ExportUserProgram, CreateUserFromCSVProgram, AboutProgram,
                StatisticsTimeLocProgram, StatisticsTimeTypeProgram, StatisticsTimeTypeLocProgram,
                StatisticsTimeCheckResultProgram, StatisticsTimeCheckResultAndTypeProgram,
                StatisticsTimeCheckResultAndLocProgram, StatisticsTimeDetailProgram, StatisticsUserTinyProgram,
                StatisticsUserLargeProgram, StatisticsScoreDistributedProgram, StatisticsReputationDistributedProgram,
                StatisticsPassRateGlobalProgram, StatisticsPassRateTypeProgram, StatisticsPassRateLocProgram,
-               StatisticsPassRateTypeAndLocProgram]
+               StatisticsPassRateTypeAndLocProgram, StatisticsDateTypeProgram, StatisticsDateLocProgram,
+               StatisticsDateTypeLocProgram, StatisticsDateCheckResultProgram, StatisticsDateCheckResultAndTypeProgram,
+               StatisticsDateCheckResultAndLocProgram, StatisticsDateDetailProgram]

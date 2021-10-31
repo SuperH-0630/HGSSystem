@@ -210,17 +210,21 @@ class UpdateMenu(AdminMenu):
 class StatisticsMenu(AdminMenu):
     def __init__(self, station, win, color):
         super().__init__(station, win, color, "数据分析")
-        self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(3)]
-        self.btn_name = ["时段分析", "积分信用分析", "通过率"]
+        self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(4)]
+        self.btn_name = ["时段分析", "日期分析", "积分信用分析", "通过率"]
 
     def conf_gui(self, color: str, n: int = 1):
         super().conf_gui(color, n)
         self.btn[0]['command'] = self.statistics_time_command
-        self.btn[1]['command'] = self.statistics_user_command
-        self.btn[2]['command'] = self.statistics_pass_command
+        self.btn[1]['command'] = self.statistics_date_command
+        self.btn[2]['command'] = self.statistics_user_command
+        self.btn[3]['command'] = self.statistics_pass_command
 
     def statistics_time_command(self):
         self.station.to_menu("时段分析")
+
+    def statistics_date_command(self):
+        self.station.to_menu("日期分析")
 
     def statistics_user_command(self):
         self.station.to_menu("积分信用分析")
@@ -266,6 +270,102 @@ class StatisticsTimeMenu(AdminMenu):
 
     def by_detail(self):
         self.station.to_program("时段分析-详细分类")
+
+
+class StatisticsDateMenu(AdminMenu):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "日期分析")
+        self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(2)]
+        self.btn_name = ["最近7日", "最近30日"]
+
+    def conf_gui(self, color: str, n: int = 1):
+        super().conf_gui(color, n)
+        self.btn[0]['command'] = self.by_7
+        self.btn[1]['command'] = self.by_30
+
+    def by_7(self):
+        self.station.to_menu("日期分析-最近7日")
+
+    def by_30(self):
+        self.station.to_menu("日期分析-最近30日")
+
+
+class StatisticsDate7Menu(AdminMenu):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "日期分析-最近7日")
+        self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(7)]
+        self.btn_name = ["按投放区域", "按投放类型", "投放类型和区域", "按检查结果", "按检查结果和类型", "按检查结果和区域",
+                         "详细分类"]
+
+    def conf_gui(self, color: str, n: int = 1):
+        super().conf_gui(color, n)
+        self.btn[0]['command'] = self.by_loc
+        self.btn[1]['command'] = self.by_type
+        self.btn[2]['command'] = self.by_type_and_type
+        self.btn[3]['command'] = self.by_result
+        self.btn[4]['command'] = self.by_result_and_type
+        self.btn[5]['command'] = self.by_result_and_loc
+        self.btn[6]['command'] = self.by_detail
+
+    def by_loc(self):
+        self.station.to_program("最近7日-按投放区域")
+
+    def by_type(self):
+        self.station.to_program("最近7日-按投放类型")
+
+    def by_type_and_type(self):
+        self.station.to_program("最近7日-按投放类型和区域")
+
+    def by_result(self):
+        self.station.to_program("最近7日-按检查结果")
+
+    def by_result_and_type(self):
+        self.station.to_program("最近7日-按检查结果和类型")
+
+    def by_result_and_loc(self):
+        self.station.to_program("最近7日-按检查结果和区域")
+
+    def by_detail(self):
+        self.station.to_program("最近7日-详细分类")
+
+
+class StatisticsDate30Menu(AdminMenu):
+    def __init__(self, station, win, color):
+        super().__init__(station, win, color, "日期分析-最近30日")
+        self.btn: List[tk.Button] = [tk.Button(self.frame) for _ in range(7)]
+        self.btn_name = ["按投放区域", "按投放类型", "投放类型和区域", "按检查结果", "按检查结果和类型", "按检查结果和区域",
+                         "详细分类"]
+
+    def conf_gui(self, color: str, n: int = 1):
+        super().conf_gui(color, n)
+        self.btn[0]['command'] = self.by_loc
+        self.btn[1]['command'] = self.by_type
+        self.btn[2]['command'] = self.by_type_and_type
+        self.btn[3]['command'] = self.by_result
+        self.btn[4]['command'] = self.by_result_and_type
+        self.btn[5]['command'] = self.by_result_and_loc
+        self.btn[6]['command'] = self.by_detail
+
+    def by_loc(self):
+        self.station.to_program("最近30日-按投放区域")
+
+    def by_type(self):
+        self.station.to_program("最近30日-按投放类型")
+
+    def by_type_and_type(self):
+        self.station.to_program("最近30日-按投放类型和区域")
+
+    def by_result(self):
+        self.station.to_program("最近30日-按检查结果")
+
+    def by_result_and_type(self):
+        self.station.to_program("最近30日-按检查结果和类型")
+
+    def by_result_and_loc(self):
+        self.station.to_program("最近30日-按检查结果和区域")
+
+    def by_detail(self):
+        self.station.to_program("最近30日-详细分类")
 
 
 class StatisticsUserMenu(AdminMenu):
@@ -321,4 +421,4 @@ class StatisticsPassMenu(AdminMenu):
 
 
 all_menu = [MainMenu, CreateMenu, DeleteMenu, SearchMenu, UpdateMenu, StatisticsMenu, StatisticsTimeMenu,
-            StatisticsUserMenu, StatisticsPassMenu]
+            StatisticsUserMenu, StatisticsPassMenu, StatisticsDateMenu, StatisticsDate7Menu, StatisticsDate30Menu]

@@ -23,12 +23,3 @@ class RankWebsite:
             i = cur.fetchone()
             res.append((f"{index + 1}", i[1], i[0][:Config.tk_show_uid_len], str(i[3]), str(i[2])))
         return res
-
-    def run(self,
-            host: Optional[str] = None,
-            port: Optional[int] = None,
-            debug: Optional[bool] = True,
-            load_dotenv: bool = True,
-            **options,
-            ):
-        self.app.run(host, port, debug, load_dotenv, **options)

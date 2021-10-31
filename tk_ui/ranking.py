@@ -244,7 +244,7 @@ class RankingStation(RankingStationBase):
         self.rank_title_var = tk.StringVar()
         self.rank_count = 7  # 一页显示的行数
         self.rank_label = [tk.Label(self.rank_frame) for _ in range(self.rank_count)]
-        self.rank_y_height: List[Tuple[float, float]] = []  # rank 标签的y坐标信息
+        self.rank_y_height: List[Tuple[float, float]] = []  # rank_web 标签的y坐标信息
         self.rank_var = [tk.StringVar() for _ in range(self.rank_count)]
         self.rank_btn = [tk.Button(self.rank_frame) for _ in range(3)]  # prev, auto, next
 

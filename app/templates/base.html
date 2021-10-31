@@ -40,9 +40,9 @@
             <img class="logo" src=" {{ url_for('static', filename='images/HGSSystem.png') }} " alt="HGSSystem Logo">
         </section>
         <ul class="top-nav">
-            <li class="top-nav-item"><a class="top-nav-item" href="{{ url_for('main.start') }}"> 首页 </a></li>
-            <li class="top-nav-item"><a class="top-nav-item" href="{{ url_for('main.rank_up') }}"> 高分榜 </a></li>
-            <li class="top-nav-item"><a class="top-nav-item" href="{{ url_for('main.rank_down') }}"> 警告榜 </a></li>
+            <li class="top-nav-item"><a class="top-nav-item" href="{{ url_for('hello_web.start') }}"> 首页 </a></li>
+            <li class="top-nav-item"><a class="top-nav-item" href="{{ url_for('rank_web.rank_up') }}"> 高分榜 </a></li>
+            <li class="top-nav-item"><a class="top-nav-item" href="{{ url_for('rank_web.rank_down') }}"> 警告榜 </a></li>
             <li class="top-nav-item"><a class="top-nav-item"> 积分商城 </a></li>
         </ul>
     </nav>

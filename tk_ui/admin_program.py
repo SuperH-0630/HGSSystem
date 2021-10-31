@@ -1972,7 +1972,9 @@ class StatisticsTimeProgramBase(AdminProgram):
                                label=res_type)
                 self.plt_2.plot(label_num, y,
                                 color=color,
-                                label=res_type)
+                                label=res_type,
+                                marker='o',
+                                markersize=5)
                 bottom += np.array(y)
                 max_y_plot = max(max(y), max_y_plot)
 
@@ -1986,7 +1988,7 @@ class StatisticsTimeProgramBase(AdminProgram):
 
         max_y_bar = int(max(bottom.max(), max_y_bar))
         self.plt_1.set_ylim(0, max_y_bar + max_y_bar * 0.1)
-        step = ceil(max_y_bar / 4)  # 向上取整
+        step = ceil(max_y_bar / 5)  # 向上取整
         if step > 0:
             y_ticks = [i for i in range(0, max_y_bar, step)]
             y_ticklabels = [f'{i}' for i in range(0, max_y_bar, step)]
@@ -1998,6 +2000,9 @@ class StatisticsTimeProgramBase(AdminProgram):
         self.plt_1.set_yticks(y_ticks)
         self.plt_1.set_yticklabels(y_ticklabels)  # 倒序
 
+        self.plt_1.spines['right'].set_color('none')
+        self.plt_1.spines['top'].set_color('none')
+        self.plt_1.grid(axis='y')
         self.plt_1.set_title(f"{self.program_title}柱状图")
 
         self.plt_2.set_xlim(-1, 24)
@@ -2005,7 +2010,7 @@ class StatisticsTimeProgramBase(AdminProgram):
         self.plt_2.set_xticklabels([f"{i}h" for i in range(0, 24, 2)])
 
         self.plt_2.set_ylim(0, max_y_plot + max_y_plot * 0.1)
-        step = ceil(max_y_plot / 4)  # 向上取整
+        step = ceil(max_y_plot / 5)  # 向上取整
         if step > 0:
             y_ticks = [i for i in range(0, max_y_plot, step)]
             y_ticklabels = [f'{i}' for i in range(0, max_y_plot, step)]
@@ -2017,6 +2022,9 @@ class StatisticsTimeProgramBase(AdminProgram):
         self.plt_2.set_yticks(y_ticks)
         self.plt_2.set_yticklabels(y_ticklabels)
 
+        self.plt_2.spines['right'].set_color('none')
+        self.plt_2.spines['top'].set_color('none')
+        self.plt_2.grid(axis='y')
         self.plt_2.set_title(f"{self.program_title}折线图")
 
         self.canvas.draw()
@@ -2706,7 +2714,9 @@ class StatisticsDateProgramBase(StatisticsTimeProgramBase):
                 self.color_show_dict[res_type] = color
                 self.plt_1.plot(label_num, y,
                                 color=color,
-                                label=res_type)
+                                label=res_type,
+                                marker='o',
+                                markersize=5)
                 self.plt_2.bar(label_num, y,
                                color=color,
                                align="center",
@@ -2729,7 +2739,7 @@ class StatisticsDateProgramBase(StatisticsTimeProgramBase):
         self.plt_1.set_xticklabels(x_label, rotation=20)  # 倒序
 
         self.plt_1.set_ylim(0, max_y_plot + max_y_plot * 0.1)
-        step = ceil(max_y_plot / 4)  # 向上取整
+        step = ceil(max_y_plot / 5)  # 向上取整
         if step > 0:
             y_ticks = [i for i in range(0, max_y_plot, step)]
             y_ticklabels = [f'{i}' for i in range(0, max_y_plot, step)]
@@ -2741,6 +2751,9 @@ class StatisticsDateProgramBase(StatisticsTimeProgramBase):
         self.plt_1.set_yticks(y_ticks)
         self.plt_1.set_yticklabels(y_ticklabels)
 
+        self.plt_1.spines['right'].set_color('none')
+        self.plt_1.spines['top'].set_color('none')
+        self.plt_1.grid(axis='y')
         self.plt_1.set_title(f"{self.program_title}折线图")
 
         self.plt_2.set_xlim(-1, self._days)
@@ -2749,7 +2762,7 @@ class StatisticsDateProgramBase(StatisticsTimeProgramBase):
 
         max_y_bar = int(max(bottom.max(), max_y_bar))
         self.plt_2.set_ylim(0, max_y_bar + max_y_bar * 0.1)
-        step = ceil(max_y_bar / 4)  # 向上取整
+        step = ceil(max_y_bar / 5)  # 向上取整
         if step > 0:
             y_ticks = [i for i in range(0, max_y_bar, step)]
             y_ticklabels = [f'{i}' for i in range(0, max_y_bar, step)]
@@ -2761,6 +2774,9 @@ class StatisticsDateProgramBase(StatisticsTimeProgramBase):
         self.plt_2.set_yticks(y_ticks)
         self.plt_2.set_yticklabels(y_ticklabels)  # 倒序
 
+        self.plt_2.spines['right'].set_color('none')
+        self.plt_2.spines['top'].set_color('none')
+        self.plt_2.grid(axis='y')
         self.plt_2.set_title(f"{self.program_title}柱状图")
 
         self.canvas.draw()

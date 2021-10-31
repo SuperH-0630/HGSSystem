@@ -4,7 +4,6 @@ import tkinter.ttk as ttk
 from tkinter.filedialog import askdirectory, askopenfilename, asksaveasfilename
 from math import ceil
 
-import matplotlib.pyplot
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.axes import Axes
 import numpy as np
@@ -1758,7 +1757,7 @@ class StatisticsTimeProgramBase(AdminProgram):
         self.figure_frame = tk.Frame(self.frame)
         self.figure = Figure(dpi=100)
         self.plt_1: Axes = self.figure.add_subplot(211)  # 添加子图:2行1列第1个
-        self.plt_2: Axes = self.figure.add_subplot(212)  # 添加子图:2行1列第2个
+        self.plt_2: Axes = self.figure.add_subplot(212, sharex=self.plt_1)  # 添加子图:2行1列第2个 (共享x轴)
         self.figure.subplots_adjust(hspace=0.5)
 
         self.canvas = FigureCanvasTkAgg(self.figure, master=self.figure_frame)

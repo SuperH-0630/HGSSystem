@@ -1757,7 +1757,9 @@ class StatisticsTimeBaseProgram(AdminProgram):
 
         self.figure_frame = tk.Frame(self.frame)
         self.figure = Figure(dpi=100)
-        self.plt: Axes = self.figure.add_subplot(111)  # 添加子图:1行1列第1个
+        self.plt_1: Axes = self.figure.add_subplot(211)  # 添加子图:2行1列第1个
+        self.plt_2: Axes = self.figure.add_subplot(212)  # 添加子图:2行1列第2个
+        self.figure.subplots_adjust(hspace=0.5)
 
         self.canvas = FigureCanvasTkAgg(self.figure, master=self.figure_frame)
         self.canvas_tk = self.canvas.get_tk_widget()
@@ -1925,7 +1927,8 @@ class StatisticsTimeBaseProgram(AdminProgram):
         self.station.show_msg("保存数据", f"数据导出成功\n保存位置:\n  {path}")
 
     def refresh(self):
-        self.plt.cla()
+        self.plt_1.cla()
+        self.plt_2.cla()
 
     def reset(self):
         self.color_show_dict.update(self.color_hide_dict)
@@ -1956,21 +1959,30 @@ class StatisticsTimeBaseProgram(AdminProgram):
                     y[int(i[0])] = int(i[1])
 
                 self.color_show_dict[res_type] = color
-                self.plt.bar(label_num, y,
-                             color=color,
-                             align="center",
-                             bottom=bottom,
-                             tick_label=label_str,
-                             label=res_type)
+                self.plt_1.bar(label_num, y,
+                               color=color,
+                               align="center",
+                               bottom=bottom,
+                               tick_label=label_str,
+                               label=res_type)
+                self.plt_2.plot(label_num, y,
+                                color=color,
+                                label=res_type)
                 bottom += np.array(y)
 
         if self.legend_show[1].get() == 1:  # 显示图例
-            self.plt.legend(loc="upper left")
+            self.plt_1.legend(loc="upper left")
+            self.plt_2.legend(loc="upper left")
 
-        self.plt.set_xlim(-1, 24)
-        self.plt.set_xticks([i for i in range(0, 24, 2)])
-        self.plt.set_xticklabels([f"{i}h" for i in range(0, 24, 2)])
-        self.plt.set_title(f"{self.program_title}柱状图")
+        self.plt_1.set_xlim(-1, 24)
+        self.plt_1.set_xticks([i for i in range(0, 24, 2)])
+        self.plt_1.set_xticklabels([f"{i}h" for i in range(0, 24, 2)])
+        self.plt_1.set_title(f"{self.program_title}柱状图")
+
+        self.plt_2.set_xlim(-1, 24)
+        self.plt_2.set_xticks([i for i in range(0, 24, 2)])
+        self.plt_2.set_xticklabels([f"{i}h" for i in range(0, 24, 2)])
+        self.plt_2.set_title(f"{self.program_title}折现图")
 
         self.canvas.draw()
         self.toolbar.update()

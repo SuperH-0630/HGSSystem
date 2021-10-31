@@ -1947,6 +1947,8 @@ class StatisticsTimeProgramBase(AdminProgram):
         label_str = [f"{i}" for i in range(24)]
         res_type_lst: List = res['res_type']
         self.export_lst = lst
+        max_y_plot = 1
+        max_y_bar = 1
         for res_type in res_type_lst:
             res_count: Tuple[str] = res[res_type]
             if len(res_count) != 0:
@@ -1969,6 +1971,7 @@ class StatisticsTimeProgramBase(AdminProgram):
                                 color=color,
                                 label=res_type)
                 bottom += np.array(y)
+                max_y_plot = max(max(y), max_y_plot)
 
         if self.legend_show[1].get() == 1:  # 显示图例
             self.plt_1.legend(loc="upper left")
@@ -1977,11 +1980,40 @@ class StatisticsTimeProgramBase(AdminProgram):
         self.plt_1.set_xlim(-1, 24)
         self.plt_1.set_xticks([i for i in range(0, 24, 2)])
         self.plt_1.set_xticklabels([f"{i}h" for i in range(0, 24, 2)])
+
+        max_y_bar = int(max(bottom.max(), max_y_bar))
+        self.plt_1.set_ylim(0, max_y_bar + max_y_bar * 0.1)
+        step = ceil(max_y_bar / 4)  # 向上取整
+        if step > 0:
+            y_ticks = [i for i in range(0, max_y_bar, step)]
+            y_ticklabels = [f'{i}' for i in range(0, max_y_bar, step)]
+        else:
+            y_ticks = []
+            y_ticklabels = []
+        y_ticks.append(max_y_bar)
+        y_ticklabels.append(f"{max_y_bar}")
+        self.plt_1.set_yticks(y_ticks)
+        self.plt_1.set_yticklabels(y_ticklabels)  # 倒序
+
         self.plt_1.set_title(f"{self.program_title}柱状图")
 
         self.plt_2.set_xlim(-1, 24)
         self.plt_2.set_xticks([i for i in range(0, 24, 2)])
         self.plt_2.set_xticklabels([f"{i}h" for i in range(0, 24, 2)])
+
+        self.plt_2.set_ylim(0, max_y_plot + max_y_plot * 0.1)
+        step = ceil(max_y_plot / 4)  # 向上取整
+        if step > 0:
+            y_ticks = [i for i in range(0, max_y_plot, step)]
+            y_ticklabels = [f'{i}' for i in range(0, max_y_plot, step)]
+        else:
+            y_ticks = []
+            y_ticklabels = []
+        y_ticks.append(max_y_plot)
+        y_ticklabels.append(f"{max_y_plot}")
+        self.plt_2.set_yticks(y_ticks)
+        self.plt_2.set_yticklabels(y_ticklabels)
+
         self.plt_2.set_title(f"{self.program_title}折现图")
 
         self.canvas.draw()
@@ -2681,7 +2713,7 @@ class StatisticsDateProgramBase(StatisticsTimeProgramBase):
         y_ticks.append(max_y_plot)
         y_ticklabels.append(f"{max_y_plot}")
         self.plt_1.set_yticks(y_ticks)
-        self.plt_1.set_yticklabels(y_ticklabels)  # 倒序
+        self.plt_1.set_yticklabels(y_ticklabels)
 
         self.plt_1.set_title(f"{self.program_title}折现图")
 

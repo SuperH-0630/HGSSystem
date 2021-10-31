@@ -2151,6 +2151,7 @@ class StatisticsUserBaseProgram(AdminProgram):
         self.figure_frame = tk.Frame(self.frame)
         self.figure = Figure(dpi=100)
         self.plt: Axes = self.figure.add_subplot(111)  # 添加子图:1行1列第1个
+        self.figure.subplots_adjust(bottom=0.2, top=0.93)
 
         self.canvas = FigureCanvasTkAgg(self.figure, master=self.figure_frame)
         self.canvas_tk = self.canvas.get_tk_widget()
@@ -2392,6 +2393,10 @@ class StatisticsPassRateGlobalProgram(StatisticsUserBaseProgram):
                            startangle=45, autopct="%6.3f%%", wedgeprops=dict(width=0.6, edgecolor="w"))
         self.plt.legend(res[0], label, loc="lower left")
         self.plt.set_title("全局垃圾分类通过率")  # 设置标题以及其位置和字体大小
+
+        self.plt.table(cellText=[data], cellLoc="center", colLabels=label,
+                       rowLabels=['全局'], rowLoc='center', loc='bottom', colWidths=[0.4] * 2)
+
         self.canvas.draw()
         self.toolbar.update()
 
@@ -2437,6 +2442,9 @@ class StatisticsPassRateTypeProgram(StatisticsUserBaseProgram):
         for i in GarbageType.GarbageTypeStrList_ch[1:]:
             label.append(f"{i}-通过")
             label.append(f"{i}-不通过")
+
+        self.plt.table(cellText=[data_1, data_2, data_3, data_4], cellLoc="center", colLabels=['通过', '未通过'],
+                       rowLabels=GarbageType.GarbageTypeStrList_ch[1:], rowLoc='center', loc='bottom')
 
         self.plt.legend(legend_text, label)
         self.plt.set_title("全局垃圾分类通过率")  # 设置标题以及其位置和字体大小
@@ -2496,6 +2504,10 @@ class StatisticsPassRateLocProgram(StatisticsUserBaseProgram):
         res = self.plt.pie(data, radius=1, pctdistance=0.7, textprops=dict(color='w'),  # 不显示文字
                            startangle=45, autopct="%6.3f%%", wedgeprops=dict(width=0.6, edgecolor="w"))
         self.plt.legend(res[0], label, loc="lower left")
+
+        self.plt.table(cellText=[data], cellLoc="center", colLabels=label,
+                       rowLabels=[f"区域"], rowLoc='center', loc='bottom')
+
         self.canvas.draw()
         self.toolbar.update()
 
@@ -2568,6 +2580,9 @@ class StatisticsPassRateTypeAndLocProgram(StatisticsUserBaseProgram):
         for i in GarbageType.GarbageTypeStrList_ch[1:]:
             label.append(f"{i}-通过")
             label.append(f"{i}-不通过")
+
+        self.plt.table(cellText=[data_1, data_2, data_3, data_4], cellLoc="center", colLabels=['通过', '未通过'],
+                       rowLabels=GarbageType.GarbageTypeStrList_ch[1:], rowLoc='center', loc='bottom')
 
         self.plt.legend(legend_text, label)
         self.canvas.draw()

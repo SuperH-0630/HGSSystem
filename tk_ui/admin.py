@@ -234,7 +234,7 @@ class AdminStation(AdminStationBase):
 
         self._win_height = int(self._sys_height * (2 / 3))
         self._win_width = int(self._sys_width * (2 / 3))
-        self.__conf_windows()
+        self.__conf_windows(before_load=True)
 
         self._full_screen = False
         self._is_loading = False
@@ -246,17 +246,22 @@ class AdminStation(AdminStationBase):
         self.__conf_create_tk()
         self.__conf_create_menu()
         self.__conf_create_program()
-        self.__conf_tk()
+        self.__conf_windows(before_load=False)
+        self.__conf_tk()  # 在所有的Creat完成后才conf_tk
         # self.__show_login_window()  # 显示登录窗口, Debug期间暂时注释该代码
 
         self.__conf_set_after_run()
 
-    def __conf_windows(self):
-        self._window.title('HGSSystem: Manage Station')
-        self._window.geometry(f'{self._win_width}x{self._win_height}')
-        self._window['bg'] = Config.tk_win_bg
-        self._window.resizable(False, False)
-        self._window.protocol("WM_DELETE_WINDOW", lambda: self.main_exit())
+    def __conf_windows(self, before_load: bool = True):
+        if before_load:
+            self._window.title('HGSSystem: Manage Station')
+            self._window.geometry(f'{self._win_width}x{self._win_height}')
+            self._window['bg'] = Config.tk_win_bg
+            self._window.resizable(False, False)
+            self._window.protocol("WM_DELETE_WINDOW", lambda: self.main_exit())
+            self._window.title('HGSSystem: Manage Station 加载中')
+        else:
+            self._window.title('HGSSystem: Manage Station')
 
     def __conf_create_tk(self):
         self._menu_back = tk.Frame(self._window)
@@ -358,6 +363,7 @@ class AdminStation(AdminStationBase):
         frame_list = []
 
         for i in tk_menu.all_menu:
+            self._window.update()
             frame_list.append(i(self, self._menu_back, Config.tk_second_win_bg))
 
         for i in frame_list:
@@ -419,6 +425,7 @@ class AdminStation(AdminStationBase):
     def __conf_create_program(self):
         program_list = []
         for i in tk_program.all_program:
+            self._window.update()
             program_list.append(i(self, self._program_back, Config.tk_second_win_bg))
 
         for i in program_list:

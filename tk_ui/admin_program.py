@@ -48,6 +48,9 @@ class AdminProgram(metaclass=abc.ABCMeta):
     def to_program(self):
         pass
 
+    def leave_program(self):
+        pass
+
     def get_title(self) -> str:
         return self.program_title
 

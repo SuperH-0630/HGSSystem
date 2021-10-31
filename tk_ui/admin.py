@@ -394,6 +394,7 @@ class AdminStation(AdminStationBase):
 
         menu = self._menu_dict.get(name)
         if menu is None:
+            self._menu_title[1].set(f'菜单错误')
             self.show_msg("菜单错误", f"系统无法找到菜单:\n  {name}")
             return
 
@@ -439,10 +440,12 @@ class AdminStation(AdminStationBase):
 
     def to_program(self, name: str = "欢迎页"):
         if self._program_now is not None:
+            self._program_now[2].leave_program()
             self._program_now[1].place_forget()
 
         program = self._program_dict.get(name)
         if program is None:
+            self._program_title[1].set(f' 程序加载错误')
             self.show_msg("程序错误", f"系统无法找到程序:\n  {name}")
             return
 

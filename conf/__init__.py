@@ -18,8 +18,8 @@ class Config(ConfigTkinter, ConfigSecret, ConfigSystem, ConfUser, ConfigExport,
              ConfigDatabase,
              ConfigCapture,
              ConfigMatplotlib):
-    run_type = p_args.run[0]
-    program = p_args.program[0]
+    run_type = p_args['run']
+    program = p_args['program']
 
     font_d = {"noto": noto_font}
     picture_d = {"head": head_pic, "rank_bg": rank_bg_pic}

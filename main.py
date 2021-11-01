@@ -10,12 +10,23 @@ import os
 
 from conf import Config
 
+app = None
+
 
 def can_not_load(name):
     print(f"无法加载 {name} 系统, 该系统或其依赖可能不存在", file=sys.stderr)
 
 
 def main():
+    """
+    入口程序
+    :return:
+    """
+
+    if __name__ != "__main__" and Config.program != "website":
+        print("运行程序出错", file=sys.stderr)
+        exit(1)
+
     if Config.mysql_url is None or Config.mysql_name is None:
         print("请提供MySQL信息")
         sys.exit(1)
@@ -72,7 +83,7 @@ def main():
 
         station = admin_station.AdminStation(mysql)
         station.mainloop()
-    elif program_name == "ranking_website":
+    elif program_name == "website":
         try:
             from app import creat_web
             from app.views import register
@@ -80,12 +91,14 @@ def main():
             can_not_load("在线排行榜服务")
             sys.exit(1)
 
-        app = creat_web(mysql)
-        app.run()
+        global app
+        app = creat_web(mysql)  # 暴露 app 接口
+        if __name__ == "__main__":
+            debug = Config.run_type == 'Debug'
+            app.run(debug=debug)
     else:
         can_not_load(program_name)
         sys.exit(1)
 
 
-if __name__ == '__main__':
-    main()
+main()

@@ -9,17 +9,17 @@ rank_website: Optional[RankWebsite] = None
 rank_app: Optional[Flask] = None
 
 
-@rank_web.route('/up')
-def rank_up():
+@rank_web.route('/up/<int:page>')
+def rank_up(page: int):
     global rank_website
-    data = rank_website.get_rank("DESC")
+    data = rank_website.get_rank(page, "DESC")
     return render_template("rank_web/ranking.html", rank_info=data, ranking_name="高分榜")
 
 
-@rank_web.route('/down')
-def rank_down():
+@rank_web.route('/down/<int:page>')
+def rank_down(page: int):
     global rank_website
-    data = rank_website.get_rank("ASC")
+    data = rank_website.get_rank(page, "ASC")
     return render_template("rank_web/ranking.html", rank_info=data, ranking_name="警示榜")
 
 

@@ -1,6 +1,5 @@
 from conf import Config
 from flask import render_template, Blueprint, Flask
-from .rank_web import RankWebsite
 from tool.type_ import Optional
 
 hello_web = Blueprint("hello_web", __name__)

@@ -1,3 +1,6 @@
+from args import p_args
+
+
 class ConfigSecretRelease:
     passwd_salt = "HGSSystem"
 
@@ -25,6 +28,19 @@ HGSSystem 版权归属 SuperHuan
     '''.strip()
 
 
+class ConfigSystemDebug(ConfigSystemRelease):
+    search_reset_time = 1  # 搜索间隔的时间
+    about_info = f'''
+HGSSystem is Garbage Sorting System
+
+HGSSystem 版权归属 SuperHuan
+作者: SongZihuan[SuperHuan]
+
+开发者模式
+项目托关于 Github 平台
+    '''.strip()
+
+
 class ConfigExportRelease:
     qr_show_uid_len = 12  # qr 码上展示uid的长度
 
@@ -42,6 +58,6 @@ class ConfigTkinterRelease:
 
 ConfigTkinter = ConfigTkinterRelease
 ConfigExport = ConfigExportRelease
-ConfigSystem = ConfigSystemRelease
+ConfigSystem = ConfigSystemDebug if p_args['run'] == 'Debug' else ConfigSystemRelease
 ConfUser = ConfUserRelease
 ConfigSecret = ConfigSecretRelease

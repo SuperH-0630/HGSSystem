@@ -1,6 +1,7 @@
 import abc
 import tkinter as tk
 from PIL import Image, ImageTk
+from math import ceil
 
 from conf import Config
 from tool.type_ import *
@@ -16,26 +17,22 @@ class RankingStationBase(metaclass=abc.ABCMeta):
 
     def __init__(self, db: DB):
         self._db = db
-        self.rank = [[]]
 
-        self.rank_index = 0
-        self.rank_count = 1
-
-        self.offset = 0
-        self.limit_n = 2  # 一次性获取的数据 (页数, 行数=limit_n * rank_count)
+        self.rank_page = 1  # 页码是按1开始计算的
+        self.rank_page_max = 1
+        self.rank_count = 7
 
         self.auto: bool = False
         self.auto_to_next: bool = True  # auto的移动方向
         self.auto_time: int = 5000  # 5s
 
-    def get_rank(self, offset: int = 0) -> Tuple[bool, list]:
+    def get_rank(self, offset_page: int = 0) -> Tuple[bool, list]:
         """
         获取数据
-        :param offset: 位移 (相对于当前位置移动的页数)
+        :param offset_page: 位移 (相对于当前位置移动的页数)
         :return: 成功, 排行榜数据
         """
-        limit = self.rank_count * self.limit_n
-        offset = self.offset + limit * offset  # offset为0表示不移动, 1表示向前, -1表示向后
+        offset = self.rank_count * (self.rank_page + offset_page - 1)  # 页码是按1开始计算的
         if offset < 0:
             return False, []
 
@@ -43,101 +40,83 @@ class RankingStationBase(metaclass=abc.ABCMeta):
                               table='user',
                               where='IsManager=0',
                               order_by=[('Reputation', "DESC"), ('Score', "DESC"), ('UserID', "DESC")],
-                              limit=limit,
+                              limit=self.rank_count,
                               offset=offset)
         if cur is None or cur.rowcount == 0:
             return False, []
-        self.offset = offset
+        self.rank_page += offset_page
 
         rank_list = list(cur.fetchall())
-
-        rank = [[]]
+        rank = []
         for i, r in enumerate(rank_list):
-            if len(rank[-1]) == self.rank_count:
-                rank.append([])
             color = None
-            if self.offset + i == 0:
+            if offset + i == 0:
                 color = "#eaff56"
-            elif self.offset + i == 1:
+            elif offset + i == 1:
                 color = "#ffa631"
-            elif self.offset + i == 2:
+            elif offset + i == 2:
                 color = "#ff7500"
-            rank[-1].append((self.offset + i + 1, r[1], r[0], r[2], r[3], color))
+            rank.append((offset + i + 1, r[1], r[0], r[2], r[3], color))
 
         return True, rank
+
+    def rank_page_to(self, to_: int):
+        res, rank_list = self.get_rank(to_)
+        if not res:
+            self.set_next_btn(True)  # 当 rank_index为最后一项时, 该函数不应该被调用(除非数据库被外部改动)
+            return
+
+        self.show_rank(rank_list)
+        self.set_prev_btn(False)
+
+        if self.rank_page >= self.rank_page_max:  # 最后一页
+            self.set_next_btn(True)  # 当 rank_index为最后一项时, 该函数不应该被调用(除非数据库被外部改动)
+            self.rank_page = self.rank_page_max
+        else:
+            self.set_next_btn(False)
+
+        if self.rank_page <= 1:  # 最后一页
+            self.set_prev_btn(True)  # 当 rank_index为最后一项时, 该函数不应该被调用(除非数据库被外部改动)
+            self.rank_page = 1
+        else:
+            self.set_prev_btn(False)
+
+        if self.auto:
+            self.set_run_after_now(self.auto_time, self.update_rank_auto)
 
     def rank_page_to_next(self):
         """
         显示排行榜下一页数据
         :return:
         """
-        if self.rank_index == len(self.rank) - 1:
-            self.set_next_btn(True)  # 当 rank_index为最后一项时, 该函数不应该被调用(除非数据库被外部改动)
-            return
-
-        self.rank_index += 1
-        if self.rank_index == len(self.rank) - 1:  # 最后一项
-            if len(self.rank[self.rank_index]) == self.rank_count:
-                res, rank = self.get_rank(1)  # 向前移动一个offset
-                if res:
-                    self.rank = self.rank[self.rank_index], *rank  # 调整rank的内容
-                    self.rank_index = 0
-                else:
-                    self.set_next_btn(True)
-            else:  # 如果最后一个表格没有填满, 直接判定无next
-                self.set_next_btn(True)
-        self.show_rank(self.rank[self.rank_index])
-        self.set_prev_btn(False)
-
-        if self.auto:
-            self.set_run_after_now(self.auto_time, self.update_rank_auto)
+        self.rank_page_to(1)
 
     def rank_page_to_prev(self):
         """
         显示排行榜上一页数据
         :return:
         """
-        if self.rank_index == 0:  # 当 rank_index为最后一项时, 该函数不应该被调用(除非数据库被外部改动)
-            self.set_prev_btn(True)
-            return
+        self.rank_page_to(-1)
 
-        self.rank_index -= 1
-        if self.rank_index == 0:  # 回到第一项
-            res, rank = self.get_rank(-1)  # 向后移动一个offset
-            if res:
-                self.rank = *rank, self.rank[self.rank_index]  # 调整rank的内容
-                self.rank_index = 0
-            else:
-                self.set_prev_btn(True)
-        self.show_rank(self.rank[self.rank_index])
-        self.set_next_btn(False)
-
-        if self.auto:
-            self.set_run_after_now(self.auto_time, self.update_rank_auto)
-
-    def show_rank_first(self):
+    def show_rank_first(self, rank_count: int = 7):
         """
         第一次显示排行榜数据
         :return:
         """
-        self.rank_index = 0
-        self.offset = 0
-        self.rank_count = self.rank_count
-        res, self.rank = self.get_rank(0)
 
-        if not res:
-            self.set_next_btn(False)
-            self.set_prev_btn(False)
-            self.show_rank([])
+        cur = self._db.search(columns=['Count(UserID)'],
+                              table='user',
+                              where='IsManager=0')
+        if cur is None or cur.rowcount != 1:
+            return
+        try:
+            max_ = int(cur.fetchone()[0])
+        except (ValueError, TypeError):
             return
 
-        self.show_rank(self.rank[0])
-
-        self.set_prev_btn(True)
-        if len(self.rank) == 1:
-            self.set_next_btn(True)
-        else:
-            self.set_next_btn(False)
+        self.rank_count = rank_count
+        self.rank_page_max = ceil(max_ / rank_count)  # 计算最大页数
+        self.rank_page_to(0)
 
     def rank_auto(self, auto):
         """
@@ -236,7 +215,7 @@ class RankingStation(RankingStationBase):
         self.__create_tk()
         self.__conf_tk()
 
-        self.show_rank_first()
+        self.show_rank_first(self.rank_count)
 
     def __create_tk(self):
         self.rank_frame = tk.Frame(self.window)
@@ -287,7 +266,7 @@ class RankingStation(RankingStationBase):
         n = min((self.height / height), (self.width / width))  # 因为横和纵不是平均放大, 因此取倍数小的
         self.__conf_font_size(n)
         self.__conf_tk()
-        self.show_rank_first()
+        self.show_rank_first(self.rank_count)
 
     def __conf_rank(self):
         title_font = make_font(size=self._rank_font_title_size, weight="bold")
@@ -384,7 +363,7 @@ class RankingStation(RankingStationBase):
             self.rank_title_var.set("排行榜无数据")
         else:
             self.__set_rank_info(rank_info)
-            self.rank_title_var.set("排行榜")
+            self.rank_title_var.set(f"排行榜 {self.rank_page}/{self.rank_page_max}")
 
     def rank_auto(self, auto):
         super(RankingStation, self).rank_auto(auto)

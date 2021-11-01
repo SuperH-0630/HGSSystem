@@ -417,7 +417,7 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
                 category_score = category_score / name_score
                 if category_score > 1:
                     category_score = 1
-                category = f"垃圾类型为{category_} [可信度: {(category_score / name_score) * 100}%]"
+                category = f"垃圾类型为{category_} [可信度: {category_score * 100}%]"
             res_str += f"  NO.{i + 1} {name}\n  {category}\n"
         self.show_msg("搜索垃圾", res_str, show_time=30, big=True)
 

@@ -71,10 +71,11 @@ print("是否执行数据库初始化程序?\n执行初始化程序会令你丢�
 res = input("[Y/n]")
 if res == 'Y' or res == 'y':
     with open(os.path.join(__setup, "setup.sql"), "r", encoding='utf-8') as f:
-        all_sql = f.read().split(';')
+        all_sql = f.read().split(';\n')  # 使用 `;` 作为分隔符是不够的, 因为函数中可能会使用`;`表示语句
         for s in all_sql:
             if s.strip() == "":
                 continue
+            print(f"{s};")
             cursor.execute(f"{s};")
         sql.commit()
 

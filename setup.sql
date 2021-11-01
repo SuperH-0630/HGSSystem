@@ -5,12 +5,12 @@ USE hgssystem;
 CREATE TABLE IF NOT EXISTS user -- 创建用户表
 (
     ID         INT PRIMARY KEY AUTO_INCREMENT,
-    UserID     char(34)    NOT NULL UNIQUE,
+    UserID     char(32)    NOT NULL UNIQUE CHECK (UserID REGEXP '[a-zA-Z0-9]{32}'),
     Name       varchar(50) NOT NULL,
-    IsManager  bit         NOT NULL DEFAULT 0,
-    Phone      char(11)    NOT NULL,
-    Score      INT         NOT NULL,
-    Reputation INT         NOT NULL,
+    IsManager  bit         NOT NULL DEFAULT 0 CHECK (IsManager IN (0, 1)),
+    Phone      char(11)    NOT NULL CHECK (Phone REGEXP '[0-9]{11}'),
+    Score      INT         NOT NULL CHECK (Score <= 500 and Score >= 0),
+    Reputation INT         NOT NULL CHECK (Reputation <= 1000 and Reputation >= 1),
     CreateTime DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -18,12 +18,12 @@ CREATE TABLE IF NOT EXISTS garbage -- 创建普通垃圾表
 (
     GarbageID   INT PRIMARY KEY AUTO_INCREMENT,
     CreateTime  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    Flat        TINYINT  NOT NULL DEFAULT 0,
+    Flat        TINYINT  NOT NULL DEFAULT 0 CHECK (Flat IN (0, 1, 2)),
     UserID      char(34),
     UseTime     DATETIME,
-    GarbageType TINYBLOB,
+    GarbageType TINYBLOB CHECK (GarbageType IS NULL OR GarbageType IN (1, 2, 3, 4)),
     Location    VARCHAR(50),
-    CheckResult BIT,
+    CheckResult BIT CHECK (CheckResult IS NULL OR CheckResult IN (0, 1)),
     CheckerID   char(34),
     FOREIGN KEY (UserID) REFERENCES user (UserID),
     FOREIGN KEY (CheckerID) REFERENCES user (UserID)
@@ -156,7 +156,7 @@ CREATE FUNCTION get_avg(num1 int, num2 int)
     COMMENT '计算两个数相除'
 BEGIN
     IF num2 = 0 or num1 = 0 THEN
-        RETURN 0;
-    END IF;
-    RETURN num1 / num2;
+        RETURN 0; -- 注释, 防止python在此处分割SQL
+    END IF; -- 注释, 防止python在此处分割SQL
+    RETURN num1 / num2; -- 注释, 防止python在此处分割SQL
 END;

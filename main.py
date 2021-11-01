@@ -12,10 +12,14 @@ from conf import Config
 
 
 def can_not_load(name):
-    print(f"无法加载 {name} 模块, 该系统可能不存在", file=sys.stderr)
+    print(f"无法加载 {name} 系统, 该系统或其依赖可能不存在", file=sys.stderr)
 
 
 def main():
+    if Config.mysql_url is None or Config.mysql_name is None:
+        print("请提供MySQL信息")
+        sys.exit(1)
+
     program_name = Config.program
     if program_name == "setup":  # setup程序不需要数据库链接等操作
         __main = os.path.dirname(os.path.abspath(__file__))
@@ -25,22 +29,18 @@ def main():
                         f"--mysql_passwd={Config.mysql_passwd} "
                         f"--program=setup")
         if res != 0:
-            print("初始化程序加载失败", file=sys.stderr)
-            exit(1)
-        exit(0)
+            print("初始化程序加载失败, 请检查配置是否正确而", file=sys.stderr)
+            sys.exit(1)
+        sys.exit(0)
 
     from sql.db import DB
-
-    if Config.mysql_url is None or Config.mysql_name is None:
-        print("MySQL 错误")
-        exit(1)
     mysql = DB()
 
     if program_name == "garbage":
         from equipment.aliyun import Aliyun
         if Config.aliyun_key is None or Config.aliyun_secret is None:
-            print("Aliyun key 错误")
-            exit(1)
+            print("请提供Aliyun key信息")
+            sys.exit(1)
 
         try:
             from equipment.scan import HGSCapture, HGSQRCoder

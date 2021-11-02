@@ -7,6 +7,8 @@
     <link href="{{ url_for('static', filename='styles/index.css') }}" rel="stylesheet">
 {% endblock %}
 
+{# 去除默认的内容 #}
+{% block flash %} {% endblock %}
 {% block nav %} {% endblock %}
 {% block bnav %} {% endblock %}
 {% block h1_title_ %} {% endblock %}
@@ -15,7 +17,7 @@
     <section id="base">
         <h1 id="title-1"> 欢迎，HGSSystem在线系统 </h1>
         <h2 id="title-2"> {{ loc }} 站 </h2>
-        <form method="get" action="{{ url_for('hello_web.start') }}">
+        <form method="get" action="{{ url_for('hello.index') }}">
             <input id="btn" type="submit" value="开始">
         </form>
     </section>

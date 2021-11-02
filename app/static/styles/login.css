@@ -1,0 +1,42 @@
+#login_nm_lb, #login_pw_lb, #login_nm, #login_pw {
+    font-size: 20px;
+}
+
+#login_nm_lb, #login_pw_lb {
+    display: inline-block;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+#login_nm, #login_pw {
+    display: inline-block;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    width: 100%;
+}
+
+#login_submit_div {
+    position: relative;
+    width: 100%;
+    height: 50px;
+}
+
+#login_submit {
+    display: inline-block;
+    margin: 10px auto 10px;
+    font-size: 17px;
+    width: 100px;
+    height: 40px;
+
+    position: absolute;
+    right: 0;
+}
+
+#reg_p {
+    display: inline-block;
+    font-size: 15px;
+
+    position: absolute;
+    right: 110px;
+    bottom: 0;
+}

@@ -23,6 +23,7 @@ if res is None or res == "False":
     parser.add_argument("--aliyun_key", nargs=1, type=str, help="阿里云认证-KET")
     parser.add_argument("--aliyun_secret", nargs=1, type=str, help="阿里云认证-SECRET")
 
+    parser.add_argument("--app_secret", nargs=1, type=str, help="系统密钥-SECRET")
     parser.add_argument("--program", nargs=1, type=str, choices=["setup",
                                                                  "garbage",
                                                                  "ranking",
@@ -50,6 +51,8 @@ if res is None or res == "False":
     if p_args_.aliyun_secret is not None:
         p_args['aliyun_secret'] = p_args_.aliyun_secret[0]
 
+    if p_args_.app_secret is not None:
+        p_args['app_secret'] = p_args_.app_secret[0].lower()
     if p_args_.program is not None:
         p_args['program'] = p_args_.program[0].lower()
     if p_args_.run_type is not None:
@@ -90,6 +93,13 @@ if p_args.get('aliyun_key') is None or p_args.get('aliyun_secret') is None:
         else:
             print("阿里云认证错误", file=sys.stderr)
             exit(1)
+
+if p_args.get('app_secret') is None:
+    res = os.environ.get('HGSSystem_AppSecret')
+    if res is not None:
+        p_args['app_secret'] = res
+    else:
+        p_args['app_secret'] = "HGSSystem"
 
 if p_args.get('run') is None:
     res = os.environ.get('HGSSystem_Run')

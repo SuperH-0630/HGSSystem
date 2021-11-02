@@ -3,19 +3,36 @@ html {
     font-family: 'Noto Sans SC', sans-serif;
 }
 
+section.top-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 80px;
+    vertical-align: center;
+    background-color: rgba(240, 128, 128, 90%);
+    z-index: 10;
+}
+
 ul.top-nav {
-    background-color: #F08080;
-    text-align: center;
+    display: inline-block;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 li.top-nav-item {
     display: inline-block;
-    padding: 20px 20px;
 }
 
 a.top-nav-item {
+    display: inline-block;
+    padding-left: 20px;
+    padding-right: 20px;
+
     font-size: 20px;
     font-weight: bold;
+    line-height: 80px;
 }
 
 a.top-nav-item, a.top-nav-item:hover, a.top-nav-item:active, a.top-nav-item:link, a.top-nav-item:visited {
@@ -28,30 +45,38 @@ a.top-nav-item:hover, a.top-nav-item:active {
     color: #800080;
 }
 
-@keyframes logo-run {
-    0% {
-        left: 0;
-    }
-    50% {
-        left: 100%;
-        transform: translateX(-100%);
-    }
-    100% {
-        left: 0;
-    }
+#start-p {
+    margin-top: 8%;
 }
 
-section.logo {
+
+.top-flash-message {
+    display: block;
+    width: 60%;
+    text-align: center;
+
+    border-radius: 15px;
+    background-color: rgba(64, 224, 208);
+
+    font-size: 25px;
+    height: 50px;
+    line-height: 50px;
+    margin: 5px auto;
+}
+
+#top-title {
+    display: inline-block;
+    font-size: 25px;
     position: relative;
-    height: 200px;
+    left: 3%;
+    line-height: 80px;
+    height: 100%;
+    font-weight: bold;
 }
 
-img.logo {
-    position: absolute;
-    left: 0;
-    max-height: 200px;
-    max-width: 200px;
-    animation: logo-run 15s infinite;
+#top-title, #top-title:hover, #top-title:active, #top-title:link, #top-title:visited {
+    text-decoration: underline;
+    color: #FFFFFF;
 }
 
 #bottom-nav {
@@ -60,8 +85,21 @@ img.logo {
     background-color: black;
     text-align: center;
     vertical-align: center;
-    height: 5%;
     width: 100%;
+    z-index: 10;
+}
+
+@media all and (max-width: 992px) {
+    /* 小屏幕(手机) */
+    #bottom-nav {
+        height: 8%;
+    }
+}
+
+@media not all and (max-width: 992px) {
+    #bottom-nav {
+        height: 5%;
+    }
 }
 
 .bottom-nav-item {
@@ -70,12 +108,12 @@ img.logo {
     color: #FFFFFF;
 }
 
-a#github-link, a#github-link:hover, a#github-link:active, a#github-link:link, a#github-link:visited {
+#github-link, #github-link:hover, #github-link:active, #github-link:link, #github-link:visited {
     text-decoration: none;
     color: #FFFFFF;
 }
 
-a#github-link:hover, a#github-link:active {
+#github-link:hover, #github-link:active {
     text-decoration: none;
     color: #800080;
 }

@@ -3,9 +3,9 @@
 配置文件
 """
 
-from font.noto import noto_font
-from picture import head_pic, rank_bg_pic
-from args import p_args
+from .font.noto import noto_font
+from .picture import head_pic, rank_bg_pic
+from .args import p_args
 from .equipment import ConfigCapture
 from .sql import ConfigDatabase
 from .aliyun import ConfigAliyun

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block style %}
+    {{ super() }}
+    <link href="{{ url_for('static', filename='styles/login.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block title %} 用户登录 {% endblock %}
+{% block h1_title %} 用户登录 {% endblock %}
+
+{% block content %}
+    <form method="post" action="{{ url_for('auth.login') }}">
+        {{ form.hidden_tag() }}
+
+        {{ form.name.label(id="login_nm_lb") }}<br>
+        {{ form.name(id="login_nm") }}
+
+        <br>
+        {{ form.passwd.label(id="login_pw_lb") }}<br>
+        {{ form.passwd(id="login_pw") }}
+
+        <br>
+        <div id="login_submit_div"> {{ form.submit(id="login_submit") }} </div>
+    </form>
+{% endblock %}

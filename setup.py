@@ -46,6 +46,7 @@ check_import("qrcode", "qrcode")  # 二维码生成
 check_import("pymysql", "PyMySQL")  # 连接 MySQL服务器
 check_import("cryptography", "cryptography")  # 链接 MySQL 服务器时加密
 check_import("flask", "Flask")  # 网页服务
+check_import("waitress", "waitress")  # waitress 网页服务
 check_import("PIL", "Pillow")  # 图片处理
 check_import("numpy", "numpy")  # matplotlib依赖
 check_import("matplotlib", "matplotlib")  # matplotlib依赖

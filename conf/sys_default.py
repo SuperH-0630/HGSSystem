@@ -2,7 +2,8 @@ from args import p_args
 
 
 class ConfigSecretRelease:
-    passwd_salt = "HGSSystem"
+    passwd_salt = p_args['app_secret']
+    wtf_secret = p_args['app_secret']
 
 
 class ConfUserRelease:

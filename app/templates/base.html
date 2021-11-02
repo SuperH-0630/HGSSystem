@@ -35,19 +35,47 @@
 <body>
 
 {% block nav %}
-    <section class="logo">
-        <img class="logo" src=" {{ url_for('static', filename='images/HGSSystem.png') }} " alt="HGSSystem Logo">
+    <section class="top-nav">
+        <p id="top-title"> HGSSystem-{{ loc }} 在线 </p>
+        <ul class="top-nav">
+            <li class="top-nav-item"><a class="top-nav-item" href="{{ url_for('hello.index') }}"> 首页 </a></li>
+            <li class="top-nav-item"><a class="top-nav-item" href="{{ url_for('rank.rank_up', page=1) }}"> 高分榜 </a></li>
+            <li class="top-nav-item"><a class="top-nav-item" href="{{ url_for('rank.rank_down', page=1) }}"> 警告榜 </a>
+            </li>
+            <li class="top-nav-item"><a class="top-nav-item"> 积分商城 </a></li>
+            <li class="top-nav-item"><a class="top-nav-item"> 新闻 </a></li>
+            {% if current_user.is_authenticated %}
+                <li class="top-nav-item"><a class="top-nav-item" href="{{ url_for('auth.logout') }}">
+                    退出: {{ current_user.name }} </a></li>
+            {% else %}
+                <li class="top-nav-item"><a class="top-nav-item" href="{{ url_for('auth.login') }}"> 登录 </a></li>
+            {% endif %}
+        </ul>
     </section>
-    <ul class="top-nav">
-        <li class="top-nav-item"><a class="top-nav-item" href="{{ url_for('hello_web.start') }}"> 首页 </a></li>
-        <li class="top-nav-item"><a class="top-nav-item" href="{{ url_for('rank_web.rank_up', page=1) }}"> 高分榜 </a></li>
-        <li class="top-nav-item"><a class="top-nav-item" href="{{ url_for('rank_web.rank_down', page=1) }}"> 警告榜 </a>
-        </li>
-        <li class="top-nav-item"><a class="top-nav-item"> 积分商城 </a></li>
-    </ul>
 {% endblock %}
 
+<p id="start-p"></p>  <!-- 占位作用 -->
+
 <article>
+    {% block flash %}
+        <section class="top-flash">
+            {% for message in get_flashed_messages() %}
+                <p class="top-flash-message"> {{ message }} </p>
+            {% endfor %}
+            <script>
+                console.log("doneA")
+                setTimeout(function () {
+                    console.log("doneB")
+                    let p_flash = document.querySelectorAll("p.top-flash-message");
+                    for (let i = 0; i < p_flash.length; i += 1) {
+                        p_flash[i].style.display = 'none';
+                        console.log("doneC")
+                    }
+                }, 3000)
+            </script>
+        </section>
+    {% endblock %}
+
     {% block h1_title_ %}
         <section style="text-align: center">
             <h1 style=";font-size: 35px;font-weight: bold;margin: 3% auto 4%;"> {% block h1_title %} {% endblock %}</h1>
@@ -63,10 +91,10 @@
 
 <p id="last-p"></p>  <!-- 占位作用 -->
 {% block bnav %}
-    <nav id="bottom-nav">
-        <p class="bottom-nav-item"> 版权归属 (c) SuperHuan<br>在
-            <a id="github-link" href="https://github.com/SuperH-0630/HGSSystem">Github</a>上查看</p>
-    </nav>
+    <footer id="bottom-nav">
+        <p class="bottom-nav-item"> 版权归属 (c) {{ copy_right }}<br>在
+            <a id="github-link" href="{{ github_link }}">Github</a>上查看</p>
+    </footer>
 {% endblock %}
 
 </body>

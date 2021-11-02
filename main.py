@@ -85,17 +85,23 @@ def main():
         station.mainloop()
     elif program_name == "website":
         try:
-            from app import creat_web
+            from app import creat_web, App
+            from flask import Flask
             from app.views import register
         except ImportError:
+            raise
             can_not_load("在线排行榜服务")
             sys.exit(1)
 
         global app
-        app = creat_web(mysql)  # 暴露 app 接口
         if __name__ == "__main__":
-            debug = Config.run_type == 'Debug'
-            app.run(debug=debug)
+            app = creat_web(mysql)  # 暴露 app 接口
+            print("Web 服务启动 访问: http://127.0.0.1:8080/")
+            app.run_waitress(host='0.0.0.0', port="8080")
+            # app.run_flask()
+        else:
+            tmp = creat_web(mysql)  # 暴露 app 接口
+            app = tmp.get_app()
     else:
         can_not_load(program_name)
         sys.exit(1)

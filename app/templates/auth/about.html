@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% import "auth/about_macro.html" as about %}
+
+{% block style %}
+    {{ super() }}
+    <link href="{{ url_for('static', filename='styles/auth/about.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block title %} 关于 {% endblock %}
+{% block h1_title %} 你好, {{ current_user.name }}! {% endblock %}
+
+{% block content %}
+    <section id="about" class="clearfix">
+        <section id="user-info">
+            <p class="user-info-item"> 用户名: <span class="user-info-value"> {{ current_user.name }} </span></p>
+            <br>
+
+            <p class="user-info-item"> 用户ID: <span class="user-info-value"> {{ current_user.uid }} </span></p>
+            <br>
+
+            <p class="user-info-item"> 用户组: <span class="user-info-value"> {{ current_user.group }} </span></p>
+            <br>
+
+            <p class="user-info-item"> 目前积分: <span class="user-info-value"> {{ current_user.score }} </span></p>
+            <br>
+
+            <p class="user-info-item"> 垃圾分类信用: <span class="user-info-value"> {{ current_user.reputation }} </span></p>
+            <br>
+
+            <p class="user-info-item"> 最近7天垃圾量: <span class="user-info-value"> {{ current_user.rubbish }} </span></p>
+
+            <br>
+            <form method="get" action="{{ url_for("auth.logout") }}">
+                <input type="submit" class="user-logout-btn" value="退出登录">
+            </form>
+            <br>
+        </section>
+        <ul id="garbage-list">
+            {{ about.get_garbage_list(current_user.get_garbage_list()) }}
+        </ul>
+    </section>
+{% endblock %}

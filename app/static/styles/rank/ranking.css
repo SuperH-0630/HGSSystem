@@ -17,6 +17,7 @@ li#ranking-item-3 {
 }
 
 li.ranking-item {
+    display: block;
     border-width: 2px;
     border-style: ridge;
     border-color: #F08080;

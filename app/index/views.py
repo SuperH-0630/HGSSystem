@@ -11,7 +11,7 @@ def start():
     return render_template("hello/start.html")
 
 
-@hello.route('/start')
+@hello.route('/index')
 def index():
     return render_template("hello/index.html")
 

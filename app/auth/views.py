@@ -2,11 +2,11 @@ from flask import render_template, Blueprint, Flask, request, url_for, redirect,
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired
 from flask_wtf import FlaskForm
-from flask_login import LoginManager, login_required, login_user, logout_user
+from flask_login import LoginManager, login_required, login_user, logout_user, current_user
 
 from tool.type_ import *
 from sql.db import DB
-from .web import AuthWebsite
+from .web import AuthWebsite, WebUser
 
 auth = Blueprint("auth", __name__)
 auth_website: Optional[AuthWebsite] = None
@@ -52,6 +52,14 @@ def logout():
     logout_user()
     flash("用户退出成功")
     return redirect(url_for("hello.index"))
+
+
+@auth.route("/about")
+@login_required
+def about():
+    user: WebUser = current_user
+    user.update_info()
+    return render_template("auth/about.html")
 
 
 def creat_auth_website(app_: Flask, db: DB):

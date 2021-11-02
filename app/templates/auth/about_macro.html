@@ -1,0 +1,10 @@
+{% macro get_garbage_list(info_lines) %}
+    {% if info_lines %}
+        {% for line in info_lines %}
+            <li class="garbage-list-item garbage-{{ line[4] }}">{{ line[0] }} {{ line[1] }}
+                <span> {{ line[2] }} </span> <span> {{ line[3] }} </span></li>
+        {% endfor %}
+    {% else %}
+        <li class="garbage-list-item garbage-wait"> 没有记录</li>
+    {% endif %}
+{% endmacro %}

@@ -1,31 +1,52 @@
+/* 全局设定相关 */
 html {
     font-size: 15px;
     font-family: 'Noto Sans SC', sans-serif;
 }
 
-section.top-nav {
-    position: fixed;
+body {
+    overflow-y: scroll; /* 总是显示滚动条 */
+}
+
+/* 顶菜单栏 */
+section.nav-top {
+    position: fixed; /* 固定布局 */
     top: 0;
     left: 0;
+
     width: 100%;
-    height: 80px;
+
     vertical-align: center;
-    background-color: rgba(240, 128, 128, 90%);
+    background-color: rgba(240, 128, 128, 90%); /* 带一点透明效果 */
     z-index: 10;
 }
 
-ul.top-nav {
-    display: inline-block;
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
+#nav-title {
+    display: block;
+    float: left;
+
+    font-size: 25px;
+    line-height: 80px;
+    font-weight: bold;
+    margin-left: 10px;
 }
 
-li.top-nav-item {
+#nav-title, #nav-title:hover, #nav-title:active, #nav-title:link, #nav-title:visited {
+    text-decoration: underline;
+    color: #FFFFFF;
+}
+
+ul.nav-top {
+    display: block;
+    float: right;
+    margin-right: 10px;
+}
+
+li.nav-top-item {
     display: inline-block;
 }
 
-a.top-nav-item {
+a.nav-top-item {
     display: inline-block;
     padding-left: 20px;
     padding-right: 20px;
@@ -35,22 +56,23 @@ a.top-nav-item {
     line-height: 80px;
 }
 
-a.top-nav-item, a.top-nav-item:hover, a.top-nav-item:active, a.top-nav-item:link, a.top-nav-item:visited {
+a.nav-top-item, a.nav-top-item:hover, a.nav-top-item:active, a.nav-top-item:link, a.nav-top-item:visited {
     text-decoration: none;
     color: #FFFFFF;
 }
 
-a.top-nav-item:hover, a.top-nav-item:active {
+a.nav-top-item:hover, a.nav-top-item:active {
     text-decoration: none;
     color: #800080;
 }
+
 
 #start-p {
     margin-top: 8%;
 }
 
-
-.top-flash-message {
+/* 闪现消息 */
+.top-msg {
     display: block;
     width: 60%;
     text-align: center;
@@ -64,22 +86,25 @@ a.top-nav-item:hover, a.top-nav-item:active {
     margin: 5px auto;
 }
 
-#top-title {
-    display: inline-block;
-    font-size: 25px;
-    position: relative;
-    left: 3%;
-    line-height: 80px;
-    height: 100%;
-    font-weight: bold;
+/* 内容 */
+@media all and (max-width: 992px) {
+    /* 小屏幕(手机) */
+    #main {
+        position: relative;
+        left: 3%;
+        width: 94%;
+    }
 }
 
-#top-title, #top-title:hover, #top-title:active, #top-title:link, #top-title:visited {
-    text-decoration: underline;
-    color: #FFFFFF;
+@media not all and (max-width: 992px) {
+    #main {
+        position: relative;
+        left: 25%;
+        width: 50%;
+    }
 }
 
-#bottom-nav {
+#nav-bottom {
     position: fixed;
     top: 95%;
     background-color: black;
@@ -91,18 +116,18 @@ a.top-nav-item:hover, a.top-nav-item:active {
 
 @media all and (max-width: 992px) {
     /* 小屏幕(手机) */
-    #bottom-nav {
+    #nav-bottom {
         height: 8%;
     }
 }
 
 @media not all and (max-width: 992px) {
-    #bottom-nav {
+    #nav-bottom {
         height: 5%;
     }
 }
 
-.bottom-nav-item {
+.nav-bottom-item {
     display: block;
     font-size: 15px;
     color: #FFFFFF;
@@ -122,19 +147,9 @@ a.top-nav-item:hover, a.top-nav-item:active {
     margin-top: 5%;
 }
 
-@media all and (max-width: 992px) {
-    /* 小屏幕(手机) */
-    #main {
-        position: relative;
-        left: 3%;
-        width: 94%;
-    }
-}
-
-@media not all and (max-width: 992px) {
-    #main {
-        position: relative;
-        left: 30%;
-        width: 40%;
-    }
+/* 用于解决父元素高度坍塌 */
+.clearfix::after {
+    display: block;
+    content: "";
+    clear: both;
 }

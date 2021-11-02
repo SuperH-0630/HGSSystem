@@ -1,24 +1,39 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="ch">
+<head>
+    <meta charset="UTF-8">
 
-{% block title %} Hello-HGSSystem {% endblock %}
+    <!-- 针对移动端的优化 width为设备大小, user-scalable不允许用户缩放 initial-scale首次加载缩放大小为1.0 -->
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
 
-{% block style %}
-    {{ super() }}
-    <link href="{{ url_for('static', filename='styles/index.css') }}" rel="stylesheet">
-{% endblock %}
+    <!--  针对ie的设置  -->
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
-{# 去除默认的内容 #}
-{% block flash %} {% endblock %}
-{% block nav %} {% endblock %}
-{% block bnav %} {% endblock %}
-{% block h1_title_ %} {% endblock %}
+    <!-- Google Font 字体设置 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@100;300&display=swap" rel="stylesheet">
 
-{% block content_ %}
-    <section id="base">
-        <h1 id="title-1"> 欢迎，HGSSystem在线系统 </h1>
-        <h2 id="title-2"> {{ loc }} 站 </h2>
-        <form method="get" action="{{ url_for('hello.index') }}">
-            <input id="btn" type="submit" value="开始">
-        </form>
-    </section>
-{% endblock %}
+    <link href="{{ url_for('static', filename='styles/reset.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='styles/hello/start.css') }}" rel="stylesheet">
+    <style>
+        body {
+        <!-- 不显示滚动条 --> overflow-y: hidden;
+            overflow-x: hidden;
+        }
+    </style>
+
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    <title> Hello-HGSSystem </title>
+</head>
+
+<body>
+<h1 id="title-1"> 欢迎，HGSSystem在线系统 </h1>
+<h2 id="title-2"> Guangdong-KZ 站 </h2>
+<form method="get" action=" {{ url_for('hello.index') }} ">
+    <input id="btn" type="submit" value="开始">
+</form>
+
+</body>
+</html>

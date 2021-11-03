@@ -16,6 +16,7 @@
 .user-info-item {
     font-size: 22px;
     line-height: 30px;
+    margin-bottom: 20px;
 }
 
 .user-logout-btn {
@@ -27,6 +28,12 @@
 
 .user-info-value {
     text-decoration: underline;
+}
+
+.goods-list-item {
+    font-size: 20px;
+    line-height: 20px;
+    margin-bottom: 10px;
 }
 
 #garbage-list {

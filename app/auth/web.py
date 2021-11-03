@@ -60,6 +60,32 @@ class WebUser:
     def is_authenticated(self):
         return views.auth_website.load_user_by_id(self._uid) is not None
 
+    @property
+    def order(self) -> str:
+        cur = views.auth_website.db.search(columns=["OrderID"],
+                                           table="orders",
+                                           where=f"UserID = '{self._uid}' and status=0")
+        if cur is None or cur.rowcount == 0:
+            return "None"
+        assert cur.rowcount == 1
+        return str(cur.fetchone()[0])
+
+    def get_order_goods_list(self):
+        order = self.order
+        if order is None:
+            return []
+        cur = views.auth_website.db.search(columns=["Name", "Quantity"],
+                                           table="order_goods_view",
+                                           where=f"OrderID = '{order}'")
+        if cur is None:
+            return []
+
+        res = []
+        for i in range(cur.rowcount):
+            re = cur.fetchone()
+            res.append(f"#{i} {re[0]} x {re[1]}")
+        return res
+
     def get_id(self):
         return self._uid
 

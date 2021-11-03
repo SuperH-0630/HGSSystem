@@ -8,3 +8,9 @@
         <li class="garbage-list-item garbage-wait"> 没有记录</li>
     {% endif %}
 {% endmacro %}
+
+{% macro get_goods_list(info_lines) %}
+    {% for line in info_lines %}
+        <li class="goods-list-item"> &nbsp;&nbsp;{{ line }} </li>
+    {% endfor %}
+{% endmacro %}

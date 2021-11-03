@@ -13,27 +13,25 @@
     <section id="about" class="clearfix">
         <section id="user-info">
             <p class="user-info-item"> 用户名: <span class="user-info-value"> {{ current_user.name }} </span></p>
-            <br>
 
             <p class="user-info-item"> 用户ID: <span class="user-info-value"> {{ current_user.uid }} </span></p>
-            <br>
 
             <p class="user-info-item"> 用户组: <span class="user-info-value"> {{ current_user.group }} </span></p>
-            <br>
 
             <p class="user-info-item"> 目前积分: <span class="user-info-value"> {{ current_user.score }} </span></p>
-            <br>
 
             <p class="user-info-item"> 垃圾分类信用: <span class="user-info-value"> {{ current_user.reputation }} </span></p>
-            <br>
 
             <p class="user-info-item"> 最近7天垃圾量: <span class="user-info-value"> {{ current_user.rubbish }} </span></p>
 
-            <br>
             <form method="get" action="{{ url_for("auth.logout") }}">
                 <input type="submit" class="user-logout-btn" value="退出登录">
             </form>
-            <br>
+            <hr>
+            <p class="user-info-item"> 订单号: <span class="user-info-value"> {{ current_user.order }} </span></p>
+            <ul id="goods-list">
+                {{ about.get_goods_list(current_user.get_order_goods_list()) }}
+            </ul>
         </section>
         <ul id="garbage-list">
             {{ about.get_garbage_list(current_user.get_garbage_list()) }}

@@ -57,29 +57,20 @@
 
 <article>
     {% block flash %}
-        <style>
-            .top-msg-section {
-                height: calc({{ flash_height }}px * 55);
-                transition: height 1.5s;
-            }
-        </style>
+        {% if flash_height != 0 %}
+            <ul class="top-msg-section">
+                {% for message in flash_msg %}
+                    <li class="top-msg"> {{ flash_height }} {{ message }} </li>
+                {% endfor %}
+            </ul>
 
-        <ul class="top-msg-section">
-            {% for message in flash_msg %}
-                <li class="top-msg"> {{ flash_height }} {{ message }} </li>
-            {% endfor %}
             <script>
                 setTimeout(function () {
                     let ul_flash = document.querySelector("ul.top-msg-section");
-                    ul_flash.style.height = "20px";
-
-                    let li_flash = document.querySelectorAll("li.top-msg");
-                    for (let i = 0; i < li_flash.length; i += 1) {
-                        li_flash[i].style.display = 'none';
-                    }
-                }, 3000)
+                    ul_flash.style.display = "none";
+                }, 3100)
             </script>
-        </ul>
+        {% endif %}
     {% endblock %}
 
     {% block h1_title_ %}

@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, Blueprint, get_flashed_messages
 from waitress import serve
 
 from conf import Config
@@ -12,6 +12,23 @@ app: Optional["App"] = None
 
 class App:
     app: Optional["App"] = None
+    base = Blueprint("base", __name__)
+
+    @staticmethod
+    @base.app_context_processor
+    def inject_base():
+        return {"loc": Config.base_location,
+                "copy_right": "SuperHuan",
+                "github_link": r"https://github.com/SuperH-0630/HGSSystem"}
+
+    @staticmethod
+    @base.app_context_processor
+    def inject_flash_message():
+        msg = []
+        for i in get_flashed_messages():
+            msg.append(i)
+        return {"flash_msg": msg,
+                "flash_height": len(msg)}
 
     def __new__(cls, *args, **kwargs):
         if App.app is not None:
@@ -20,6 +37,7 @@ class App:
 
     def __init__(self):
         self._app = Flask(__name__)
+        self._app.register_blueprint(self.base)
 
     def conf(self, db: DB):
         self._app.config["SECRET_KEY"] = Config.wtf_secret  # FlaskForm 需要使用

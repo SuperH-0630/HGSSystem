@@ -57,22 +57,29 @@
 
 <article>
     {% block flash %}
-        <section class="top-msg-section">
-            {% for message in get_flashed_messages() %}
-                <p class="top-msg"> {{ message }} </p>
+        <style>
+            .top-msg-section {
+                height: calc({{ flash_height }}px * 55);
+                transition: height 1.5s;
+            }
+        </style>
+
+        <ul class="top-msg-section">
+            {% for message in flash_msg %}
+                <li class="top-msg"> {{ flash_height }} {{ message }} </li>
             {% endfor %}
             <script>
-                console.log("doneA")
                 setTimeout(function () {
-                    console.log("doneB")
-                    let p_flash = document.querySelectorAll("p.top-msg");
-                    for (let i = 0; i < p_flash.length; i += 1) {
-                        p_flash[i].style.display = 'none';
-                        console.log("doneC")
+                    let ul_flash = document.querySelector("ul.top-msg-section");
+                    ul_flash.style.height = "20px";
+
+                    let li_flash = document.querySelectorAll("li.top-msg");
+                    for (let i = 0; i < li_flash.length; i += 1) {
+                        li_flash[i].style.display = 'none';
                     }
                 }, 3000)
             </script>
-        </section>
+        </ul>
     {% endblock %}
 
     {% block h1_title_ %}

@@ -72,18 +72,37 @@ a.nav-top-item:hover, a.nav-top-item:active {
 }
 
 /* 闪现消息 */
+
+@keyframes show_flash_message {
+    0% {
+        color: white;
+        background-color: #FFFFFF;
+    }
+    50% {
+        color: black;
+        background-color: rgba(221, 160, 221);
+    }
+    100% {
+        color: white;
+        background-color: #FFFFFF;
+    }
+
+}
+
 .top-msg {
     display: block;
     width: 60%;
     text-align: center;
 
     border-radius: 15px;
-    background-color: rgba(64, 224, 208);
 
     font-size: 25px;
     height: 50px;
     line-height: 50px;
     margin: 5px auto;
+
+    animation-name: show_flash_message;
+    animation-duration: 3s;
 }
 
 /* 内容 */

@@ -1,4 +1,3 @@
-from conf import Config
 from flask import render_template, Blueprint, Flask
 from tool.type_ import Optional
 
@@ -24,13 +23,6 @@ def error_404(e):
 @hello.app_errorhandler(403)
 def error_403(e):
     return render_template("hello/error.html", error_code="403", error_info=e), 403
-
-
-@hello.app_context_processor
-def inject_base():
-    return {"loc": Config.base_location,
-            "copy_right": "SuperHuan",
-            "github_link": r"https://github.com/SuperH-0630/HGSSystem"}
 
 
 def creat_hello_website(app_: Flask):

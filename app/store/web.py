@@ -2,7 +2,7 @@ from flask import Flask
 
 from sql.db import DB
 from sql.user import update_user
-from sql.store import get_store_item_list, get_store_item, update_goods, get_order_id, write_goods
+from sql.store import get_store_item_list, get_store_item, update_goods, get_order_id, write_goods, check_order
 from tool.type_ import *
 
 from core.user import User, UserNotSupportError
@@ -66,5 +66,7 @@ class StoreWebsite:
         goods = get_store_item(goods_id, self._db)  # 返回值 ["Name", "Score", "Quantity", "GoodsID"]
         if goods is None:
             return goods
-        print(goods)
         return Goods(*goods)
+
+    def check_order(self, order_id: int, uid: uid_t) -> bool:
+        return check_order(order_id, uid, self._db)

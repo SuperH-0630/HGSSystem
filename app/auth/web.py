@@ -25,7 +25,7 @@ class WebUser:
         self.score = "0"
         self.reputation = "0"
         self.rubbish = "0"
-        self.group = "NormalUser"
+        self.group = "普通成员"
         self.is_anonymous = False
         self.update_info()
 
@@ -34,20 +34,22 @@ class WebUser:
         if user is None:
             return
         if user.is_manager():
-            self.group = "ManagerUser"
+            self.group = "管理员"
             self.score = "0"
             self.reputation = "0"
             self.rubbish = "0"
         else:
-            self.group = "NormalUser"
+            self.group = "普通成员"
             res = user.get_info()
             self.score = res.get('score', '0')
             self.reputation = res.get('reputation', '0')
             self.rubbish = res.get('rubbish', '0')
 
+    def is_manager(self):
+        return self.group == "管理员"
+
     def get_qr_code(self):
-        order = self.order
-        return f"HGSSystem-{self._uid}-{order}-order", order
+        return self.order, self._uid
 
     @property
     def name(self):

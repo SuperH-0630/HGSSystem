@@ -3,6 +3,7 @@ from wtforms import TextField, SubmitField
 from flask_login import current_user
 from flask_wtf import FlaskForm
 from flask_login import login_required
+import functools
 
 from sql.db import DB
 
@@ -56,6 +57,28 @@ def index():
     user: WebUser = current_user
     user.update_info()
     return render_template("store/store.html", store_list=store_list, store_form=form)
+
+
+def manager_required(f):
+    @functools.wraps(f)
+    def func(*args, **kwargs):
+        if current_user.is_anonymous or not current_user.is_authenticated or not current_user.is_manager():
+            abort(403)
+        return f(*args, **kwargs)
+
+    return func
+
+
+@store.route('/check/<string:user>/<string:order>')
+@login_required
+@manager_required
+def check(user, order):
+    print(f"wwww{order=}")
+    if not store_web.check_order(order, user):
+        abort(404)
+    else:
+        flash(f"订单: {order} 处理成功")
+    return redirect(url_for("hello.index"))
 
 
 def creat_store_website(app_: Flask, db: DB):

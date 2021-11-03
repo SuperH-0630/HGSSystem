@@ -21,6 +21,11 @@ def error_404(e):
     return render_template("hello/error.html", error_code="404", error_info=e), 404
 
 
+@hello.app_errorhandler(403)
+def error_403(e):
+    return render_template("hello/error.html", error_code="403", error_info=e), 403
+
+
 @hello.app_context_processor
 def inject_base():
     return {"loc": Config.base_location,

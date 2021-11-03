@@ -7,7 +7,6 @@ from flask_login import LoginManager, login_required, login_user, logout_user, c
 import base64
 import qrcode
 from io import BytesIO
-import PIL
 
 from tool.type_ import *
 from sql.db import DB
@@ -72,14 +71,12 @@ def about():
 def order_qr():
     user: WebUser = current_user
     user.update_info()
-    qr_str, order = user.get_qr_code()
-
-    image = qrcode.make(data=qr_str)
+    order, user = user.get_qr_code()
+    image = qrcode.make(data=url_for("store.check", user=user, order=order, _external=True))
     img_buffer = BytesIO()
     image.save(img_buffer, format='JPEG')
     byte_data = img_buffer.getvalue()
     base64_str = base64.b64encode(byte_data).decode("utf-8")
-
     return render_template("auth/qr.html", qr_base64=base64_str, order=order)
 
 

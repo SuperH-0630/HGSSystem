@@ -59,7 +59,7 @@ def index():
 def manager_required(f):
     @functools.wraps(f)
     def func(*args, **kwargs):
-        if current_user.is_anonymous or not current_user.is_authenticated or not current_user.is_manager():
+        if not current_user.is_manager():
             abort(403)
         return f(*args, **kwargs)
     return func

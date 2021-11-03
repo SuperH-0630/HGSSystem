@@ -85,3 +85,4 @@ def creat_auth_website(app_: Flask):
         app = app_
         login_manager.init_app(app)
         app.register_blueprint(auth, url_prefix="/auth")
+        login_manager.anonymous_user = web_user.WebAnonymous

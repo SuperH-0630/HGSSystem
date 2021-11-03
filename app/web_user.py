@@ -1,3 +1,5 @@
+from flask_login import UserMixin, AnonymousUserMixin
+
 from conf import Config
 
 from tool.login import create_uid
@@ -7,8 +9,46 @@ from core.user import User
 from . import views
 
 
-class WebUser:
+class WebAnonymous(AnonymousUserMixin):
+    def __init__(self):
+        self.group = "匿名用户"
+        self.score = "0"
+        self.reputation = "0"
+        self.rubbish = "0"
+        self.is_manager = lambda: False
+
+    @staticmethod
+    def get_qr_code():
+        return ""
+
+    @property
+    def name(self):
+        return ""
+
+    @property
+    def uid(self):
+        return ""
+
+    @property
+    def order(self):
+        return ""
+
+    @staticmethod
+    def get_order_goods_list():
+        return []
+
+    @staticmethod
+    def get_garbage_list():
+        return []
+
+    @staticmethod
+    def get_user():
+        return None
+
+
+class WebUser(UserMixin):
     def __init__(self, name: uname_t, passwd: passwd_t = None, uid: uid_t = None):
+        super(WebUser, self).__init__()
         self._name = name
         if uid is None:
             self._uid = create_uid(name, passwd)
@@ -18,7 +58,6 @@ class WebUser:
         self.reputation = "0"
         self.rubbish = "0"
         self.group = "普通成员"
-        self.is_anonymous = False
         self.update_info()
 
     def update_info(self):

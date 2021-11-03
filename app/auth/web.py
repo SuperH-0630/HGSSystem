@@ -27,6 +27,7 @@ class WebUser:
         self.rubbish = "0"
         self.group = "NormalUser"
         self.is_anonymous = False
+        self.update_info()
 
     def update_info(self):
         user = views.auth_website.get_user_by_id(self._uid)
@@ -43,6 +44,10 @@ class WebUser:
             self.score = res.get('score', '0')
             self.reputation = res.get('reputation', '0')
             self.rubbish = res.get('rubbish', '0')
+
+    def get_qr_code(self):
+        order = self.order
+        return f"HGSSystem-{self._uid}-{order}-order", order
 
     @property
     def name(self):

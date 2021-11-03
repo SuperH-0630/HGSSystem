@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% import "store/store_macro.html" as store %}
+
+{% block style %}
+    {{ super() }}
+    <link href="{{ url_for('static', filename='styles/auth/qr.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block title %} 取件码 {% endblock %}
+{% block h1_title %} 取件码 {% endblock %}
+
+{% block content %}
+    <p class="order"> 订单号: {{ order }} </p>
+    <img class="qr" src="data:image/jpeg;base64,{{ qr_base64 }}" alt="取件码">
+{% endblock %}

@@ -28,10 +28,15 @@
                 <input type="submit" class="user-logout-btn" value="退出登录">
             </form>
             <hr>
-            <p class="user-info-item"> 订单号: <span class="user-info-value"> {{ current_user.order }} </span></p>
-            <ul id="goods-list">
-                {{ about.get_goods_list(current_user.get_order_goods_list()) }}
-            </ul>
+            {% if order == "None" %}
+                <p class="user-info-item"> 订单号: <span class="user-info-value"> 无 </span></p>
+            {% else %}
+                <a class="user-info-item" id="goods-list-title" href="{{ url_for('auth.order_qr') }}">
+                    订单号: <span class="user-info-value"> {{ order }} </span></a>
+                <ul id="goods-list">
+                    {{ about.get_goods_list(order_list) }}
+                </ul>
+            {% endif %}
         </section>
         <ul id="garbage-list">
             {{ about.get_garbage_list(current_user.get_garbage_list()) }}

@@ -1,4 +1,5 @@
 {% macro _get_store_item(infos, store_form) %}
+    {% if infos[2] > 0 %}
     <section id="store-item">
         <p class="store-item-info store-item-title"> {{ infos[0] }} </p>
         <p class="store-item-info"> 消耗 {{ infos[1] }} 积分</p>
@@ -13,6 +14,7 @@
             {{ store_form.submit(value="兑换", class="store-item-submit") }}
         </form>
     </section>
+    {% endif %}
 {% endmacro %}
 
 {% macro get_store_item(info_lines, store_form) %}

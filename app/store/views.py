@@ -2,6 +2,7 @@ from flask import render_template, Blueprint, Flask, redirect, url_for, abort, f
 from wtforms import TextField, SubmitField
 from flask_login import current_user
 from flask_wtf import FlaskForm
+from flask_login import login_required
 
 from sql.db import DB
 
@@ -20,6 +21,7 @@ class BuyForm(FlaskForm):
 
 
 @store.route('/buy/<int:goods_id>', methods=['GET', 'POST'])
+@login_required
 def buy(goods_id: int):
     form = BuyForm()
     if form.validate_on_submit():
@@ -47,6 +49,7 @@ def buy(goods_id: int):
 
 
 @store.route('/index', methods=['GET', 'POST'])
+@login_required
 def index():
     form = BuyForm()
     store_list = store_web.get_store_list()

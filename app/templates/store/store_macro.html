@@ -1,0 +1,28 @@
+{% macro _get_store_item(infos, store_form) %}
+    <section id="store-item">
+        <p class="store-item-info store-item-title"> {{ infos[0] }} </p>
+        <p class="store-item-info"> 消耗 {{ infos[1] }} 积分</p>
+        <p class="store-item-info"> 剩余 {{ infos[2] }} 件 </p>
+        <hr>
+        <form method="post" action="{{ url_for("store.buy", goods_id=infos[3]) }}">
+            {{ store_form.hidden_tag() }}
+            <label class="store-item-num">
+                个数:
+                {{ store_form.quantity(type="number", class="store-item-num", placeholder="个数", value="1") }}
+            </label>
+            {{ store_form.submit(value="兑换", class="store-item-submit") }}
+        </form>
+    </section>
+{% endmacro %}
+
+{% macro get_store_item(info_lines, store_form) %}
+    {% if info_lines %}
+        {% for line in info_lines %}
+            {{ _get_store_item(line, store_form) }}
+        {% endfor %}
+    {% else %}
+        <section id="store-item">
+            <p class="store-item-info" style="text-align: center"> 啥都没有 </p>
+        </section>
+    {% endif %}
+{% endmacro %}

@@ -83,23 +83,23 @@ class MysqlDB(HGSDatabase):
         columns: str = ", ".join(columns)
         return self.__search(f"SELECT {columns} FROM {table} {where} {group_by} {order_by} {limit} {offset};")
 
-    def insert(self, table: str, columns: list, values: Union[str, List[str]]):
+    def insert(self, table: str, columns: list, values: Union[str, List[str]], not_commit: bool = False):
         columns: str = ", ".join(columns)
         if type(values) is str:
             values: str = f"({values})"
         else:
             values: str = ", ".join(f"{v}" for v in values)
-        return self.__done(f"INSERT INTO {table}({columns}) VALUES {values};")
+        return self.__done(f"INSERT INTO {table}({columns}) VALUES {values};", not_commit=not_commit)
 
-    def delete(self, table: str, where: Union[str, List[str]] = None):
+    def delete(self, table: str, where: Union[str, List[str]] = None, not_commit: bool = False):
         if type(where) is list and len(where) > 0:
             where: str = " AND ".join(f"({w})" for w in where)
         elif type(where) is not str or len(where) == 0:  # 必须指定条件
             return None
 
-        return self.__done(f"DELETE FROM {table} WHERE {where};")
+        return self.__done(f"DELETE FROM {table} WHERE {where};", not_commit=not_commit)
 
-    def update(self, table: str, kw: dict[str:str], where: Union[str, List[str]] = None):
+    def update(self, table: str, kw: dict[str:str], where: Union[str, List[str]] = None, not_commit: bool = False):
         if len(kw) == 0:
             return None
 
@@ -110,8 +110,7 @@ class MysqlDB(HGSDatabase):
 
         kw_list = [f"{key} = {kw[key]}" for key in kw]
         kw_str = ", ".join(kw_list)
-
-        return self.__done(f"UPDATE {table} SET {kw_str} WHERE {where};")
+        return self.__done(f"UPDATE {table} SET {kw_str} WHERE {where};", not_commit=not_commit)
 
     def __search(self, sql) -> Union[None, pymysql.cursors.Cursor]:
         if self._cursor is None or self._db is None:
@@ -128,7 +127,7 @@ class MysqlDB(HGSDatabase):
             self._lock.release()  # 释放锁
         return self._cursor
 
-    def __done(self, sql) -> Union[None, pymysql.cursors.Cursor]:
+    def __done(self, sql, not_commit: bool = False) -> Union[None, pymysql.cursors.Cursor]:
         if self._cursor is None or self._db is None:
             raise DBCloseException
 
@@ -141,6 +140,14 @@ class MysqlDB(HGSDatabase):
             traceback.print_exc()
             return None
         finally:
-            self._db.commit()
+            if not not_commit:
+                self._db.commit()
             self._lock.release()
         return self._cursor
+
+    def commit(self):
+        try:
+            self._lock.acquire()
+            self._db.commit()
+        finally:
+            self._lock.release()

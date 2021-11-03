@@ -5,10 +5,10 @@ USE hgssystem;
 CREATE TABLE IF NOT EXISTS user -- 创建用户表
 (
     ID         INT PRIMARY KEY AUTO_INCREMENT,
-    UserID     char(32)    NOT NULL UNIQUE CHECK (UserID REGEXP '[a-zA-Z0-9]{32}'),
-    Name       varchar(50) NOT NULL,
-    IsManager  bit         NOT NULL DEFAULT 0 CHECK (IsManager IN (0, 1)),
-    Phone      char(11)    NOT NULL CHECK (Phone REGEXP '[0-9]{11}'),
+    UserID     CHAR(32)    NOT NULL UNIQUE CHECK (UserID REGEXP '[a-zA-Z0-9]{32}'),
+    Name       VARCHAR(50) NOT NULL,
+    IsManager  BIT         NOT NULL DEFAULT 0 CHECK (IsManager IN (0, 1)),
+    Phone      CHAR(11)    NOT NULL CHECK (Phone REGEXP '[0-9]{11}'),
     Score      INT         NOT NULL CHECK (Score <= 500 and Score >= 0),
     Reputation INT         NOT NULL CHECK (Reputation <= 1000 and Reputation >= 1),
     CreateTime DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -19,14 +19,41 @@ CREATE TABLE IF NOT EXISTS garbage -- 创建普通垃圾表
     GarbageID   INT PRIMARY KEY AUTO_INCREMENT,
     CreateTime  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     Flat        TINYINT  NOT NULL DEFAULT 0 CHECK (Flat IN (0, 1, 2)),
-    UserID      char(34),
+    UserID      CHAR(34),
     UseTime     DATETIME,
     GarbageType TINYBLOB CHECK (GarbageType IS NULL OR GarbageType IN (1, 2, 3, 4)),
     Location    VARCHAR(50),
     CheckResult BIT CHECK (CheckResult IS NULL OR CheckResult IN (0, 1)),
-    CheckerID   char(34),
+    CheckerID   CHAR(34),
     FOREIGN KEY (UserID) REFERENCES user (UserID),
     FOREIGN KEY (CheckerID) REFERENCES user (UserID)
+);
+
+CREATE TABLE IF NOT EXISTS goods -- 商品
+(
+    GoodsID  INT PRIMARY KEY AUTO_INCREMENT,
+    Name     CHAR(100) NOT NULL,
+    Quantity INT       NOT NULL CHECK (Quantity >= 0),
+    Score    INT       NOT NULL CHECK (Score > 0 and Score <= 500)
+);
+
+CREATE TABLE IF NOT EXISTS orders -- 订单
+(
+    OrderID INT PRIMARY KEY AUTO_INCREMENT,
+    UserID  CHAR(34) NOT NULL,
+    Status  BIT      NOT NULL DEFAULT 0,
+    FOREIGN KEY (UserID) REFERENCES user (UserID)
+);
+
+
+CREATE TABLE IF NOT EXISTS ordergoods -- 订单内容
+(
+    OrderGoodsID INT PRIMARY KEY AUTO_INCREMENT,
+    OrderID      INT NOT NULL,
+    GoodsID      INT NOT NULL,
+    Quantity     INT NOT NULL DEFAULT 1 CHECK (Quantity >= 0),
+    FOREIGN KEY (OrderID) REFERENCES Orders (OrderID),
+    FOREIGN KEY (GoodsID) REFERENCES Goods (GoodsID)
 );
 
 -- 创建视图

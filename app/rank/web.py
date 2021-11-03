@@ -10,6 +10,10 @@ class RankWebsite:
         self._db = db
         self.app = app
 
+    @property
+    def db(self):
+        return self._db
+
     def get_rank(self, page: int, order_by: str = "DESC") -> Optional[List[Tuple]]:
         offset = 20 * (page - 1)
         cur = self._db.search(columns=['UserID', 'Name', 'Score', 'Reputation'],

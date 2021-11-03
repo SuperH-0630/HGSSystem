@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% import "store/store_macro.html" as store %}
+
+{% block style %}
+    {{ super() }}
+    <link href="{{ url_for('static', filename='styles/store/store.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block title %} 积分商城 {% endblock %}
+{% block h1_title %} 积分商城 {% endblock %}
+
+{% block content %}
+    <div id="info">
+        {% if current_user.is_anonymous %}
+            <p id="info-score"> 未登录 </p>
+        {% else %}
+            <p id="info-score"> 当前积分: {{ current_user.score }} </p>
+        {% endif %}
+    </div>
+    <section id="store">
+        {{ store.get_store_item(store_list, store_form) }}
+    </section>
+{% endblock %}

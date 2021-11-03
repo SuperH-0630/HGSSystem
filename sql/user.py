@@ -92,7 +92,7 @@ def is_user_exists(uid: uid_t, db: DB) -> bool:
     return True
 
 
-def update_user(user: User, db: DB) -> bool:
+def update_user(user: User, db: DB, not_commit: bool = False) -> bool:
     if not is_user_exists(user.get_uid(), db):
         return False
 
@@ -101,16 +101,16 @@ def update_user(user: User, db: DB) -> bool:
     is_manager = info['manager']
     if is_manager == '1':
         cur = db.update(table="user",
-                        kw={"IsManager": {is_manager}},
-                        where=f"UserID = '{uid}'")
+                        kw={"IsManager": is_manager},
+                        where=f"UserID = '{uid}'", not_commit=not_commit)
     else:
         score = info['score']
         reputation = info['reputation']
         cur = db.update(table="user",
-                        kw={"IsManager": {is_manager},
-                            "Score": {score},
-                            "Reputation": {reputation}},
-                        where=f"UserID = '{uid}'")
+                        kw={"IsManager": is_manager,
+                            "Score": f"{score}",
+                            "Reputation": f"{reputation}"},
+                        where=f"UserID = '{uid}'", not_commit=not_commit)
     return cur is not None
 
 

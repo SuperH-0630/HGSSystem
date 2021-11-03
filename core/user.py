@@ -76,6 +76,9 @@ class User(metaclass=abc.ABCMeta):
     def evaluate(self, is_right: bool) -> score_t:
         raise UserNotSupportError
 
+    def get_score(self):
+        raise UserNotSupportError
+
     def add_score(self, score: score_t) -> score_t:
         raise UserNotSupportError
 
@@ -186,6 +189,9 @@ class NormalUser(User):
             self._lock.release()
 
         return reputation
+
+    def get_score(self):
+        return self._score
 
     def add_score(self, score: score_t) -> score_t:
         try:

@@ -76,7 +76,6 @@ if res == 'Y' or res == 'y':
         for s in all_sql:
             if s.strip() == "":
                 continue
-            print(f"{s};")
             cursor.execute(f"{s};")
         sql.commit()
 

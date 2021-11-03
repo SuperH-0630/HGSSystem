@@ -41,7 +41,7 @@
             <li class="nav-top-item"><a class="nav-top-item" href="{{ url_for('rank.rank_up', page=1) }}"> 高分榜 </a></li>
             <li class="nav-top-item"><a class="nav-top-item" href="{{ url_for('rank.rank_down', page=1) }}"> 警告榜 </a>
             </li>
-            <li class="nav-top-item"><a class="nav-top-item"> 积分商城 </a></li>
+            <li class="nav-top-item"><a class="nav-top-item" href="{{ url_for('store.index') }}"> 积分商城 </a></li>
             <li class="nav-top-item"><a class="nav-top-item"> 新闻 </a></li>
             {% if current_user.is_authenticated %}
                 <li class="nav-top-item"><a class="nav-top-item" href="{{ url_for('auth.about') }}">

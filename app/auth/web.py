@@ -6,6 +6,7 @@ from conf import Config
 from tool.login import create_uid
 from tool.type_ import *
 
+from core.user import User
 from core.garbage import GarbageType
 
 from sql import DBBit
@@ -65,11 +66,19 @@ class WebUser:
     def get_garbage_list(self):
         return views.auth_website.get_user_garbage_list(self._uid, limit=20)
 
+    def get_user(self) -> User:
+        res = views.auth_website.get_user_by_id(self._uid)
+        return res
+
 
 class AuthWebsite:
     def __init__(self, app: Flask, db: DB):
         self._app = app
         self._db = db
+
+    @property
+    def db(self):
+        return self._db
 
     def load_user_by_name(self, name: uname_t, passwd: passwd_t) -> Optional[WebUser]:
         user = find_user_by_name(name, passwd, self._db)
@@ -110,4 +119,5 @@ class AuthWebsite:
         return res
 
     def get_user_by_id(self, uid: uid_t):
-        return find_user_by_id(uid, self._db)
+        res = find_user_by_id(uid, self._db)
+        return res

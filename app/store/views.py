@@ -5,15 +5,12 @@ from flask_wtf import FlaskForm
 from flask_login import login_required
 import functools
 
-from sql.db import DB
-
 from tool.type_ import Optional
-from . import web
-from ..auth.web import WebUser
+from app import views
+from app import web_user
 
 store = Blueprint("store", __name__)
 app: Optional[Flask] = None
-store_web: Optional[web.StoreWebsite] = None
 
 
 class BuyForm(FlaskForm):
@@ -31,7 +28,7 @@ def buy(goods_id: int):
         except (TypeError, ValueError):
             flash("请输入正确的数量")
         else:
-            goods = store_web.get_goods(goods_id)
+            goods = views.website.get_goods(goods_id)
             if goods is None:
                 flash("商品错误")
             res, order_id = goods.buy_for_user(quantity, current_user)
@@ -53,8 +50,8 @@ def buy(goods_id: int):
 @login_required
 def index():
     form = BuyForm()
-    store_list = store_web.get_store_list()
-    user: WebUser = current_user
+    store_list = views.website.get_store_list()
+    user: web_user.WebUser = current_user
     user.update_info()
     return render_template("store/store.html", store_list=store_list, store_form=form)
 
@@ -65,7 +62,6 @@ def manager_required(f):
         if current_user.is_anonymous or not current_user.is_authenticated or not current_user.is_manager():
             abort(403)
         return f(*args, **kwargs)
-
     return func
 
 
@@ -73,17 +69,14 @@ def manager_required(f):
 @login_required
 @manager_required
 def check(user, order):
-    print(f"wwww{order=}")
-    if not store_web.check_order(order, user):
+    if not views.website.check_order(order, user):
         abort(404)
-    else:
-        flash(f"订单: {order} 处理成功")
+    flash(f"订单: {order} 处理成功")
     return redirect(url_for("hello.index"))
 
 
-def creat_store_website(app_: Flask, db: DB):
-    global store_web, app
-    if store_web is None:
+def creat_store_website(app_: Flask):
+    global app
+    if app is None:
         app = app_
         app.register_blueprint(store, url_prefix="/store")
-        store_web = web.StoreWebsite(db, app)

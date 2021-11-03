@@ -9,11 +9,10 @@ import qrcode
 from io import BytesIO
 
 from tool.type_ import *
-from sql.db import DB
-from .web import AuthWebsite, WebUser
+from app import views
+from app import web_user
 
 auth = Blueprint("auth", __name__)
-auth_website: Optional[AuthWebsite] = None
 app: Optional[Flask] = None
 
 login_manager = LoginManager()
@@ -32,7 +31,7 @@ def login():
     if form.validate_on_submit():
         name = form.name.data
         passwd = form.passwd.data
-        check = auth_website.load_user_by_name(name, passwd)
+        check = views.website.load_user_by_name(name, passwd)
 
         if check is not None:
             login_user(user=check, remember=True)
@@ -47,7 +46,7 @@ def login():
 
 @login_manager.user_loader
 def load_user(user: uid_t):
-    return auth_website.load_user_by_id(user)
+    return views.website.load_user_by_id(user)
 
 
 @auth.route("/logout")
@@ -61,7 +60,7 @@ def logout():
 @auth.route("/about")
 @login_required
 def about():
-    user: WebUser = current_user
+    user: web_user.WebUser = current_user
     user.update_info()
     return render_template("auth/about.html", order=user.order, order_list=user.get_order_goods_list())
 
@@ -69,7 +68,7 @@ def about():
 @auth.route("/order")
 @login_required
 def order_qr():
-    user: WebUser = current_user
+    user: web_user.WebUser = current_user
     user.update_info()
     order, user = user.get_qr_code()
     image = qrcode.make(data=url_for("store.check", user=user, order=order, _external=True))
@@ -80,10 +79,9 @@ def order_qr():
     return render_template("auth/qr.html", qr_base64=base64_str, order=order)
 
 
-def creat_auth_website(app_: Flask, db: DB):
-    global auth_website, app
-    if auth_website is None:
+def creat_auth_website(app_: Flask):
+    global app
+    if app is None:
         app = app_
-        auth_website = AuthWebsite(app, db)
         login_manager.init_app(app)
         app.register_blueprint(auth, url_prefix="/auth")

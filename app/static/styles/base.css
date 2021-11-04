@@ -7,7 +7,7 @@ html {
 body {
     position: relative;
     overflow-y: scroll; /* 总是显示滚动条 */
-    min-height: 83vh; /* 设置最小高度为整个窗口的高度 */
+    min-height: 100vh; /* 设置最小高度为整个窗口的高度 */
 }
 
 /* 顶菜单栏 */
@@ -70,7 +70,7 @@ a.nav-top-item:hover, a.nav-top-item:active {
 
 
 #start-p {
-    margin-top: 8%;
+    margin-bottom: 8%;
 }
 
 /* 闪现消息 */

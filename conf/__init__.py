@@ -9,11 +9,11 @@ from .args import p_args
 from .equipment import ConfigCapture
 from .sql import ConfigDatabase
 from .aliyun import ConfigAliyun
-from .sys_default import ConfigExport, ConfigSystem, ConfigSecret, ConfigTkinter, ConfUser
+from .sys_default import ConfigSystem, ConfigSecret, ConfigTkinter, ConfUser
 from .matplotlib_conf import ConfigMatplotlib
 
 
-class Config(ConfigTkinter, ConfigSecret, ConfigSystem, ConfUser, ConfigExport,
+class Config(ConfigTkinter, ConfigSecret, ConfigSystem, ConfUser,
              ConfigAliyun,
              ConfigDatabase,
              ConfigCapture,

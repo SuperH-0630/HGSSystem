@@ -52,7 +52,6 @@ class ConfigTkinterRelease:
 
 
 ConfigTkinter = ConfigTkinterRelease
-ConfigExport = ConfigExportRelease
 ConfigSystem = ConfigSystemDebug if p_args['run'] == 'Debug' else ConfigSystemRelease
 ConfUser = ConfUserRelease
 ConfigSecret = ConfigSecretRelease

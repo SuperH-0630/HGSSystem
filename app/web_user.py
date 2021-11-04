@@ -76,11 +76,16 @@ class WebUser(UserMixin):
             self.reputation = res.get('reputation', '0')
             self.rubbish = res.get('rubbish', '0')
 
-    def is_manager(self):
-        return self.group == "管理员"
+    @property
+    def is_active(self):
+        return views.website.load_user_by_id(self._uid) is not None
 
-    def get_qr_code(self):
-        return self.order, self._uid
+    @property
+    def is_authenticated(self):
+        return views.website.load_user_by_id(self._uid) is not None
+
+    def get_id(self):
+        return self._uid
 
     @property
     def name(self):
@@ -91,14 +96,6 @@ class WebUser(UserMixin):
         return self._uid[:Config.tk_show_uid_len]
 
     @property
-    def is_active(self):
-        return views.website.load_user_by_id(self._uid) is not None
-
-    @property
-    def is_authenticated(self):
-        return views.website.load_user_by_id(self._uid) is not None
-
-    @property
     def order(self) -> str:
         cur = views.website.db.search(columns=["OrderID"],
                                       table="orders",
@@ -107,6 +104,12 @@ class WebUser(UserMixin):
             return "None"
         assert cur.rowcount == 1
         return str(cur.fetchone()[0])
+
+    def is_manager(self):
+        return self.group == "管理员"
+
+    def get_qr_code(self):
+        return self.order, self._uid
 
     def get_order_goods_list(self):
         order = self.order
@@ -124,12 +127,12 @@ class WebUser(UserMixin):
             res.append(f"#{i} {re[0]} x {re[1]}")
         return res
 
-    def get_id(self):
-        return self._uid
-
     def get_garbage_list(self):
         return views.website.get_user_garbage_list(self._uid, limit=20)
 
     def get_user(self) -> User:
         res = views.website.get_user_by_id(self._uid)
         return res
+
+    def write_news(self, text: str):
+        return views.website.write_news(text, self._uid)

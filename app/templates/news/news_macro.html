@@ -1,0 +1,10 @@
+{% macro get_context_list(info_lines) %}
+    {% for line in info_lines %}
+        <section class="news">
+            <p class="news-author"> 作者:{{ line[2] }} </p>
+            <p class="news-time"> 发表时间: {{ line[3] }} </p>
+            <p class="news-content"> {{ line[1] }} </p>
+            <hr>
+        </section>
+    {% endfor %}
+{% endmacro %}

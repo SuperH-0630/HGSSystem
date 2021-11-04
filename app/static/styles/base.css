@@ -9,7 +9,7 @@ body {
 }
 
 /* 顶菜单栏 */
-section.nav-top {
+nav.nav-top {
     position: fixed; /* 固定布局 */
     top: 0;
     left: 0;

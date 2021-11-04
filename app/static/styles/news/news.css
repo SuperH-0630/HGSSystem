@@ -1,0 +1,59 @@
+.h2-title {
+    font-size: 22px;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    text-align: left;
+}
+
+#writer {
+    display: block;
+    position: relative;
+    height: 200px;
+}
+
+#writer-context {
+    display: block;
+    font-size: 19px;
+    width: 100%;
+    height: 100px;
+    clear: both;
+}
+
+#writer-submit {
+    display: block;
+    font-size: 17px;
+    line-height: 30px;
+    width: 70px;
+    height: 30px;
+    margin-top: 10px;
+    float: right;
+}
+
+.news {
+    width: 100%;
+    margin: 20px auto 5px;
+}
+
+.news-content, .news-author, .news-time {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+.news-author, .news-time {
+    font-size: 20px;
+}
+
+.news-author {
+    float: left;
+}
+
+.news-time {
+    float: right;
+}
+
+.news-content {
+    display: block;
+    clear: both;
+    font-size: 22px;
+    padding-top: 5px;
+}

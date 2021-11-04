@@ -1,6 +1,7 @@
 from sql.store import get_store_item_list, get_store_item, check_order
 
 from flask import Flask
+from flask_login import current_user
 import datetime
 
 from conf import Config
@@ -12,6 +13,7 @@ from core.garbage import GarbageType
 from sql import DBBit
 from sql.db import DB
 from sql.user import find_user_by_name, find_user_by_id
+from sql.news import write_news, get_news
 
 from . import web_user
 from . import web_goods
@@ -21,13 +23,26 @@ class WebsiteBase:
     def __init__(self, app: Flask, db: DB):
         self._db = db
         self._app = app
+        self._user = current_user  # 把参函传递的user移迁为该变量
 
-
-class AuthWebsite(WebsiteBase):
     @property
     def db(self):
         return self._db
 
+    @property
+    def app(self):
+        return self._app
+
+    @property
+    def user(self):
+        return self._user
+
+    @property
+    def rel_user(self):
+        return self._user._get_current_object()
+
+
+class AuthWebsite(WebsiteBase):
     def load_user_by_name(self, name: uname_t, passwd: passwd_t) -> Optional["web_user.WebUser"]:
         user = find_user_by_name(name, passwd, self._db)
         if user is None:
@@ -72,10 +87,6 @@ class AuthWebsite(WebsiteBase):
 
 
 class StoreWebsite(WebsiteBase):
-    @property
-    def db(self):
-        return self._db
-
     def get_store_list(self) -> Optional[List]:
         return get_store_item_list(self._db)
 
@@ -90,10 +101,6 @@ class StoreWebsite(WebsiteBase):
 
 
 class RankWebsite(WebsiteBase):
-    @property
-    def db(self):
-        return self._db
-
     def get_rank(self, page: int, order_by: str = "DESC") -> Optional[List[Tuple]]:
         offset = 20 * (page - 1)
         cur = self._db.search(columns=['UserID', 'Name', 'Score', 'Reputation'],
@@ -111,6 +118,14 @@ class RankWebsite(WebsiteBase):
         return res
 
 
-class Website(AuthWebsite, StoreWebsite, RankWebsite, WebsiteBase):
+class NewsWebsite(WebsiteBase):
+    def write_news(self, context: str, uid: uid_t):
+        return write_news(context, uid, self.db)
+
+    def get_news(self, page: int = 1):
+        return get_news(limit=20, offset=((page - 1) * 20), db=self.db)
+
+
+class Website(AuthWebsite, StoreWebsite, RankWebsite, NewsWebsite, WebsiteBase):
     def __init__(self, app: Flask, db: DB):
         super(Website, self).__init__(app, db)

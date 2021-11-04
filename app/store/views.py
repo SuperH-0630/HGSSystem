@@ -1,6 +1,7 @@
 from flask import render_template, Blueprint, Flask, redirect, url_for, abort, flash
 from wtforms import TextField, SubmitField
 from flask_login import current_user
+from wtforms.validators import DataRequired, NumberRange
 from flask_wtf import FlaskForm
 from flask_login import login_required
 import functools
@@ -14,7 +15,8 @@ app: Optional[Flask] = None
 
 
 class BuyForm(FlaskForm):
-    quantity = TextField()
+    quantity = TextField(validators=[DataRequired(message="请输入兑换数量"),
+                                     NumberRange(1, 11, message="一次性只能兑换1-10个")])
     submit = SubmitField()
 
 
@@ -46,7 +48,7 @@ def buy(goods_id: int):
     abort(404)
 
 
-@store.route('/index', methods=['GET', 'POST'])
+@store.route('/', methods=['GET', 'POST'])
 @login_required
 def index():
     form = BuyForm()

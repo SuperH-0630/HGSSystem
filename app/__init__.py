@@ -1,4 +1,4 @@
-from flask import Flask, Blueprint, get_flashed_messages
+from flask import Flask, Blueprint, get_flashed_messages, render_template
 from waitress import serve
 
 from conf import Config
@@ -29,6 +29,21 @@ class App:
             msg.append(i)
         return {"flash_msg": msg,
                 "flash_height": len(msg)}
+
+    @staticmethod
+    @base.app_errorhandler(404)
+    def error_404(e):
+        return render_template("error.html", error_code="404", error_info=e), 404
+
+    @staticmethod
+    @base.app_errorhandler(403)
+    def error_403(e):
+        return render_template("error.html", error_code="403", error_info=e), 403
+
+    @staticmethod
+    @base.app_errorhandler(500)
+    def error_500(e):
+        return render_template("error.html", error_code="500", error_info=e), 500
 
     def __new__(cls, *args, **kwargs):
         if App.app is not None:

@@ -20,8 +20,8 @@ login_manager.login_view = 'auth.login'
 
 
 class LoginForm(FlaskForm):
-    name = StringField("你的用户名是？", validators=[DataRequired()])
-    passwd = PasswordField("用户密码是？", validators=[DataRequired()])
+    name = StringField("你的用户名是？", validators=[DataRequired(message="请输入用户名")])
+    passwd = PasswordField("用户密码是？", validators=[DataRequired(message="请输入密码")])
     submit = SubmitField("登录")
 
 

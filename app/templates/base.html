@@ -34,23 +34,33 @@
 <body>
 
 {% block nav %}
-    <section class="nav-top">
+    <nav class="nav-top">
         <p id="nav-title"> HGSSystem-{{ loc }} 在线 </p>
         <ul class="nav-top">
-            <li class="nav-top-item"><a class="nav-top-item" href="{{ url_for('hello.index') }}"> 首页 </a></li>
-            <li class="nav-top-item"><a class="nav-top-item" href="{{ url_for('rank.rank_up', page=1) }}"> 高分榜 </a></li>
-            <li class="nav-top-item"><a class="nav-top-item" href="{{ url_for('rank.rank_down', page=1) }}"> 警告榜 </a>
-            </li>
-            <li class="nav-top-item"><a class="nav-top-item" href="{{ url_for('store.index') }}"> 积分商城 </a></li>
-            <li class="nav-top-item"><a class="nav-top-item"> 新闻 </a></li>
+            <li class="nav-top-item"><a class="nav-top-item" href="{{ url_for('hello.index') }}">
+                首页 </a></li>
+
+            <li class="nav-top-item"><a class="nav-top-item" href="{{ url_for('rank.rank_up', page=1) }}">
+                高分榜 </a></li>
+
+            <li class="nav-top-item"><a class="nav-top-item" href="{{ url_for('rank.rank_down', page=1) }}">
+                警告榜 </a></li>
+
+            <li class="nav-top-item"><a class="nav-top-item" href="{{ url_for('store.index') }}">
+                积分商城 </a></li>
+
+            <li class="nav-top-item"><a class="nav-top-item" href="{{ url_for('news.index') }}">
+                新闻 </a></li>
+
             {% if current_user.is_authenticated %}
                 <li class="nav-top-item"><a class="nav-top-item" href="{{ url_for('auth.about') }}">
                     关于: {{ current_user.name }} </a></li>
             {% else %}
                 <li class="nav-top-item"><a class="nav-top-item" href="{{ url_for('auth.login') }}"> 登录 </a></li>
             {% endif %}
+
         </ul>
-    </section>
+    </nav>
 {% endblock %}
 
 <p id="start-p"></p>  <!-- 占位作用 -->
@@ -60,7 +70,7 @@
         {% if flash_height != 0 %}
             <ul class="top-msg-section">
                 {% for message in flash_msg %}
-                    <li class="top-msg"> {{ flash_height }} {{ message }} </li>
+                    <li class="top-msg"> {{ message }} </li>
                 {% endfor %}
             </ul>
 

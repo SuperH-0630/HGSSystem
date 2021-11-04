@@ -1,5 +1,5 @@
 from .db import DB
-from tool.type_ import *
+from tool.typing import *
 
 
 def get_store_item_list(db: DB) -> Optional[List]:
@@ -46,6 +46,27 @@ def write_goods(goods_id: int, quantity: int, order_id: int, db: DB):
         return False
     assert cur.rowcount == 1
     return True
+
+
+def check_order(order: int, uid: uid_t, db: DB) -> bool:
+    cur = db.search(columns=["UserID"],
+                    table="orders",
+                    where=[f"OrderID='{order}'", f"UserID='{uid}'"])
+    if cur is None or cur.rowcount != 1:
+        return False
+    uid = cur.fetchone()[0]
+    if uid != uid:
+        return False
+    return True
+
+
+def get_goods_from_order(order, db: DB) -> Optional[list]:
+    cur = db.search(columns=["Name", "Quantity"],
+                    table="order_goods_view",
+                    where=f"OrderID = '{order}'")
+    if cur is None:
+        return None
+    return cur.fetchall()
 
 
 def confirm_order(order: int, uid: uid_t, db: DB) -> bool:

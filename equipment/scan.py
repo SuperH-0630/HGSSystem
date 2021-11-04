@@ -4,7 +4,7 @@ import cv2.cv2 as cv2
 
 from conf import Config
 import qrcode
-from tool.type_ import *
+from tool.typing import *
 
 
 class HGSCapture:

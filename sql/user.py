@@ -2,12 +2,29 @@ import csv
 
 from . import DBBit
 from .db import DB
-from tool.type_ import *
+from tool.typing import *
 from tool.login import create_uid, randomPassword
-from tool.time_ import mysql_time
+from tool.time import mysql_time
 from core.user import NormalUser, ManagerUser, User
 from conf import Config
 from . import garbage
+
+
+def get_rank_for_user(db: DB, limit, offset, order_by: str = "DESC"):
+    cur = db.search(columns=['UserID', 'Name', 'Score', 'Reputation'],
+                    table='user',
+                    where='IsManager=0',
+                    order_by=[('Reputation', order_by), ('Score', order_by), ('UserID', order_by)],
+                    limit=limit,
+                    offset=offset)
+
+    if cur is None:
+        return None, None
+    res = []
+    for index in range(cur.rowcount):
+        i = cur.fetchone()
+        res.append((f"{offset + index + 1}", i[1], i[0][:Config.show_uid_len], str(i[3]), str(i[2])))
+    return res
 
 
 def update_user_score(where: str, score: score_t, db: DB) -> int:
@@ -73,7 +90,7 @@ def find_user_by_id(uid: uid_t, db: DB) -> Optional[User]:
     else:
         score: score_t = res[3]
         reputation: score_t = res[4]
-        rubbish: count_t = garbage.count_garbage_by_time(uid, db)
+        rubbish: count_t = garbage.count_garbage_by_uid(uid, db)
         return NormalUser(name, uid, reputation, rubbish, score)  # rubbish 实际计算
 
 
@@ -231,3 +248,11 @@ def creat_auto_user_from_csv(path, db: DB) -> List[User]:
             if user is not None:
                 res.append(user)
     return res
+
+
+def count_all_user(db: DB):
+    cur = db.search(columns=['count(UserID)'], table='user')
+    if cur is None:
+        return 0
+    assert cur.rowcount == 1
+    return int(cur.fetchone()[0])

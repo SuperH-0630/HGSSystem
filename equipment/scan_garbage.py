@@ -1,7 +1,7 @@
 from core.garbage import GarbageBag
 from sql.db import DB
 from sql.garbage import find_garbage
-from tool.type_ import *
+from tool.typing import *
 from .scan import QRCode, HGSCapture, HGSQRCoder
 from tool.pic import write_text
 import re

@@ -4,7 +4,7 @@ from PIL import Image, ImageTk
 from math import ceil
 
 from conf import Config
-from tool.type_ import *
+from tool.typing import *
 from tool.tk import make_font
 from sql.db import DB
 

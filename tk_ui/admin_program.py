@@ -12,7 +12,7 @@ from matplotlib.colorbar import Colorbar
 from matplotlib.figure import Figure
 
 from tool.color import random_color
-from tool.type_ import *
+from tool.typing import *
 from tool.tk import make_font, set_tk_disable_from_list
 from tool.login import create_uid
 

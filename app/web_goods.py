@@ -1,7 +1,7 @@
 from sql.user import update_user
 from sql.store import update_goods, get_order_id, write_goods
 
-from tool.type_ import *
+from tool.typing import *
 from core.user import User, UserNotSupportError
 from . import views
 from . import web_user
@@ -15,20 +15,21 @@ class Goods:
         self._id = goods_id
 
     def buy_for_user(self, quantity: int, user_: web_user.WebUser) -> Tuple[int, int]:
-        assert quantity > 0
-        user: User = user_.get_user()
-        if user is None:
-            return -4, 0
-
         score_ = quantity * self._score
         if quantity > self._quantity or quantity <= 0:
-            return -2, 0
+            return -2, 0  # 数量错误
+
+        user: User = user_.get_user()
+        if user is None:
+            return -4, 0  # 系统错误
+
         try:
             score = user.get_score()
         except UserNotSupportError:
-            return -1, 0
+            return -1, 0  # 用户不支持购买
+
         if score < score_:
-            return -3, 0
+            return -3, 0  # 积分不足
 
         user.add_score(-score_)
         update_user(user, views.website.db)
@@ -38,8 +39,8 @@ class Goods:
 
         order_id = get_order_id(user.get_uid(), views.website.db)
         if order_id is None:
-            return -4, 0
+            return -4, 0  # 系统错误
 
         if not write_goods(self._id, quantity, order_id, views.website.db):
-            return -4, 0
+            return -4, 0  # 系统错误
         return 0, order_id

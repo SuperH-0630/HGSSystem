@@ -1,5 +1,5 @@
 from conf import Config
-from tool.type_ import List
+from tool.typing import List
 
 if Config.database.upper() == 'MYSQL':
     try:

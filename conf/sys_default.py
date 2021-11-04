@@ -30,7 +30,7 @@ HGSSystem 版权归属 SuperHuan
     '''.strip()
 
 
-class ConfigSystemDebug(ConfigSystemRelease):
+class ConfigSystemTest(ConfigSystemRelease):
     search_reset_time = 1  # 搜索间隔的时间
     about_info = f'''
 HGSSystem is Garbage Sorting System
@@ -52,6 +52,6 @@ class ConfigTkinterRelease:
 
 
 ConfigTkinter = ConfigTkinterRelease
-ConfigSystem = ConfigSystemDebug if p_args['run'] == 'Debug' else ConfigSystemRelease
+ConfigSystem = ConfigSystemTest if p_args['run'] == 'test' else ConfigSystemRelease
 ConfUser = ConfUserRelease
 ConfigSecret = ConfigSecretRelease

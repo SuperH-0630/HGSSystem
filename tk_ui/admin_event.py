@@ -1,7 +1,7 @@
 import time
 import numpy as np
 
-from tool.type_ import *
+from tool.typing import *
 from sql import DBBit
 from sql.db import DB
 from sql.user import find_user_by_name

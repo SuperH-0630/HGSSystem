@@ -1,7 +1,7 @@
 import datetime
 
 from sql.db import DB
-from tool.type_ import *
+from tool.typing import *
 from tool.string import mysql_str
 
 

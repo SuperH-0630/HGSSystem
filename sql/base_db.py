@@ -1,5 +1,5 @@
 import abc
-from tool.type_ import List, Union, Optional, Tuple
+from tool.typing import List, Union, Optional, Tuple
 
 
 class DBException(Exception):

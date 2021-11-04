@@ -4,7 +4,7 @@ from equipment.scan import QRCode
 from equipment.scan_user import scan_user
 from equipment.scan_garbage import scan_garbage
 
-from tool.type_ import *
+from tool.typing import *
 
 from core.user import User
 from core.garbage import GarbageBag

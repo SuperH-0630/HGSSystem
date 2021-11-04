@@ -1,8 +1,8 @@
 import time
 from . import DBBit
 from .db import DB
-from tool.type_ import *
-from tool.time_ import mysql_time, time_from_mysql
+from tool.typing import *
+from tool.time import mysql_time, time_from_mysql
 from core.garbage import GarbageBag, GarbageType
 
 
@@ -117,16 +117,33 @@ def search_from_garbage_view(columns, where: str, db: DB):
     return res
 
 
-def count_garbage_by_time(uid: uid_t, db: DB):
-    ti: time_t = time.time()
-    start = ti - 3.5 * 24 * 60 * 60  # 前后3.5天
-    end = ti + 3.5 * 24 * 60 * 60
-    cur = db.search(columns=["GarbageID"],
+def count_garbage_by_uid(uid: uid_t, db: DB, time_limit: bool = True):
+    if time_limit:
+        ti: time_t = time.time()
+        start = ti - 3.5 * 24 * 60 * 60  # 前后3.5天
+        end = ti + 3.5 * 24 * 60 * 60
+        where = [f"UserID = '{uid}'", f"UseTime BETWEEN {mysql_time(start)} AND {mysql_time(end)}"]
+    else:
+        where = [f"UserID = '{uid}'"]
+    cur = db.search(columns=["Count(GarbageID)"],
                     table="garbage_time",
-                    where=[f"UserID = '{uid}'", f"UseTime BETWEEN {mysql_time(start)} AND {mysql_time(end)}"])
+                    where=where)
     if cur is None:
         return -1
-    return cur.rowcount
+    assert cur.rowcount == 1
+    return int(cur.fetchone()[0])
+
+
+def get_garbage_by_uid(uid: uid_t, columns, limit, db: DB, offset: int = 0):
+    cur = db.search(columns=columns,
+                    table="garbage",
+                    where=f"UserID='{uid}'",
+                    limit=limit,
+                    offset=offset,
+                    order_by=[("UseTime", "DESC")])
+    if cur is None:
+        return None
+    return cur.fetchall()
 
 
 def __find_garbage(columns: List[str], table: str, where: str, db: DB):

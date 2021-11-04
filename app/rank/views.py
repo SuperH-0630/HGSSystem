@@ -1,5 +1,5 @@
 from flask import render_template, Blueprint, Flask, request, abort
-from tool.type_ import Optional
+from tool.typing import Optional
 from app import views
 
 rank = Blueprint("rank", __name__)

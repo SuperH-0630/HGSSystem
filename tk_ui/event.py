@@ -3,7 +3,7 @@ import traceback
 import threading
 
 from conf import Config
-from tool.type_ import *
+from tool.typing import *
 
 
 class TkEventBase(metaclass=abc.ABCMeta):

@@ -94,7 +94,7 @@ if res == 'Y' or res == 'y':
         admin_phone = input("输入 'admin' 管理员的电话[长度=11]: ")
 
     from tool.login import create_uid
-    from tool.time_ import mysql_time
+    from tool.time import mysql_time
 
     # 生成基本 admin 用户
     uid = create_uid("admin", admin_passwd)

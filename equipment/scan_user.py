@@ -2,7 +2,7 @@ from conf import Config
 from core.user import User
 from sql.db import DB
 from sql.user import find_user_by_id
-from tool.type_ import *
+from tool.typing import *
 from .scan import QRCode, HGSCapture, HGSQRCoder
 from tool.pic import write_text
 import re

@@ -1,7 +1,7 @@
 import threading
 
-from tool.type_ import *
-from tool.time_ import HGSTime, hgs_time_t
+from tool.typing import *
+from tool.time import HGSTime, hgs_time_t
 from tool.location import HGSLocation, hgs_location_t
 
 

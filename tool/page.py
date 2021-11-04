@@ -1,5 +1,5 @@
 from flask import url_for
-from tool.type_ import *
+from tool.typing import *
 
 
 def get_page(url, page: int, count: int):

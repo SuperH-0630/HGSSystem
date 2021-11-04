@@ -4,7 +4,7 @@ from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from conf import Config
 
 from tool.login import create_uid
-from tool.type_ import *
+from tool.typing import *
 
 from core.user import User
 from . import views
@@ -69,6 +69,7 @@ class WebUser(UserMixin):
         user = views.website.get_user_by_id(self._uid)
         if user is None:
             return
+
         if user.is_manager():
             self.group = "管理员"
             self.score = "0"
@@ -83,13 +84,16 @@ class WebUser(UserMixin):
 
     @property
     def is_active(self):
+        """Flask要求的属性"""
         return views.website.load_user_by_id(self._uid) is not None
 
     @property
     def is_authenticated(self):
+        """Flask要求的属性"""
         return views.website.load_user_by_id(self._uid) is not None
 
     def get_id(self):
+        """Flask要求的方法"""
         return self._uid
 
     @property

@@ -2,7 +2,7 @@ from flask import Flask, Blueprint, get_flashed_messages, render_template
 from waitress import serve
 
 from conf import Config
-from tool.type_ import *
+from tool.typing import *
 from sql.db import DB
 
 from . import views as views

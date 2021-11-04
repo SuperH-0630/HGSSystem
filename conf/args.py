@@ -15,11 +15,14 @@ p_args: dict[str: Optional[str]] = {"mysql_url": None,
 
 if res is None or res == "False":
     parser = argparse.ArgumentParser()
+
+    # 数据库相关参数
     parser.add_argument("--mysql_url", nargs=1, type=str, help="MySQL-URL")
     parser.add_argument("--mysql_name", nargs=1, type=str, help="MySQL-用户名")
     parser.add_argument("--mysql_passwd", nargs=1, type=str, help="MySQL-密码")
     parser.add_argument("--mysql_port", nargs=1, type=str, help="MySQL-端口")
 
+    # Aliyun SDK 相关参数
     parser.add_argument("--aliyun_key", nargs=1, type=str, help="阿里云认证-KET")
     parser.add_argument("--aliyun_secret", nargs=1, type=str, help="阿里云认证-SECRET")
 
@@ -31,6 +34,7 @@ if res is None or res == "False":
                                                                  "website"],
                         help="选择启动的程序")
 
+    # 运行模式 release/debug(test)
     parser.add_argument("--run_type", nargs=1, type=str, choices=["test",
                                                                   "release"],
                         default=["release"],

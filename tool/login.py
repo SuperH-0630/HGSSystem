@@ -1,4 +1,4 @@
-from .type_ import *
+from .typing import *
 import hashlib
 from conf import Config
 from random import randint

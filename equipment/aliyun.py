@@ -4,7 +4,7 @@
 import json
 
 from conf import Config
-from tool.type_ import *
+from tool.typing import *
 from viapi.fileutils import FileUtils
 from aliyunsdkcore.client import AcsClient
 from aliyunsdkimagerecog.request.v20190930 import ClassifyingRubbishRequest

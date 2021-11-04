@@ -4,7 +4,7 @@ import traceback
 
 from conf import Config
 from .base_db import HGSDatabase, DBException, DBCloseException
-from tool.type_ import *
+from tool.typing import *
 
 
 class MysqlDB(HGSDatabase):

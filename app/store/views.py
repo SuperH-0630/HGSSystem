@@ -8,7 +8,7 @@ import functools
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 
 from conf import Config
-from tool.type_ import Optional
+from tool.typing import Optional
 from app import views
 from app import web_user
 
@@ -21,9 +21,29 @@ class BuyForm(FlaskForm):
     submit = SubmitField()
 
 
-@store.route('/buy/<int:goods_id>', methods=['GET', 'POST'])
+@store.route('/', methods=['GET', 'POST'])
+@login_required
+def index():
+    """
+    显示购买的表单
+    购买时发送请求到 store.buy
+    :return:
+    """
+    form = BuyForm()
+    store_list = views.website.get_store_list()
+    user: web_user.WebUser = current_user
+    user.update_info()
+    return render_template("store/store.html", store_list=store_list, store_form=form)
+
+
+@store.route('/buy/<int:goods_id>', methods=['POST'])
 @login_required
 def buy(goods_id: int):
+    """
+    处理购买的表单
+    仅支持 Post 请求
+    非表单的一律 404
+    """
     form = BuyForm()
     if form.validate_on_submit():
         try:
@@ -49,23 +69,12 @@ def buy(goods_id: int):
     abort(404)
 
 
-@store.route('/', methods=['GET', 'POST'])
-@login_required
-def index():
-    form = BuyForm()
-    store_list = views.website.get_store_list()
-    user: web_user.WebUser = current_user
-    user.update_info()
-    return render_template("store/store.html", store_list=store_list, store_form=form)
-
-
 def manager_required(f):
     @functools.wraps(f)
     def func(*args, **kwargs):
         if not current_user.is_manager():
             abort(403)
         return f(*args, **kwargs)
-
     return func
 
 
@@ -73,6 +82,9 @@ def manager_required(f):
 @login_required
 @manager_required
 def check(user, order):
+    """
+    显示取件码的获取内容
+    """
     res, uid = views.website.check_order(order, user)
     if res is None:
         abort(404)
@@ -83,6 +95,9 @@ def check(user, order):
 @login_required
 @manager_required
 def confirm(token):
+    """
+    确认取件
+    """
     try:
         s = Serializer(Config.passwd_salt, expires_in=3600)  # 3h有效
         data = s.loads(token)

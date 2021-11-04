@@ -1,4 +1,4 @@
-from .type_ import *
+from .typing import *
 import time
 
 

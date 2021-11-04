@@ -1,5 +1,5 @@
 from conf import Config
-from .type_ import *
+from .typing import *
 from PIL import Image, ImageDraw, ImageFont
 
 

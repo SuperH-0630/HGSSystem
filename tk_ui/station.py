@@ -11,9 +11,9 @@ import datetime
 from PIL import Image, ImageTk
 
 from conf import Config
-from tool.type_ import *
+from tool.typing import *
 from tool.tk import set_tk_disable_from_list, make_font
-from tool.thread_ import getThreadIdent
+from tool.thread import getThreadIdent
 
 from core.user import User
 from core.garbage import GarbageBag, GarbageType

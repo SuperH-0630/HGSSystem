@@ -2,8 +2,8 @@ import abc
 import threading
 
 from conf import Config
-from tool.type_ import *
-from tool.time_ import HGSTime
+from tool.typing import *
+from tool.time import HGSTime
 from .garbage import GarbageBag, GarbageType
 
 

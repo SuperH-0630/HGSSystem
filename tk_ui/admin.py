@@ -23,7 +23,7 @@ from sql.user import (create_new_user, del_user, del_user_from_where, del_user_f
                       update_user_score, update_user_reputation,
                       creat_user_from_csv, creat_auto_user_from_csv)
 from tool.tk import make_font
-from tool.type_ import *
+from tool.typing import *
 
 
 class AdminStationBase(TkEventMain, metaclass=abc.ABCMeta):

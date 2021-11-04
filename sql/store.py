@@ -48,7 +48,7 @@ def write_goods(goods_id: int, quantity: int, order_id: int, db: DB):
     return True
 
 
-def check_order(order: int, uid: uid_t, db: DB) -> bool:
+def confirm_order(order: int, uid: uid_t, db: DB) -> bool:
     cur = db.search(columns=["OrderID"],
                     table="orders",
                     where=[f"OrderID={order}", f"UserID='{uid}'", "Status=0"])

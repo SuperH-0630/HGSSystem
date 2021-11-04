@@ -235,20 +235,20 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
         garbage_type = GarbageType.GarbageTypeStrList_ch[int(info['type'])]
         if self._garbage.is_check()[0]:
             time_str = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(float(info['use_time'])))
-            check = f'Checker is {info["checker"][0:Config.tk_show_uid_len]}\n'
+            check = f'Checker is {info["checker"][0:Config.show_uid_len]}\n'
             if info["check"] == '1':
                 check += f'检查结果为 投放正确\n'
             else:
                 check += f'检查结果为 投放错误\n'
             self.show_msg("垃圾袋信息", (f"垃圾类型为 {garbage_type}\n"
-                                    f"用户是 {info['user'][0:Config.tk_show_uid_len]}\n"
+                                    f"用户是 {info['user'][0:Config.show_uid_len]}\n"
                                     f"地址:\n  {info['loc']}\n"
                                     f"{check}"
                                     f"使用日期:\n  {time_str}"), show_time=5.0)  # 遮蔽Pass和Fail按键
         elif self._garbage.is_use():
             time_str = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(float(info['use_time'])))
             self.show_msg("垃圾袋信息", (f"垃圾类型为 {garbage_type}\n"
-                                    f"用户是 {info['user'][0:Config.tk_show_uid_len]}\n"
+                                    f"用户是 {info['user'][0:Config.show_uid_len]}\n"
                                     f"地址:\n  {info['loc']}\n"
                                     f"垃圾袋还未检查\n"
                                     f"使用日期:\n  {time_str}"), big=False, show_time=5.0)  # 不遮蔽Pass和Fail按键
@@ -1089,7 +1089,7 @@ class GarbageStation(GarbageStationBase):
         for i, info in enumerate(rank_info):
             no, name, uid, score, eval_, color = info
             self._rank_var[i + 1].set(f"NO.{no}  {name}\n\n"  # 中间空一行 否则中文字体显得很窄
-                                      f"ID: {uid[0:Config.ranking_tk_show_uid_len]}  "
+                                      f"ID: {uid[0:Config.show_uid_len]}  "
                                       f"信用: {eval_} 积分: {score}")
             if color is None:
                 self._rank_label[i + 1]['bg'] = "#F5FFFA"
@@ -1239,7 +1239,7 @@ class GarbageStation(GarbageStationBase):
             if uid_get is None or len(uid_get) < 32:
                 uid.set('error')
             else:
-                uid.set(uid_get[0:Config.tk_show_uid_len])
+                uid.set(uid_get[0:Config.show_uid_len])
             eval_.set(user_info.get('reputation'))
             rubbish.set(user_info.get('rubbish'))
             score.set(user_info.get('score'))

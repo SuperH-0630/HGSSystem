@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% import "store/store_macro.html" as store %}
+
+{% block style %}
+    {{ super() }}
+    <link href="{{ url_for('static', filename='styles/store/goods.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block title %} 获取清单 {% endblock %}
+{% block h1_title %} 获取清单 {% endblock %}
+
+{% block content %}
+    <section>
+        <p class="goods-title"> 用户: {{ goods_user }} </p>
+        <p class="goods-title"> 订单号: {{ order_id }} </p>
+    </section>
+    <hr>
+    <ul>
+        {{ store.get_goods_item(goods_list) }}
+    </ul>
+
+{% endblock %}

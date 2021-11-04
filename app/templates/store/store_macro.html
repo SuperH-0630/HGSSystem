@@ -28,3 +28,9 @@
         </section>
     {% endif %}
 {% endmacro %}
+
+{% macro get_goods_item(info_lines) %}
+    {% for line in info_lines %}
+        <li class="goods-info"> {{ line }} </li>
+    {% endfor %}
+{% endmacro %}

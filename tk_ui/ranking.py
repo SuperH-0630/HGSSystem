@@ -347,7 +347,7 @@ class RankingStation(RankingStationBase):
         for i, info in enumerate(rank_info):
             no, name, uid, score, eval_, color = info
             self.rank_var[i].set(f"NO.{no}  {name}\n\n"  # 中间空一行 否则中文字体显得很窄
-                                 f"ID: {uid[0:Config.ranking_tk_show_uid_len]}  "
+                                 f"ID: {uid[0:Config.show_uid_len]}  "
                                  f"信用: {eval_} 积分: {score}")
             if color is None:
                 self.rank_label[i]['bg'] = "#F5FFFA"

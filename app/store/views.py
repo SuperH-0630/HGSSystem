@@ -1,11 +1,13 @@
 from flask import render_template, Blueprint, Flask, redirect, url_for, abort, flash
 from wtforms import TextField, SubmitField
 from flask_login import current_user
-from wtforms.validators import DataRequired, NumberRange
+from wtforms.validators import DataRequired
 from flask_wtf import FlaskForm
 from flask_login import login_required
 import functools
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 
+from conf import Config
 from tool.type_ import Optional
 from app import views
 from app import web_user
@@ -15,8 +17,7 @@ app: Optional[Flask] = None
 
 
 class BuyForm(FlaskForm):
-    quantity = TextField(validators=[DataRequired(message="请输入兑换数量"),
-                                     NumberRange(1, 11, message="一次性只能兑换1-10个")])
+    quantity = TextField(validators=[DataRequired(message="请输入兑换数量")])
     submit = SubmitField()
 
 
@@ -64,6 +65,7 @@ def manager_required(f):
         if not current_user.is_manager():
             abort(403)
         return f(*args, **kwargs)
+
     return func
 
 
@@ -71,9 +73,27 @@ def manager_required(f):
 @login_required
 @manager_required
 def check(user, order):
-    if not views.website.check_order(order, user):
+    res, uid = views.website.check_order(order, user)
+    if res is None:
         abort(404)
-    flash(f"订单: {order} 处理成功")
+    return render_template("store/goods.html", goods_list=res, goods_user=uid[:Config.show_uid_len], order_id=order)
+
+
+@store.route('/confirm/<string:token>')
+@login_required
+@manager_required
+def confirm(token):
+    try:
+        s = Serializer(Config.passwd_salt, expires_in=3600)  # 3h有效
+        data = s.loads(token)
+        order = data["order"]
+        user = data["uid"]
+    except:
+        abort(404)
+    else:
+        if not views.website.confirm_order(order, user):
+            abort(404)
+        flash(f"订单: {order} 处理成功")
     return redirect(url_for("hello.index"))
 
 

@@ -5,7 +5,7 @@ import math
 
 from conf import Config
 
-from sql.store import get_store_item_list, get_store_item, check_order
+from sql.store import get_store_item_list, get_store_item, confirm_order
 
 from tool.type_ import *
 from tool.page import get_page
@@ -109,8 +109,28 @@ class StoreWebsite(WebsiteBase):
             return goods
         return web_goods.Goods(*goods)
 
-    def check_order(self, order_id: int, uid: uid_t) -> bool:
-        return check_order(order_id, uid, self._db)
+    def check_order(self, order, uid) -> Tuple[Optional[list], Optional[str]]:
+        cur = self._db.search(columns=["UserID"],
+                              table="orders",
+                              where=[f"OrderID='{order}'", f"UserID='{uid}'"])
+        if cur is None or cur.rowcount != 1:
+            return None, None
+        uid = cur.fetchone()[0]
+
+        cur = self._db.search(columns=["Name", "Quantity"],
+                              table="order_goods_view",
+                              where=f"OrderID = '{order}'")
+        if cur is None:
+            return None, None
+
+        res = []
+        for i in range(cur.rowcount):
+            re = cur.fetchone()
+            res.append(f"#{i} {re[0]} x {re[1]}")
+        return res, uid
+
+    def confirm_order(self, order_id: int, uid: uid_t) -> bool:
+        return confirm_order(order_id, uid, self._db)
 
 
 class RankWebsite(WebsiteBase):
@@ -133,7 +153,7 @@ class RankWebsite(WebsiteBase):
         res = []
         for index in range(cur.rowcount):
             i = cur.fetchone()
-            res.append((f"{offset + index + 1}", i[1], i[0][:Config.tk_show_uid_len], str(i[3]), str(i[2])))
+            res.append((f"{offset + index + 1}", i[1], i[0][:Config.show_uid_len], str(i[3]), str(i[2])))
         return res, get_page(f"rank.{url}", page, count)
 
 

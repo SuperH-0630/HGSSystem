@@ -8,8 +8,12 @@
 
 {% block title %} 取件码 {% endblock %}
 {% block h1_title %} 取件码 {% endblock %}
+{% block bnav %} {# 不显示底边栏 #} {% endblock %}
 
 {% block content %}
     <p class="order"> 订单号: {{ order }} </p>
-    <img class="qr" src="data:image/jpeg;base64,{{ qr_base64 }}" alt="取件码">
+    <img class="qr" src="data:image/jpeg;base64,{{ check_qr_base64 }}" alt="取件码">
+
+    <p class="order"> 确认码: {{ order }} </p>
+    <img class="qr" src="data:image/jpeg;base64,{{ confirm_qr_base64 }}" alt="确认码">
 {% endblock %}

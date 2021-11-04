@@ -74,7 +74,8 @@ def about():
     else:
         count = math.ceil(current_user.get_garbage_list_count() / 10)
         garbage_list = current_user.get_garbage_list(limit=10, offset=(page - 1) * 10)
-        return render_template("auth/about.html", order=user.order, order_list=user.get_order_goods_list(),
+        order_list = user.get_order_goods_list()
+        return render_template("auth/about.html", order=user.order, order_list=order_list,
                                garbage_list=garbage_list, page_list=get_page("auth.about", page, count), page=page)
 
 
@@ -84,13 +85,22 @@ def order_qr():
     user: web_user.WebUser = current_user
     user.update_info()
 
-    order, user = user.get_qr_code()
-    image = qrcode.make(data=url_for("store.check", user=user, order=order, _external=True))
-    img_buffer = BytesIO()
-    image.save(img_buffer, format='JPEG')
-    byte_data = img_buffer.getvalue()
-    base64_str = base64.b64encode(byte_data).decode("utf-8")
-    return render_template("auth/qr.html", qr_base64=base64_str, order=order)
+    order, user, token = user.get_qr_code()
+
+    check_image = qrcode.make(data=url_for("store.check", user=user, order=order, _external=True))
+    check_img_buffer = BytesIO()
+    check_image.save(check_img_buffer, format='JPEG')
+    check_qr_data = check_img_buffer.getvalue()
+    check_qr_base64 = base64.b64encode(check_qr_data).decode("utf-8")
+
+    confirm_image = qrcode.make(data=url_for("store.confirm", token=token, _external=True))
+    confirm_img_buffer = BytesIO()
+    confirm_image.save(confirm_img_buffer, format='JPEG')
+    confirm_qr_data = confirm_img_buffer.getvalue()
+    confirm_qr_base64 = base64.b64encode(confirm_qr_data).decode("utf-8")
+
+    return render_template("auth/qr.html", check_qr_base64=check_qr_base64,
+                           confirm_qr_base64=confirm_qr_base64, order=order)
 
 
 def creat_auth_website(app_: Flask):

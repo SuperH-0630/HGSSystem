@@ -183,6 +183,12 @@ SELECT (TO_DAYS(NOW()) - TO_DAYS(UseTime)) AS days,
 FROM garbage
 WHERE TO_DAYS(NOW()) - TO_DAYS(UseTime) < 30;
 
+DROP VIEW IF EXISTS order_goods_view;
+CREATE VIEW order_goods_view AS
+SELECT ordergoods.OrderID AS OrderID, ordergoods.GoodsID AS GoodsID, ordergoods.Quantity AS Quantity, goods.Name AS Name
+FROM ordergoods
+         JOIN goods on ordergoods.GoodsID = goods.GoodsID;
+
 DROP VIEW IF EXISTS context_user;
 CREATE VIEW context_user AS
 SELECT context.ContextID, context.Context, context.Time, user.UserID, user.Name

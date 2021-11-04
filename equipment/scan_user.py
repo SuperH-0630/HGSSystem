@@ -46,7 +46,7 @@ def make_uid_image(uid: uid_t, name: uname_t, path: str):
     res = qr.make_img(path)
     if not res:
         return False
-    write_text((60, 5), "noto", f"User: {name} {uid[0: Config.qr_show_uid_len]}", path)
+    write_text((60, 5), "noto", f"User: {name} {uid[0: Config.show_uid_len]}", path)
     return True
 
 

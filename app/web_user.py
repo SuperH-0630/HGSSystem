@@ -1,4 +1,5 @@
 from flask_login import UserMixin, AnonymousUserMixin
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 
 from conf import Config
 
@@ -97,7 +98,7 @@ class WebUser(UserMixin):
 
     @property
     def uid(self):
-        return self._uid[:Config.tk_show_uid_len]
+        return self._uid[:Config.show_uid_len]
 
     @property
     def order(self) -> str:
@@ -113,7 +114,9 @@ class WebUser(UserMixin):
         return self.group == "管理员"
 
     def get_qr_code(self):
-        return self.order, self._uid
+        s = Serializer(Config.passwd_salt, expires_in=3600)  # 3h有效
+        token = s.dumps({"order": f"{self.order}", "uid": f"{self._uid}"})
+        return self.order, self._uid, token
 
     def get_order_goods_list(self):
         order = self.order

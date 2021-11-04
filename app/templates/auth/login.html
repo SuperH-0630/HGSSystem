@@ -7,6 +7,7 @@
 
 {% block title %} 用户登录 {% endblock %}
 {% block h1_title %} 用户登录 {% endblock %}
+{% block bnav %} {# 不显示底边栏 #} {% endblock %}
 
 {% block content %}
     <form method="post" action="{{ url_for('auth.login') }}">

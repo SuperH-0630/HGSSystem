@@ -16,8 +16,15 @@ store = Blueprint("store", __name__)
 app: Optional[Flask] = None
 
 
-class BuyForm(FlaskForm):
-    quantity = TextField(validators=[DataRequired(message="请输入兑换数量")])
+class BuySetForm(FlaskForm):
+    quantity = TextField(validators=[DataRequired(message="请输入数量")])
+    submit = SubmitField()
+
+
+class AddNewGoodsForm(FlaskForm):
+    name = TextField(validators=[DataRequired(message="请输入名字")])
+    quantity = TextField(validators=[DataRequired(message="请输入库存")])
+    score = TextField(validators=[DataRequired(message="请输入库存")])
     submit = SubmitField()
 
 
@@ -29,7 +36,7 @@ def index():
     购买时发送请求到 store.buy
     :return:
     """
-    form = BuyForm()
+    form = BuySetForm()
     store_list = views.website.get_store_list()
     user: web_user.WebUser = current_user
     user.update_info()
@@ -44,7 +51,7 @@ def buy(goods_id: int):
     仅支持 Post 请求
     非表单的一律 404
     """
-    form = BuyForm()
+    form = BuySetForm()
     if form.validate_on_submit():
         try:
             quantity = int(form.quantity.data)
@@ -75,7 +82,52 @@ def manager_required(f):
         if not current_user.is_manager():
             abort(403)
         return f(*args, **kwargs)
+
     return func
+
+
+@store.route('/set/<int:goods_id>', methods=['POST'])
+@login_required
+@manager_required
+def set_goods(goods_id: int):
+    """
+    设置库存
+    仅支持 Post 请求
+    非表单的一律 404
+    """
+    form = BuySetForm()
+    if form.validate_on_submit():
+        try:
+            quantity = int(form.quantity.data)
+        except (TypeError, ValueError):
+            flash("请输入正确的数量")
+        else:
+            if not views.website.set_goods_quantity(quantity, goods_id):
+                abort(404)
+            return redirect(url_for("store.index"))
+    abort(404)
+
+
+@store.route('/set_score/<int:goods_id>', methods=['POST'])
+@login_required
+@manager_required
+def set_goods_score(goods_id: int):
+    """
+    设置兑换积分
+    仅支持 Post 请求
+    非表单的一律 404
+    """
+    form = BuySetForm()
+    if form.validate_on_submit():
+        try:
+            score = int(form.quantity.data)
+        except (TypeError, ValueError):
+            flash("请输入正确的数量")
+        else:
+            if not views.website.set_goods_score(score, goods_id):
+                abort(404)
+            return redirect(url_for("store.index"))
+    abort(404)
 
 
 @store.route('/check/<string:user>/<string:order>')
@@ -110,6 +162,22 @@ def confirm(token):
             abort(404)
         flash(f"订单: {order} 处理成功")
     return redirect(url_for("hello.index"))
+
+
+@store.route('/add', methods=["GET", "POST"])
+@login_required
+@manager_required
+def add_new_goods():
+    form = AddNewGoodsForm()
+    if form.validate_on_submit():
+        name = form.name.data
+        score = form.score.data
+        quantity = form.quantity.data
+        if not views.website.add_new_goods(name, score, quantity):
+            abort(404)
+        flash(f"新增商品 {name} 成功")
+        return redirect(url_for("store.add_new_goods"))
+    return render_template("store/add.html", add_form=form)
 
 
 def creat_store_website(app_: Flask):

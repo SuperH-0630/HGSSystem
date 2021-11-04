@@ -1,26 +1,50 @@
-{% macro _get_store_item(infos, store_form) %}
-    {% if infos[2] > 0 %}
-    <section id="store-item">
-        <p class="store-item-info store-item-title"> {{ infos[0] }} </p>
-        <p class="store-item-info"> 消耗 {{ infos[1] }} 积分</p>
-        <p class="store-item-info"> 剩余 {{ infos[2] }} 件 </p>
-        <hr>
-        <form method="post" action="{{ url_for("store.buy", goods_id=infos[3]) }}">
-            {{ store_form.hidden_tag() }}
-            <label class="store-item-num">
-                个数:
-                {{ store_form.quantity(type="number", class="store-item-num", placeholder="个数", value="1") }}
-            </label>
-            {{ store_form.submit(value="兑换", class="store-item-submit") }}
-        </form>
-    </section>
+{% macro _get_store_item(infos, store_form, user) %}
+    {% if user.is_manager or infos[2] > 0 %}
+        <section id="store-item">
+            <p class="store-item-info store-item-title"> {{ infos[0] }} </p>
+            <p class="store-item-info"> 消耗 {{ infos[1] }} 积分</p>
+            <p class="store-item-info"> 剩余 {{ infos[2] }} 件 </p>
+            <hr>
+            <form
+                    {% if user.is_manager %}
+                        action="{{ url_for("store.set_goods", goods_id=infos[3]) }}"
+                    {% else %}
+                        action="{{ url_for("store.buy", goods_id=infos[3]) }}"
+                    {% endif %} method="post">
+                {{ store_form.hidden_tag() }}
+                {% if user.is_manager %}
+                    <label class="store-item-num">
+                        库存:
+                        {{ store_form.quantity(type="number", class="store-item-num", placeholder="库存", value=infos[2]) }}
+                    </label>
+                    {{ store_form.submit(value="设定库存", class="store-item-submit") }}
+                {% else %}
+                    <label class="store-item-num">
+                        个数:
+                        {{ store_form.quantity(type="number", class="store-item-num", placeholder="个数", value="1") }}
+                    </label>
+                    {{ store_form.submit(value="兑换", class="store-item-submit") }}
+                {% endif %}
+            </form>
+            {% if user.is_manager %}
+                <hr>
+                <form action="{{ url_for("store.set_goods_score", goods_id=infos[3]) }}" method="post">
+                    {{ store_form.hidden_tag() }}
+                    <label class="store-item-num">
+                        积分:
+                        {{ store_form.quantity(type="number", class="store-item-num", placeholder="积分", value=infos[1]) }}
+                    </label>
+                    {{ store_form.submit(value="设定积分", class="store-item-submit") }}
+                </form>
+            {% endif %}
+        </section>
     {% endif %}
 {% endmacro %}
 
-{% macro get_store_item(info_lines, store_form) %}
+{% macro get_store_item(info_lines, store_form, user) %}
     {% if info_lines %}
         {% for line in info_lines %}
-            {{ _get_store_item(line, store_form) }}
+            {{ _get_store_item(line, store_form, user) }}
         {% endfor %}
     {% else %}
         <section id="store-item">

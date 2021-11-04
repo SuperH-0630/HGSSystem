@@ -83,3 +83,33 @@ def confirm_order(order: int, uid: uid_t, db: DB) -> bool:
         return False
     assert cur.rowcount == 1
     return True
+
+
+def set_goods_quantity(quantity: int, goods_id, db: DB):
+    cur = db.update(table="goods",
+                    kw={"Quantity": f"{quantity}"},
+                    where=f"GoodsID={goods_id}")
+    if cur is None or cur.rowcount == 0:
+        return False
+    assert cur.rowcount == 1
+    return True
+
+
+def set_goods_score(score: score_t, goods_id, db: DB):
+    cur = db.update(table="goods",
+                    kw={"Score": f"{score}"},
+                    where=f"GoodsID={goods_id}")
+    if cur is None or cur.rowcount == 0:
+        return False
+    assert cur.rowcount == 1
+    return True
+
+
+def add_new_goods(name: str, score: score_t, quantity: int, db: DB):
+    cur = db.insert(table='goods',
+                    columns=["Name", "Quantity", "Score"],
+                    values=f"'{name}', {quantity}, {score}")
+    if cur is None or cur.rowcount == 0:
+        return False
+    assert cur.rowcount == 1
+    return True

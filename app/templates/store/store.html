@@ -11,13 +11,15 @@
 
 {% block content %}
     <div id="info">
-        {% if current_user.is_anonymous %}
+        {% if current_user.is_manager() %}
+            <a id="add-goods" href="{{ url_for("store.add_new_goods") }}"> 新增商品 </a>
+        {% elif current_user.is_anonymous %}
             <p id="info-score"> 未登录 </p>
         {% else %}
             <p id="info-score"> 当前积分: {{ current_user.score }} </p>
         {% endif %}
     </div>
     <section id="store">
-        {{ store.get_store_item(store_list, store_form) }}
+        {{ store.get_store_item(store_list, store_form, current_user) }}
     </section>
 {% endblock %}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block style %}
+    {{ super() }}
+    <link href="{{ url_for('static', filename='styles/store/add.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block title %} 新增商品 {% endblock %}
+{% block h1_title %} 新增商品 {% endblock %}
+
+{% block content %}
+    <form method="post" action="{{ url_for('store.add_new_goods') }}">
+        {{ add_form.hidden_tag() }}
+        <label>
+            <p id="name-label">物品名字: </p><br>
+            {{ add_form.name(id="name-input") }}
+        </label>
+
+        <label>
+            <p id="score-label">物品积分: </p><br>
+            {{ add_form.score(id="score-input", type="number", value=10) }}
+        </label>
+
+        <label>
+            <p id="quantity-label">物品库存: </p><br>
+            {{ add_form.quantity(id="quantity-input", type="number", value=10) }}
+        </label>
+
+        {{ add_form.submit(id="add-submit", value="提交") }}
+    </form>
+{% endblock %}

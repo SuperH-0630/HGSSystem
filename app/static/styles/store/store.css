@@ -5,6 +5,20 @@
     align-items: flex-start;
 }
 
+#add-goods, #add-goods:active, #add-goods:link, #add-goods:visited {
+    display: block;
+    text-decoration: none;
+    color: black;
+
+    font-size: 20px;
+    float: right;
+    margin: 0 10px;
+}
+
+#add-goods:hover {
+    color: red;
+}
+
 #info {
     font-size: 20px;
     line-height: 25px;
@@ -13,7 +27,7 @@
 }
 
 #info-score {
-    margin-right: 10px;
+    margin: 0 10px;
     float: right;
 }
 

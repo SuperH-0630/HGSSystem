@@ -14,7 +14,7 @@ from sql.db import DB
 from sql.garbage import count_garbage_by_uid, get_garbage_by_uid
 from sql.user import find_user_by_name, find_user_by_id, get_rank_for_user, count_all_user
 from sql.news import write_news, get_news, get_news_count, delete_news
-from sql.store import check_order, get_goods_from_order
+from sql.store import check_order, get_goods_from_order, set_goods_quantity, set_goods_score, add_new_goods
 
 from . import web_user
 from . import web_goods
@@ -110,6 +110,15 @@ class StoreWebsite(WebsiteBase):
 
     def confirm_order(self, order_id: int, uid: uid_t) -> bool:
         return confirm_order(order_id, uid, self._db)
+
+    def set_goods_quantity(self, quantity: int, goods_id: int):
+        return set_goods_quantity(quantity, goods_id, self._db)
+
+    def set_goods_score(self, score: score_t, goods_id: int):
+        return set_goods_score(score, goods_id, self._db)
+
+    def add_new_goods(self, name: str, score: score_t, quantity: int):
+        return add_new_goods(name, score, quantity, self._db)
 
 
 class RankWebsite(WebsiteBase):

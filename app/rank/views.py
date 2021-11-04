@@ -13,8 +13,9 @@ def rank_up():
     except (ValueError, TypeError):
         abort(404)
     else:
-        data = views.website.get_rank(page, "DESC")
-        return render_template("rank/ranking.html", rank_info=data, ranking_name="高分榜")
+        data, page_list = views.website.get_rank(page, "DESC", "rank_up")
+        return render_template("rank/ranking.html", rank_info=data, ranking_name="高分榜",
+                               page_list=page_list, page=page)
 
 
 @rank.route('/down')
@@ -24,8 +25,9 @@ def rank_down():
     except (ValueError, TypeError):
         abort(404)
     else:
-        data = views.website.get_rank(page, "ASC")
-        return render_template("rank/ranking.html", rank_info=data, ranking_name="警示榜")
+        data, page_list = views.website.get_rank(page, "ASC", "rank_down")
+        return render_template("rank/ranking.html", rank_info=data, ranking_name="警示榜",
+                               page_list=page_list, page=f"{page}")
 
 
 def creat_ranking_website(app_: Flask):

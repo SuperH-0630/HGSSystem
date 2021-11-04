@@ -103,21 +103,27 @@ class StoreWebsite(WebsiteBase):
 
 
 class RankWebsite(WebsiteBase):
-    def get_rank(self, page: int, order_by: str = "DESC") -> Optional[List[Tuple]]:
+    def get_rank(self, page: int, order_by: str = "DESC", url: str = "rank_up"):
+        cur = self._db.search(columns=['count(UserID)'], table='user')
+        if cur is None:
+            return None, None
+        assert cur.rowcount == 1
+        count = math.ceil(int(cur.fetchone()[0]) / 20)
+
         offset = 20 * (page - 1)
         cur = self._db.search(columns=['UserID', 'Name', 'Score', 'Reputation'],
                               table='user',
                               where='IsManager=0',
                               order_by=[('Reputation', order_by), ('Score', order_by), ('UserID', order_by)],
                               limit=20,
-                              offset=offset)
+                              offset=offset)  # TODO 封装该函数
         if cur is None:
-            return None
+            return None, None
         res = []
         for index in range(cur.rowcount):
             i = cur.fetchone()
             res.append((f"{offset + index + 1}", i[1], i[0][:Config.tk_show_uid_len], str(i[3]), str(i[2])))
-        return res
+        return res, get_page(f"rank.{url}", page, count)
 
 
 class NewsWebsite(WebsiteBase):

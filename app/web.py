@@ -13,7 +13,7 @@ from sql import DBBit
 from sql.db import DB
 from sql.garbage import count_garbage_by_uid, get_garbage_by_uid
 from sql.user import find_user_by_name, find_user_by_id, get_rank_for_user, count_all_user
-from sql.news import write_news, get_news, get_news_count
+from sql.news import write_news, get_news, get_news_count, delete_news
 from sql.store import check_order, get_goods_from_order
 
 from . import web_user
@@ -131,6 +131,9 @@ class NewsWebsite(WebsiteBase):
         if not res:
             return False, None, None
         return True, news_list, get_page("news.index", page, count)
+
+    def delete_news(self, context_id: str):
+        return delete_news(context_id, self._db)
 
 
 class Website(AuthWebsite, StoreWebsite, RankWebsite, NewsWebsite, WebsiteBase):

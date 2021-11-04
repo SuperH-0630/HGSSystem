@@ -38,3 +38,12 @@ def get_news_count(db: DB):
         return 0
     assert cur.rowcount == 1
     return int(cur.fetchone()[0])
+
+
+def delete_news(context_id: str, db: DB):
+    cur = db.delete(table="context",
+                    where=f"ContextID={context_id}")
+    if cur is None or cur.rowcount == 0:
+        return False
+    assert cur.rowcount == 1
+    return True

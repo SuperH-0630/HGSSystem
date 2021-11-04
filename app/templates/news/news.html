@@ -6,11 +6,11 @@
     <link href="{{ url_for('static', filename='styles/news/news.css') }}" rel="stylesheet">
 {% endblock %}
 
-{% block title %} 新闻 {% endblock %}
-{% block h1_title %} 新闻 {% endblock %}
+{% block title %} 博客 {% endblock %}
+{% block h1_title %} 博客 {% endblock %}
 
 {% block content %}
-    <h2 class="h2-title"> 发表意见 </h2>
+    <h2 class="h2-title"> 发表博文 </h2>
     <form class="writer clearfix" action="{{ url_for('news.index', page=1) }}" method="post">
         {{ form.hidden_tag() }}
         {{ form.context(id="writer-context") }}
@@ -18,6 +18,6 @@
     </form>
 
     <h2 class="h2-title"> 最新消息 </h2>
-    {{ news.get_context_list(context_list) }}
+    {{ news.get_context_list(context_list, current_user, news_delete) }}
     {{ macro.get_page_list(page_list, page) }}
 {% endblock %}

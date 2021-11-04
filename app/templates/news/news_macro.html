@@ -1,8 +1,15 @@
-{% macro get_context_list(info_lines) %}
+{% macro get_context_list(info_lines, user, form) %}
     {% for line in info_lines %}
         <section class="news">
             <p class="news-author"> 作者:{{ line[2] }} </p>
             <p class="news-time"> 发表时间: {{ line[3] }} </p>
+            {% if user.is_manager() %}
+                {# 只有管理员会显示该表单 #}
+                <form action="{{ url_for('news.delete', context=line[0]) }}" method="post">
+                    {{ form.hidden_tag() }}
+                    {{ form.submit(value="删除", class="news-delete") }}
+                </form>
+            {% endif %}
             <p class="news-content"> {{ line[1] }} </p>
             <hr>
         </section>

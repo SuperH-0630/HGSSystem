@@ -51,6 +51,13 @@
     float: right;
 }
 
+.news-delete {
+    margin-left: 10px;
+    margin-right: 10px;
+    font-size: 15px;
+    float: right;
+}
+
 .news-content {
     display: block;
     clear: both;

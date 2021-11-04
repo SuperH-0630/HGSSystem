@@ -3,6 +3,7 @@ from flask_wtf import FlaskForm
 from wtforms import TextAreaField, SubmitField
 from wtforms.validators import DataRequired
 from flask_login import login_required, current_user
+import functools
 
 from tool.typing import Optional
 
@@ -18,6 +19,13 @@ class WriteForm(FlaskForm):
     写新内容表单
     """
     context = TextAreaField(validators=[DataRequired(message="请输入内容")])
+    submit = SubmitField()
+
+
+class NewDelete(FlaskForm):
+    """
+    删除内容表单
+    """
     submit = SubmitField()
 
 
@@ -43,8 +51,32 @@ def index():
     res, context_list, page_list = views.website.get_news(page)
     if not res:
         abort(404)
+    delete_form = NewDelete()
     return render_template("news/news.html", form=write_form, context_list=context_list,
-                           page_list=page_list, page=f"{page}")
+                           page_list=page_list, page=f"{page}", news_delete=delete_form)
+
+
+def manager_required(f):
+    @functools.wraps(f)
+    def func(*args, **kwargs):
+        if not current_user.is_manager():
+            abort(403)
+        return f(*args, **kwargs)
+
+    return func
+
+
+@news.route('/delete', methods=['POST'])
+@login_required
+@manager_required
+def delete():
+    context_id = request.args.get("context")
+    if context_id is None:
+        abort(404)
+    if not views.website.delete_news(context_id):
+        abort(404)
+    flash(f"删除内容 {context_id} 成功")
+    return redirect(url_for("news.index"))
 
 
 def creat_news_website(app_: Flask):

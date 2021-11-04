@@ -58,11 +58,22 @@ class AuthWebsite(WebsiteBase):
         name = user.get_name()
         return web_user.WebUser(name, uid=uid)
 
-    def get_user_garbage_list(self, uid: uid_t, limit: int):
+    def get_user_garbage_count(self, uid: uid_t):
+        cur = self._db.search(columns=["count(GarbageID)"],
+                              table="garbage",
+                              where=f"UserID='{uid}'")
+        if cur is None:
+            return 0
+        assert cur.rowcount == 1
+        return int(cur.fetchone()[0])
+
+    def get_user_garbage_list(self, uid: uid_t, limit: int, offset: int = 0):
         cur = self._db.search(columns=["UseTime", "Location", "GarbageType", "CheckResult"],
                               table="garbage",
                               where=f"UserID='{uid}'",
-                              limit=limit)
+                              limit=limit,
+                              offset=offset,
+                              order_by=[("UseTime", "DESC")])
         if cur is None or cur.rowcount == 0:
             return None
         res = []

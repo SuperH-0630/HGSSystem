@@ -1,4 +1,6 @@
-from flask import render_template, Blueprint, Flask, request, url_for, redirect, flash
+import math
+
+from flask import render_template, Blueprint, Flask, request, url_for, redirect, flash, abort
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired
 from flask_wtf import FlaskForm
@@ -9,6 +11,8 @@ import qrcode
 from io import BytesIO
 
 from tool.type_ import *
+from tool.page import get_page
+
 from app import views
 from app import web_user
 
@@ -62,7 +66,16 @@ def logout():
 def about():
     user: web_user.WebUser = current_user
     user.update_info()
-    return render_template("auth/about.html", order=user.order, order_list=user.get_order_goods_list())
+
+    try:
+        page = int(request.args.get("page", 1))
+    except (ValueError, TypeError):
+        abort(404)
+    else:
+        count = math.ceil(current_user.get_garbage_list_count() / 10)
+        garbage_list = current_user.get_garbage_list(limit=10, offset=(page - 1) * 10)
+        return render_template("auth/about.html", order=user.order, order_list=user.get_order_goods_list(),
+                               garbage_list=garbage_list, page_list=get_page("auth.about", page, count), page=page)
 
 
 @auth.route("/order")
@@ -70,6 +83,7 @@ def about():
 def order_qr():
     user: web_user.WebUser = current_user
     user.update_info()
+
     order, user = user.get_qr_code()
     image = qrcode.make(data=url_for("store.check", user=user, order=order, _external=True))
     img_buffer = BytesIO()

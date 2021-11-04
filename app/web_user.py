@@ -38,7 +38,11 @@ class WebAnonymous(AnonymousUserMixin):
         return []
 
     @staticmethod
-    def get_garbage_list():
+    def get_garbage_list_count():
+        return 0
+
+    @staticmethod
+    def get_garbage_list(limit, offset):
         return []
 
     @staticmethod
@@ -127,8 +131,11 @@ class WebUser(UserMixin):
             res.append(f"#{i} {re[0]} x {re[1]}")
         return res
 
-    def get_garbage_list(self):
-        return views.website.get_user_garbage_list(self._uid, limit=20)
+    def get_garbage_list_count(self):
+        return views.website.get_user_garbage_count(self._uid)
+
+    def get_garbage_list(self, limit: int, offset: int = 0):
+        return views.website.get_user_garbage_list(self._uid, limit=limit, offset=offset)
 
     def get_user(self) -> User:
         res = views.website.get_user_by_id(self._uid)

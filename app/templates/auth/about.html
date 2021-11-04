@@ -38,8 +38,11 @@
                 </ul>
             {% endif %}
         </section>
-        <ul id="garbage-list">
-            {{ about.get_garbage_list(current_user.get_garbage_list()) }}
-        </ul>
+        <section id="garbage-list">
+            <ul>
+                {{ about.get_garbage_list(garbage_list) }}
+            </ul>
+            {{ macro.get_page_list(page_list, page) }}
+        </section>
     </section>
 {% endblock %}

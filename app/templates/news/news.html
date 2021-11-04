@@ -11,7 +11,7 @@
 
 {% block content %}
     <h2 class="h2-title"> 发表意见 </h2>
-    <form class="writer clearfix" action="{{ url_for('news.index') }}" method="post">
+    <form class="writer clearfix" action="{{ url_for('news.index', page=1) }}" method="post">
         {{ form.hidden_tag() }}
         {{ form.context(id="writer-context") }}
         {{ form.submit(id="writer-submit", value="提交") }}
@@ -19,4 +19,5 @@
 
     <h2 class="h2-title"> 最新消息 </h2>
     {{ news.get_context_list(context_list) }}
+    {{ macro.get_page_list(page_list, page) }}
 {% endblock %}

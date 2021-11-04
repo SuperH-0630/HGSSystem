@@ -45,7 +45,6 @@ CREATE TABLE IF NOT EXISTS orders -- 订单
     FOREIGN KEY (UserID) REFERENCES user (UserID)
 );
 
-
 CREATE TABLE IF NOT EXISTS ordergoods -- 订单内容
 (
     OrderGoodsID INT PRIMARY KEY AUTO_INCREMENT,
@@ -54,6 +53,15 @@ CREATE TABLE IF NOT EXISTS ordergoods -- 订单内容
     Quantity     INT NOT NULL DEFAULT 1 CHECK (Quantity >= 0),
     FOREIGN KEY (OrderID) REFERENCES Orders (OrderID),
     FOREIGN KEY (GoodsID) REFERENCES Goods (GoodsID)
+);
+
+CREATE TABLE IF NOT EXISTS context
+(
+    ContextID INT PRIMARY KEY AUTO_INCREMENT,
+    Context   TEXT     NOT NULL,
+    Author    CHAR(34) NOT NULL,
+    Time      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (Author) REFERENCES user (UserID)
 );
 
 -- 创建视图
@@ -174,6 +182,12 @@ SELECT (TO_DAYS(NOW()) - TO_DAYS(UseTime)) AS days,
        CheckerID
 FROM garbage
 WHERE TO_DAYS(NOW()) - TO_DAYS(UseTime) < 30;
+
+DROP VIEW IF EXISTS context_user;
+CREATE VIEW context_user AS
+SELECT context.ContextID, context.Context, context.Time, user.UserID, user.Name
+FROM context
+         JOIN user on context.Author = user.UserID;
 
 -- 创建函数
 CREATE FUNCTION get_avg(num1 int, num2 int)

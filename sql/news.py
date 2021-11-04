@@ -30,3 +30,11 @@ def get_news(db: DB, limit: Optional[int] = None, offset: Optional[int] = None):
         time: datetime.datetime = re[3]
         res.append((re[0], re[1], re[2], time.strftime("%Y-%m-%d %H:%M")))
     return True, res
+
+
+def get_news_count(db: DB):
+    cur = db.search(columns=["count(ContextID)"], table="context_user")
+    if cur is None:
+        return 0
+    assert cur.rowcount == 1
+    return int(cur.fetchone()[0])

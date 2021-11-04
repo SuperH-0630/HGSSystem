@@ -1,0 +1,51 @@
+{% macro get_page_list(info_lines, page) %}
+    <style>
+        #page-list {
+            position: relative;
+            font-size: 20px;
+            line-height: 25px;
+        }
+
+        li.page-list-item {
+            display: block;
+            float: left;
+            height: 50px;
+            text-align: center;
+            margin: 10px 8px;
+
+        }
+
+        a.page-list-item, a.page-list-item:hover, a.page-list-item:active,
+        a.page-list-item:link, a.page-list-item:visited {
+            text-decoration: underline;
+            padding: 0 10px;
+            border: 1px gray ridge;
+        }
+
+        a.on_page-list-item, a.on_page-list-item:hover, a.on_page-list-item:active,
+        a.on_page-list-item:link, a.on_page-list-item:visited {
+            color: #DC143C;
+        }
+
+        a.out_page-list-item, a.out_page-list-item:hover, a.out_page-list-item:active,
+        a.out_page-list-item:link, a.out_page-list-item:visited {
+            color: black;
+        }
+
+    </style>
+    <ul id="page-list">
+        {% for line in info_lines %}
+            {% if line %}
+                <li class="page-list-item"><a
+                        {% if page == line[0] %}
+                            class="page-list-item on_page-list-item"
+                        {% else %}
+                            class="page-list-item out_page-list-item"
+                        {% endif %}
+                            href="{{ line[1] }}"> {{ line[0] }} </a></li>
+            {% else %}
+                <li class="page-list-item"><a class="page-list-item"> ... </a></li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+{% endmacro %}

@@ -1,19 +1,21 @@
-from sql.store import get_store_item_list, get_store_item, check_order
-
-from flask import Flask
+from flask import Flask, url_for
 from flask_login import current_user
 import datetime
+import math
 
 from conf import Config
 
+from sql.store import get_store_item_list, get_store_item, check_order
+
 from tool.type_ import *
+from tool.page import get_page
 
 from core.garbage import GarbageType
 
 from sql import DBBit
 from sql.db import DB
 from sql.user import find_user_by_name, find_user_by_id
-from sql.news import write_news, get_news
+from sql.news import write_news, get_news, get_news_count
 
 from . import web_user
 from . import web_goods
@@ -123,7 +125,15 @@ class NewsWebsite(WebsiteBase):
         return write_news(context, uid, self.db)
 
     def get_news(self, page: int = 1):
-        return get_news(limit=20, offset=((page - 1) * 20), db=self.db)
+        count = math.ceil(get_news_count(self.db) / 10)
+        if page > count:
+            return False, None, None
+
+        res, news_list = get_news(limit=20, offset=((page - 1) * 10), db=self.db)
+        if not res:
+            return False, None, None
+
+        return True, news_list, get_page("news.index", page, count)
 
 
 class Website(AuthWebsite, StoreWebsite, RankWebsite, NewsWebsite, WebsiteBase):

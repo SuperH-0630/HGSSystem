@@ -25,16 +25,17 @@ def index():
     if write_form.validate_on_submit():
         if len(write_form.context.data) < 20:
             flash("请输入20个字符以上的内容")
-            return redirect(url_for("news.index"))
+            return redirect(url_for("news.index", page=1))
         user: WebUser = current_user
         if not user.write_news(write_form.context.data):
             abort(500)
-        return redirect(url_for("news.index"))
-    page = request.args.get("page", 1)
-    res, context_list = views.website.get_news(page)
+        return redirect(url_for("news.index", page=1))
+    page = int(request.args.get("page", 1))
+    res, context_list, page_list = views.website.get_news(page)
     if not res:
         abort(404)
-    return render_template("news/news.html", form=write_form, context_list=context_list)
+    return render_template("news/news.html", form=write_form, context_list=context_list,
+                           page_list=page_list, page=f"{page}")
 
 
 def creat_news_website(app_: Flask):

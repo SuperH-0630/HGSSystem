@@ -3,8 +3,17 @@ import sys
 import time
 from typing import Union, List
 
+import faker
+
 print("初始化程序开始执行")
 print("开始检查依赖")
+
+print(r"是否使用 http://pypi.douban.com/simple/ 源")
+use_i = input(r"[Y/n]")
+if use_i == "Y" or use_i == 'y':
+    use_i = r"-i http://pypi.douban.com/simple/ --trusted-host pypi.douban.com"
+else:
+    use_i = ""
 
 try:
     __import__("pip")
@@ -13,7 +22,7 @@ except ImportError:
     sys.exit(1)
 else:
     print("依赖 pip 存在")
-    if os.system(f"{sys.executable} -m pip install --upgrade pip") != 0:
+    if os.system(f"{sys.executable} -m pip install {use_i} --upgrade pip") != 0:
         print(f"依赖 pip 更新失败", file=sys.stderr)
     else:
         print(f"依赖 pip 更新成功")
@@ -32,7 +41,7 @@ def check_import(packages: Union[str, List[str]], pips: Union[str, List[str]]):
             print(f"依赖 {package} 存在")
     except ImportError:
         for pip in pips:
-            command = f"{sys.executable} -m pip install {pip}"
+            command = f"{sys.executable} -m pip install {use_i} {pip}"
             print(f"依赖 {pip} 安装: {command}")
             if os.system(command) != 0:
                 print(f"依赖 {pip} 安装失败", file=sys.stderr)
@@ -107,16 +116,14 @@ if input("[Y/n]") != "Y":
 import random
 from tool.login import randomPassword
 
+check_import("faker", "Faker")  # matplotlib依赖
+from faker import Faker
+
+fake = Faker(locale='zh_CN')
+
 random_manager = []
 random_normal = []
-loc = ["LOC-A", "LOC-B", "LOC-C"]
-
-
-def random_phone() -> str:
-    r_phone = ""
-    while len(r_phone) < 11:
-        r_phone += f"{random.randint(0, 9)}"
-    return r_phone
+loc = [fake.street_name() for _ in range(4)]
 
 
 def random_time() -> str:
@@ -133,7 +140,7 @@ def random_time_double() -> tuple[str, str]:
     return mysql_time(min(r_h1, r_h2)), mysql_time(max(r_h1, r_h2))
 
 
-def random_user(r_name, r_passwd, r_phone, r_time, is_manager: int, cur):
+def random_user(r_name, r_passwd, r_phone, r_time, is_manager: int, cur, c_g=0, u_g=0):
     r_score = random.randint(0, 50000) / 100
     r_reputation = random.randint(5, 995)
     r_uid = create_uid(r_name, r_passwd)
@@ -145,27 +152,59 @@ def random_user(r_name, r_passwd, r_phone, r_time, is_manager: int, cur):
     else:
         random_normal.append(r_uid)
         print(f"普通用户: {r_name} {r_passwd} {r_phone} {r_reputation} {r_score} {r_uid}")
+    while c_g > 0:
+        c_g -= 1
+        t2, t1 = random_time_double()
+        random_garbage_c_to_user(r_uid, t1, t2, cur)
+
+    while u_g > 0:
+        u_g -= 1
+        t2, t1 = random_time_double()
+        random_garbage_u_to_user(r_uid, t1, t2, cur)
 
 
 def random_garbage_n(r_time, cur):
     cur.execute(f"INSERT INTO garbage(CreateTime, Flat) VALUES ({r_time}, 0);")
 
 
-def random_garbage_c(r_time, r_time2, cur):
-    user = random.choice(random_normal)
+def random_garbage_c_to_user(user, r_time, r_time2, cur):
     r_loc = random.choice(loc)
     cur.execute(f"INSERT INTO garbage(CreateTime, Flat, UserID, UseTime, GarbageType, Location) "
                 f"VALUES ({r_time}, 1, '{user}', {r_time2}, {random.randint(1, 4)}, '{r_loc}');")
 
 
-def random_garbage_u(r_time, r_time2, cur):
-    user = random.choice(random_normal)
+def random_garbage_u_to_user(user, r_time, r_time2, cur):
     checker = random.choice(random_manager)
     r_loc = random.choice(loc)
     cur.execute(f"INSERT INTO garbage(CreateTime, Flat, UserID, UseTime, GarbageType, Location, "
                 f"CheckerID, CheckResult) "
                 f"VALUES ({r_time}, 1, '{user}', {r_time2}, {random.randint(1, 4)}, '{r_loc}', "
                 f"'{checker}', {random.randint(0, 1)});")
+
+
+def random_garbage_c(r_time, r_time2, cur):
+    user = random.choice(random_normal)
+    random_garbage_c_to_user(user, r_time, r_time2, cur)
+
+
+def random_garbage_u(r_time, r_time2, cur):
+    user = random.choice(random_normal)
+    random_garbage_c_to_user(user, r_time, r_time2, cur)
+
+
+def random_news(c_time, cur):
+    user = random.choice(random_normal)
+    text = f"大家好，我是 {fake.name()}, 我居住在 {fake.street_name()}{fake.street_address()}, 谢谢"
+    cur.execute(f"INSERT INTO context(Context, Author, Time) "
+                f"VALUES ('{text}', '{user}', {c_time});")
+
+
+def random_goods(cur):
+    car = fake.license_plate()
+    quantity = random.randint(0, 20)
+    score = random.randint(10, 200)
+    cur.execute(f"INSERT INTO goods(Name, Quantity, Score) "
+                f"VALUES ('{car}', '{quantity}', {score});")
 
 
 print("步骤1, 注册管理账户[输入q结束]:")
@@ -180,7 +219,7 @@ while True:
         break
 
     if phone == 'x':
-        phone = random_phone()
+        phone = fake.phone_number()
     if creat_time == 'n':
         c_time = mysql_time()
     else:
@@ -197,6 +236,10 @@ while True:
         break
     if (creat_time := input("是否随机时间[n=不随机 y=随机]:")) == 'q':
         break
+    if (w_garbage := input("待检测垃圾个数:")) == 'q':
+        break
+    if (c_garbage := input("已检测垃圾个数:")) == 'q':
+        break
 
     if creat_time == 'n':
         c_time = mysql_time()
@@ -204,14 +247,16 @@ while True:
         c_time = random_time()
 
     if phone == 'x':
-        phone = random_phone()
-    random_user(name, passwd, phone, c_time, 0, cursor)
+        phone = fake.phone_number()
+    w_garbage = int(w_garbage)
+    c_garbage = int(w_garbage)
+    random_user(name, passwd, phone, c_time, 0, cursor, w_garbage, c_garbage)
 
 count = int(input("步骤3, 注册随机管理员账户[输入个数]:"))
 while count > 0:
     name = randomPassword()[:5]
     passwd = randomPassword()
-    phone = random_phone()
+    phone = fake.phone_number()
     c_time = random_time()
     random_user(name, passwd, phone, c_time, 1, cursor)
     count -= 1
@@ -220,7 +265,7 @@ count = int(input("步骤3, 注册随机普通账户[输入个数]:"))
 while count > 0:
     name = randomPassword()[:5]
     passwd = randomPassword()
-    phone = random_phone()
+    phone = fake.phone_number()
     c_time = random_time()
     random_user(name, passwd, phone, c_time, 0, cursor)
     count -= 1
@@ -242,6 +287,17 @@ while count > 0:
     count -= 1
     c_time = random_time()
     random_garbage_n(c_time, cursor)
+
+count = int(input("步骤7, 注册随机新闻内容:"))
+while count > 0:
+    count -= 1
+    c_time = random_time()
+    random_news(c_time, cursor)
+
+count = int(input("步骤8, 注册随机商城内容:"))
+while count > 0:
+    count -= 1
+    random_goods(cursor)
 
 sql.commit()
 cursor.close()

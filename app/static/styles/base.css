@@ -12,16 +12,40 @@ body {
 
 /* 顶菜单栏 */
 nav.nav-top {
-    position: fixed; /* 固定布局 */
-    top: 0;
-    left: 0;
-
     width: 100%;
 
     vertical-align: center;
     background-color: rgba(240, 128, 128, 90%); /* 带一点透明效果 */
     z-index: 10;
 }
+
+/* 内容 */
+@media all and (max-width: 1200px) {
+    /* 小屏幕(手机) */
+    nav.nav-top {
+        position: relative;
+        top: 0;
+        left: 0;
+    }
+
+    #start-p {
+        height: 0;
+    }
+
+}
+
+@media not all and (max-width: 1200px) {
+    nav.nav-top {
+        position: fixed; /* 固定布局 */
+        top: 0;
+        left: 0;
+    }
+
+    #start-p {
+        height: 100px;
+    }
+}
+
 
 #nav-title {
     display: block;
@@ -68,11 +92,6 @@ a.nav-top-item:hover, a.nav-top-item:active {
     color: #800080;
 }
 
-
-#start-p {
-    margin-bottom: 8%;
-}
-
 /* 闪现消息 */
 
 @keyframes show_flash_message {
@@ -102,7 +121,7 @@ a.nav-top-item:hover, a.nav-top-item:active {
     font-size: 25px;
     height: 50px;
     line-height: 50px;
-    margin: 5px auto;
+    margin: 0 auto 5px;
 
     animation-name: show_flash_message;
     animation-duration: 3s;
@@ -118,11 +137,19 @@ a.nav-top-item:hover, a.nav-top-item:active {
     }
 }
 
-@media not all and (max-width: 992px) {
+@media all and (min-width: 992px) and (max-width: 1200px) {
     #main {
         position: relative;
-        left: 25%;
-        width: 50%;
+        left: 10%;
+        width: 80%;
+    }
+}
+
+@media all and (min-width: 1200px) {
+    #main {
+        position: relative;
+        left: 20%;
+        width: 60%;
     }
 }
 
@@ -136,7 +163,7 @@ a.nav-top-item:hover, a.nav-top-item:active {
     width: 100%;
     z-index: 10;
     font-size: 15px;
-    height: 5vh;
+    height: 50px;
 }
 
 .nav-bottom-item {
@@ -155,7 +182,7 @@ a.nav-top-item:hover, a.nav-top-item:active {
 }
 
 #last-p {
-    padding-top: 7vh;
+    padding-top: 60px;
 }
 
 /* 用于解决父元素高度坍塌 */

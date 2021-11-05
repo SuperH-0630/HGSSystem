@@ -22,7 +22,7 @@ body {
 }
 
 #btn {
-    position: absolute;
+    position: relative;
     display: block;
     text-align: center;
 
@@ -31,7 +31,7 @@ body {
     border-style: ridge;
     border-color: rgb(123, 104, 238);
 
-    bottom: 200px;
+    top: 120px;
 
     color: #F0FFF0;
     background-color: #FFDC00;
@@ -62,7 +62,6 @@ body {
         left: 40%;
         width: 20%;
         height: 150px;
-        bottom: 175px;
         border-radius: 30px;
 
         color: black;

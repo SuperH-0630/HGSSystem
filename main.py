@@ -89,16 +89,14 @@ def main():
             from flask import Flask
             from app.views import register
         except ImportError:
-            raise
             can_not_load("在线排行榜服务")
             sys.exit(1)
 
         global app
         if __name__ == "__main__":
             app = creat_web(mysql)  # 暴露 app 接口
-            print("Web 服务启动 访问: http://127.0.0.1:8080/")
+            print("Waitress Web 服务启动 访问: http://127.0.0.1:8080/")
             app.run_waitress(host='0.0.0.0', port="8080")
-            # app.run_flask()
         else:
             tmp = creat_web(mysql)  # 暴露 app 接口
             app = tmp.get_app()

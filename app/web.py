@@ -152,6 +152,8 @@ class DataWebsite(WebsiteBase):
                               group_by=["GarbageType", "days"],
                               order_by=[("GarbageType", "ASC"), ("days", "ASC")],
                               where="UseTime IS NOT NULL")
+        if cur is None:
+            return None
         return cur.fetchall()
 
     def count_by_times(self, days):
@@ -160,7 +162,21 @@ class DataWebsite(WebsiteBase):
                               group_by=["GarbageType", "days"],
                               order_by=[("GarbageType", "ASC"), ("days", "ASC")],
                               where="UseTime IS NOT NULL")
+        if cur is None:
+            return None
         return cur.fetchall()
+
+    def count_passing_rate(self):
+        cur = self._db.search(columns=[f"get_avg(count(GarbageID), "
+                                       f"(SELECT count(g.GarbageID) "
+                                       f"FROM garbage AS g WHERE g.CheckResult is not null)) AS count"],
+                              table="garbage",
+                              where=["CheckResult is not null", "CheckResult=1"],
+                              order_by=[("count", "DESC")])
+        if cur is None or cur.rowcount == 0:
+            return None
+        assert cur.rowcount == 1
+        return cur.fetchone()[0]
 
 
 class Website(AuthWebsite, StoreWebsite, RankWebsite, NewsWebsite, DataWebsite, WebsiteBase):

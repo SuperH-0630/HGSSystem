@@ -766,8 +766,7 @@ class PassingRateEvent(AdminEventBase):
     def func(self, columns, where, where_select, order_by):
         where_str = " AND ".join(["g.CheckResult is not null", *where_select])
         columns += [f"get_avg(count(GarbageID), "
-                    f"(SELECT count(g.GarbageID) "
-                    f"FROM garbage AS g WHERE {where_str})) AS count"]
+                    f"(SELECT count(g.GarbageID) FROM garbage AS g WHERE {where_str})) AS count"]
         where += ["CheckResult is not null", "CheckResult=1"]
         cur = self._db.search(columns=columns,
                               table="garbage",

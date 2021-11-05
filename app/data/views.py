@@ -24,6 +24,9 @@ def index():
 @data.route('/pyecharts/count_by_day')
 def count_by_days():
     db_data = views.website.count_by_days()
+    if db_data is None:
+        abort(500)
+
     bar = pyecharts.charts.Bar(init_opts=init_opts)
 
     res = {}
@@ -55,6 +58,9 @@ def count_by_date(days):
         abort(404)
 
     db_data = views.website.count_by_times(days)
+    if db_data is None:
+        abort(500)
+
     line = pyecharts.charts.Line(init_opts=init_opts)
     print(db_data)
     res = {}
@@ -82,9 +88,25 @@ def count_by_date(days):
     for i in res:
         y_data = res[i][::-1]  # 反转数据
         line.add_yaxis(series_name=i, y_axis=y_data, color=random_color())
-    line.add_yaxis(series_name="合计", y_axis=count_data, color=random_color())
+    line.add_yaxis(series_name="合计", y_axis=count_data[::-1], color=random_color())
 
     return Markup(line.render_embed())
+
+
+@data.route('/pyecharts/count_passing_rate')
+def count_passing_rate():
+    rate = views.website.count_passing_rate()
+    if rate is None:
+        abort(500)
+
+    pie = pyecharts.charts.Pie(init_opts=init_opts)
+
+    (pie.set_global_opts(xaxis_opts=pyecharts.options.AxisOpts(type_="category"),
+                         title_opts=pyecharts.options.TitleOpts(title="通过率")))
+
+    pie.add(series_name="合计", data_pair=[("通过", rate), ("不通过", 1 - rate)], color=random_color())
+
+    return Markup(pie.render_embed())
 
 
 def creat_data_website(app_: Flask):

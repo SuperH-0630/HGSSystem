@@ -2699,7 +2699,7 @@ class StatisticsDateProgramBase(StatisticsTimeProgramBase):
         max_y_plot = 1  # max_y的最大值
         max_y_bar = 1  # max_y的最大值
         for res_type in res_type_lst:
-            res_count: Tuple[str] = res[res_type]
+            res_count: List[Tuple[int, int, bytes]] = res[res_type]  # 距离今天的日期, 统计值, 分类值
             if len(res_count) != 0:
                 color = self.check_show(res_type)
                 if color is None:
@@ -2707,9 +2707,8 @@ class StatisticsDateProgramBase(StatisticsTimeProgramBase):
 
                 y = [0 for _ in range(self._days)]
                 for i in range(0, len(res_count)):  # 反向迭代列表
-                    index = self._days - res_count[i - 1][0] - 1  # 反向排序
-                    y[index] += int(res_count[i - 1][1])
-
+                    y[res_count[i][0]] = res_count[i][1]
+                y = y[::-1]  # 反转列表, 使距离今天小的数据靠数据轴右侧
                 max_y_plot = max(max(y), max_y_plot)
                 self.color_show_dict[res_type] = color
                 self.plt_1.plot(label_num, y,

@@ -1,0 +1,15 @@
+.pyecharts-frame {
+    width: 100%;
+    height: 550px;
+    border: 0;
+}
+
+.title {
+    margin-top: 20px;
+    font-size: 23px;
+}
+
+.info {
+    text-indent: 2em;
+    font-size: 19px;
+}

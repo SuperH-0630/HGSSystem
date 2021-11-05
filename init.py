@@ -56,6 +56,7 @@ check_import("flask", "Flask")  # 网页服务
 check_import("flask", "Flask")  # 网页服务
 check_import("flask_wtf", "Flask-WTF")  # 网页服务
 check_import("flask_login", "Flask-Login")  # 网页服务
+check_import("pyecharts", "pyecharts")  # 网页服务
 check_import("waitress", "waitress")  # waitress 网页服务
 check_import("PIL", "Pillow")  # 图片处理
 check_import("numpy", "numpy")  # matplotlib依赖

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block style %}
+    {{ super() }}
+    <link href="{{ url_for('static', filename='styles/data/data.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block title %} 数据分析 {% endblock %}
+{% block h1_title %} 数据分析 {% endblock %}
+
+{% block content %}
+    <h2 class="title"> 按时段统计垃圾量 </h2>
+    <p class="info"> 将数据库中的所有数据按时间段(小时)进行分类，然后获取统计值。 </p>
+    <iframe class="pyecharts-frame" src="{{ url_for("data.count_by_days") }}"></iframe>
+
+    <br>
+    <h2 class="title"> 按日期统计垃圾量 </h2>
+    <p class="info"> 将数据库中的所有数据按日期进行分类，然后获取统计值。 </p>
+    <iframe class="pyecharts-frame" src="{{ url_for("data.count_by_date", days=7) }}"></iframe>
+    <iframe class="pyecharts-frame" src="{{ url_for("data.count_by_date", days=30) }}"></iframe>
+{% endblock %}

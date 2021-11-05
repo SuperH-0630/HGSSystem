@@ -145,6 +145,24 @@ class NewsWebsite(WebsiteBase):
         return delete_news(context_id, self._db)
 
 
-class Website(AuthWebsite, StoreWebsite, RankWebsite, NewsWebsite, WebsiteBase):
+class DataWebsite(WebsiteBase):
+    def count_by_days(self):
+        cur = self._db.search(columns=["GarbageType", "DATE_FORMAT(UseTime,'%H') AS days", "count(GarbageID) AS count"],
+                              table="garbage",
+                              group_by=["GarbageType", "days"],
+                              order_by=[("GarbageType", "ASC"), ("days", "ASC")],
+                              where="UseTime IS NOT NULL")
+        return cur.fetchall()
+
+    def count_by_times(self, days):
+        cur = self._db.search(columns=["GarbageType", "days", "count(GarbageID) AS count"],
+                              table=f"garbage_{days}d",
+                              group_by=["GarbageType", "days"],
+                              order_by=[("GarbageType", "ASC"), ("days", "ASC")],
+                              where="UseTime IS NOT NULL")
+        return cur.fetchall()
+
+
+class Website(AuthWebsite, StoreWebsite, RankWebsite, NewsWebsite, DataWebsite, WebsiteBase):
     def __init__(self, app: Flask, db: DB):
         super(Website, self).__init__(app, db)

@@ -31,7 +31,7 @@ body {
     border-style: ridge;
     border-color: rgb(123, 104, 238);
 
-    margin-top: 300px;
+    bottom: 200px;
 
     color: #F0FFF0;
     background-color: #FFDC00;
@@ -42,7 +42,7 @@ body {
     transition: width 1s, height 1s,
     left 1s, border-radius 1s,
     background-color 1s, color 1s,
-    font-size 1s, margin-top 1s;
+    font-size 1s, bottom 1s;
 }
 
 @media all and (max-width: 992px) {
@@ -62,7 +62,7 @@ body {
         left: 40%;
         width: 20%;
         height: 150px;
-        margin-top: 275px;
+        bottom: 175px;
         border-radius: 30px;
 
         color: black;

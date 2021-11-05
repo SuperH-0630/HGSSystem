@@ -34,7 +34,7 @@ def main():
     program_name = Config.program
     if program_name == "setup":  # setup程序不需要数据库链接等操作
         __main = os.path.dirname(os.path.abspath(__file__))
-        res = os.system(f"{sys.executable} {os.path.join(__main, 'setup.py')} "
+        res = os.system(f"{sys.executable} {os.path.join(__main, 'init.py')} "
                         f"--mysql_url={Config.mysql_url} "
                         f"--mysql_name={Config.mysql_name} "
                         f"--mysql_passwd={Config.mysql_passwd} "

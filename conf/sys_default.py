@@ -1,4 +1,4 @@
-from args import p_args
+from .args import p_args
 
 
 class ConfigSecretRelease:

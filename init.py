@@ -3,8 +3,6 @@ import sys
 import time
 from typing import Union, List
 
-import faker
-
 print("初始化程序开始执行")
 print("开始检查依赖")
 
@@ -55,6 +53,9 @@ check_import("qrcode", "qrcode")  # 二维码生成
 check_import("pymysql", "PyMySQL")  # 连接 MySQL服务器
 check_import("cryptography", "cryptography")  # 链接 MySQL 服务器时加密
 check_import("flask", "Flask")  # 网页服务
+check_import("flask", "Flask")  # 网页服务
+check_import("flask_wtf", "Flask-WTF")  # 网页服务
+check_import("flask_login", "Flask-Login")  # 网页服务
 check_import("waitress", "waitress")  # waitress 网页服务
 check_import("PIL", "Pillow")  # 图片处理
 check_import("numpy", "numpy")  # matplotlib依赖
@@ -80,7 +81,7 @@ except pymysql.err:
 print("是否执行数据库初始化程序?\n执行初始化程序会令你丢失所有数据.")
 res = input("[Y/n]")
 if res == 'Y' or res == 'y':
-    with open(os.path.join(__setup, "setup.sql"), "r", encoding='utf-8') as f:
+    with open(os.path.join(__setup, "init.sql"), "r", encoding='utf-8') as f:
         all_sql = f.read().split(';\n')  # 使用 `;` 作为分隔符是不够的, 因为函数中可能会使用`;`表示语句
         for s in all_sql:
             if s.strip() == "":
@@ -207,98 +208,101 @@ def random_goods(cur):
                 f"VALUES ('{car}', '{quantity}', {score});")
 
 
-print("步骤1, 注册管理账户[输入q结束]:")
-while True:
-    if (name := input("输入用户名:")) == 'q':  # 这里使用了海象表达式, 把赋值运算变成一种表达式
-        break
-    if (passwd := input("输入密码:")) == 'q':
-        break
-    if (phone := input("输入手机号码[输入x表示随机]:")) == 'q':
-        break
-    if (creat_time := input("是否随机时间[n=不随机 y=随机]:")) == 'q':
-        break
+def make_fake():
+    print("步骤1, 注册管理账户[输入q结束]:")
+    while True:
+        if (name := input("输入用户名:")) == 'q':  # 这里使用了海象表达式, 把赋值运算变成一种表达式
+            break
+        if (passwd := input("输入密码:")) == 'q':
+            break
+        if (phone := input("输入手机号码[输入x表示随机]:")) == 'q':
+            break
+        if (creat_time := input("是否随机时间[n=不随机 y=随机]:")) == 'q':
+            break
 
-    if phone == 'x':
+        if phone == 'x':
+            phone = fake.phone_number()
+        if creat_time == 'n':
+            c_time = mysql_time()
+        else:
+            c_time = random_time()
+        random_user(name, passwd, phone, c_time, 1, cursor)
+
+    print("步骤2, 注册普通账户[输入q结束]:")
+    while True:
+        if (name := input("输入用户名:")) == 'q':  # 这里使用了海象表达式, 把赋值运算变成一种表达式
+            break
+        if (passwd := input("输入密码:")) == 'q':
+            break
+        if (phone := input("输入手机号码[输入x表示随机]:")) == 'q':
+            break
+        if (creat_time := input("是否随机时间[n=不随机 y=随机]:")) == 'q':
+            break
+        if (w_garbage := input("待检测垃圾个数:")) == 'q':
+            break
+        if (c_garbage := input("已检测垃圾个数:")) == 'q':
+            break
+
+        if creat_time == 'n':
+            c_time = mysql_time()
+        else:
+            c_time = random_time()
+
+        if phone == 'x':
+            phone = fake.phone_number()
+        w_garbage = int(w_garbage)
+        c_garbage = int(w_garbage)
+        random_user(name, passwd, phone, c_time, 0, cursor, w_garbage, c_garbage)
+
+    count = int(input("步骤3, 注册随机管理员账户[输入个数]:"))
+    while count > 0:
+        name = randomPassword()[:5]
+        passwd = randomPassword()
         phone = fake.phone_number()
-    if creat_time == 'n':
-        c_time = mysql_time()
-    else:
         c_time = random_time()
-    random_user(name, passwd, phone, c_time, 1, cursor)
+        random_user(name, passwd, phone, c_time, 1, cursor)
+        count -= 1
 
-print("步骤2, 注册普通账户[输入q结束]:")
-while True:
-    if (name := input("输入用户名:")) == 'q':  # 这里使用了海象表达式, 把赋值运算变成一种表达式
-        break
-    if (passwd := input("输入密码:")) == 'q':
-        break
-    if (phone := input("输入手机号码[输入x表示随机]:")) == 'q':
-        break
-    if (creat_time := input("是否随机时间[n=不随机 y=随机]:")) == 'q':
-        break
-    if (w_garbage := input("待检测垃圾个数:")) == 'q':
-        break
-    if (c_garbage := input("已检测垃圾个数:")) == 'q':
-        break
-
-    if creat_time == 'n':
-        c_time = mysql_time()
-    else:
-        c_time = random_time()
-
-    if phone == 'x':
+    count = int(input("步骤3, 注册随机普通账户[输入个数]:"))
+    while count > 0:
+        name = randomPassword()[:5]
+        passwd = randomPassword()
         phone = fake.phone_number()
-    w_garbage = int(w_garbage)
-    c_garbage = int(w_garbage)
-    random_user(name, passwd, phone, c_time, 0, cursor, w_garbage, c_garbage)
+        c_time = random_time()
+        random_user(name, passwd, phone, c_time, 0, cursor)
+        count -= 1
 
-count = int(input("步骤3, 注册随机管理员账户[输入个数]:"))
-while count > 0:
-    name = randomPassword()[:5]
-    passwd = randomPassword()
-    phone = fake.phone_number()
-    c_time = random_time()
-    random_user(name, passwd, phone, c_time, 1, cursor)
-    count -= 1
+    count = int(input("步骤4, 注册随机已检查垃圾袋[输入个数]:"))
+    while count > 0:
+        count -= 1
+        c_time2, c_time1 = random_time_double()
+        random_garbage_u(c_time1, c_time2, cursor)
 
-count = int(input("步骤3, 注册随机普通账户[输入个数]:"))
-while count > 0:
-    name = randomPassword()[:5]
-    passwd = randomPassword()
-    phone = fake.phone_number()
-    c_time = random_time()
-    random_user(name, passwd, phone, c_time, 0, cursor)
-    count -= 1
+    count = int(input("步骤5, 注册随机待检查垃圾袋[输入个数]:"))
+    while count > 0:
+        count -= 1
+        c_time2, c_time1 = random_time_double()
+        random_garbage_c(c_time1, c_time2, cursor)
 
-count = int(input("步骤4, 注册随机已检查垃圾袋[输入个数]:"))
-while count > 0:
-    count -= 1
-    c_time2, c_time1 = random_time_double()
-    random_garbage_u(c_time1, c_time2, cursor)
+    count = int(input("步骤6, 注册随机未使用垃圾袋[输入个数]:"))
+    while count > 0:
+        count -= 1
+        c_time = random_time()
+        random_garbage_n(c_time, cursor)
 
-count = int(input("步骤5, 注册随机待检查垃圾袋[输入个数]:"))
-while count > 0:
-    count -= 1
-    c_time2, c_time1 = random_time_double()
-    random_garbage_c(c_time1, c_time2, cursor)
+    count = int(input("步骤7, 注册随机新闻内容:"))
+    while count > 0:
+        count -= 1
+        c_time = random_time()
+        random_news(c_time, cursor)
 
-count = int(input("步骤6, 注册随机未使用垃圾袋[输入个数]:"))
-while count > 0:
-    count -= 1
-    c_time = random_time()
-    random_garbage_n(c_time, cursor)
+    count = int(input("步骤8, 注册随机商城内容:"))
+    while count > 0:
+        count -= 1
+        random_goods(cursor)
 
-count = int(input("步骤7, 注册随机新闻内容:"))
-while count > 0:
-    count -= 1
-    c_time = random_time()
-    random_news(c_time, cursor)
 
-count = int(input("步骤8, 注册随机商城内容:"))
-while count > 0:
-    count -= 1
-    random_goods(cursor)
-
+make_fake()
 sql.commit()
 cursor.close()
 sql.close()

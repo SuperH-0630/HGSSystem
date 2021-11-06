@@ -91,8 +91,9 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
         if self._user is None:
             return False
         if not self._user.is_manager() and time.time() - self._user_last_time > 20:
+            self.show_msg("退出登录", "用户自动退出", show_time=3.0)
             self._user = None
-            return False
+            raise Exception
         return True
 
     def __check_normal_user(self):
@@ -1214,7 +1215,7 @@ class GarbageStation(GarbageStationBase):
         rubbish: tk.Variable = self._user_rubbish[2]
         eval_: tk.Variable = self._user_eval[2]
 
-        user_info: Dict[str, str] = self.get_user_info_no_update()
+        user_info: Dict[str, str] = self.get_user_info_no_update()  # 此处检查用户是否过期登录
         if user_info.get('uid') is None:
             name.set('未登录')
             uid.set('未登录')

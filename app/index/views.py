@@ -8,7 +8,7 @@ app: Optional[Flask] = None
 @hello.route('/')
 def start():
     """
-    显示 start 宇宙界面
+    显示 start 樱花界面
     """
     return render_template("hello/start.html")
 

@@ -57,6 +57,10 @@ def index():
 
 
 def manager_required(f):
+    """
+    检查是否有管理员权限
+    """
+
     @functools.wraps(f)
     def func(*args, **kwargs):
         if not current_user.is_manager():
@@ -70,6 +74,9 @@ def manager_required(f):
 @login_required
 @manager_required
 def delete():
+    """
+    管理员: 删除内容
+    """
     context_id = request.args.get("context")
     if context_id is None:
         abort(404)

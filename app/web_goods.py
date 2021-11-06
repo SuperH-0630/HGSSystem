@@ -8,6 +8,7 @@ from . import web_user
 
 
 class Goods:
+    """ 商品 """
     def __init__(self, name: str, score: score_t, quantity: int, goods_id: int):
         self._name = name
         self._quantity = quantity
@@ -15,6 +16,7 @@ class Goods:
         self._id = goods_id
 
     def buy_for_user(self, quantity: int, user_: web_user.WebUser) -> Tuple[int, int]:
+        """ 兑换商品 """
         score_ = quantity * self._score
         if quantity > self._quantity or quantity <= 0:
             return -2, 0  # 数量错误

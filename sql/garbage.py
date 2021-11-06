@@ -7,6 +7,13 @@ from core.garbage import GarbageBag, GarbageType
 
 
 def update_garbage_type(where: str, type_: int, db: DB) -> int:
+    """
+    更新垃圾袋类型
+    :param where: 条件
+    :param type_: 类型
+    :param db: 数据库
+    :return:
+    """
     if len(where) == 0:
         return -1
 
@@ -16,11 +23,18 @@ def update_garbage_type(where: str, type_: int, db: DB) -> int:
     return cur.rowcount
 
 
-def update_garbage_check(where: str, check_: bool, db: DB) -> int:
+def update_garbage_check(where: str, result: bool, db: DB) -> int:
+    """
+    更新垃圾袋检测结果
+    :param where: 条件
+    :param result: 结果
+    :param db: 数据库
+    :return:
+    """
     if len(where) == 0:
         return -1
 
-    i: str = '1' if check_ else '0'
+    i: str = '1' if result else '0'
     cur = db.update(table="garbage", kw={"CheckResult": i}, where=where)
     if cur is None:
         return -1
@@ -149,7 +163,7 @@ def get_garbage_by_uid(uid: uid_t, columns, limit, db: DB, offset: int = 0):
 def __find_garbage(columns: List[str], table: str, where: str, db: DB):
     cur = db.search(columns=columns, table=table, where=where)
     if cur is None or cur.rowcount == 0:
-        return [None, tuple()]
+        return None, tuple()
     assert cur.rowcount == 1
     res = cur.fetchone()
     assert len(res) == len(columns)
@@ -169,7 +183,7 @@ def find_wait_garbage(gid: gid_t, db: DB) -> Union[GarbageBag, None]:
     gb, res = __find_garbage(columns=["GarbageID", "GarbageType", "UseTime", "UserID", "Location"],
                              table="garbage_c",
                              where=f"GarbageID = {gid}",
-                             db=db)[0]
+                             db=db)
     if gb is None:
         return None
 
@@ -189,7 +203,7 @@ def find_use_garbage(gid: gid_t, db: DB) -> Union[GarbageBag, None]:
                                       "CheckResult", "CheckerID"],
                              table="garbage_u",
                              where=f"GarbageID = {gid}",
-                             db=db)[0]
+                             db=db)
     if gb is None:
         return None
 

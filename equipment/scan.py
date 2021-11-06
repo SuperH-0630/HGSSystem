@@ -8,6 +8,7 @@ from tool.typing import *
 
 
 class HGSCapture:
+    """ 摄像头扫描 """
     def __init__(self, capnum: int = Config.capture_num, *args, **kwargs):
         args = *args, *Config.capture_arg
         if cv2.CAP_DSHOW not in args:
@@ -17,6 +18,7 @@ class HGSCapture:
         self._lock = threading.RLock()
 
     def get_image(self):
+        """ 获取摄像头图像 """
         try:
             self._lock.acquire()
             ret, frame = self._capture.read()
@@ -27,6 +29,7 @@ class HGSCapture:
         return ret
 
     def get_frame(self):
+        """ 获取 frame """
         try:
             self._lock.acquire()
             frame = self._frame
@@ -63,6 +66,7 @@ class QRCode:
 
 
 class HGSQRCoder:
+    """ 二维码扫描仪 """
     def __init__(self, cap: HGSCapture):
         self._cap = cap
         self._last_qr: Optional[QRCode] = None

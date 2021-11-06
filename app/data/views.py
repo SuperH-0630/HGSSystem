@@ -23,6 +23,9 @@ def index():
 
 @data.route('/pyecharts/count_by_day')
 def count_by_days():
+    """
+    时段统计分析
+    """
     db_data = views.website.count_by_days()
     if db_data is None:
         abort(500)
@@ -53,6 +56,11 @@ def count_by_days():
 
 
 def count_by_date__(days):
+    """
+    日期统计分析
+    :param days: 7日 30日
+    :return:
+    """
     if days != 7 and days != 30:
         abort(404)
 
@@ -61,7 +69,6 @@ def count_by_date__(days):
         abort(500)
 
     line = pyecharts.charts.Line(init_opts=init_opts)
-    print(db_data)
     res = {}
     loc_type = []
     count_data = [0] * days
@@ -94,6 +101,9 @@ def count_by_date__(days):
 @data.route('/pyecharts/count_by_date/<int:days>')
 def count_by_date(days):
     if days == 307:
+        """
+        将30日和7日统计汇聚在一张表中
+        """
         line7 = count_by_date__(7)
         line30 = count_by_date__(30)
         chart = pyecharts.charts.Tab("时间统计")
@@ -106,6 +116,9 @@ def count_by_date(days):
 
 @data.route('/pyecharts/count_passing_rate')
 def count_passing_rate():
+    """
+    通过率统计
+    """
     rate_list = views.website.count_passing_rate()
     if rate_list is None:
         abort(500)
@@ -118,14 +131,14 @@ def count_passing_rate():
         name = GarbageType.GarbageTypeStrList_ch[int(i[0].decode("utf-8"))]
         pie = pyecharts.charts.Pie(init_opts=init_opts)
         pie.set_global_opts(xaxis_opts=xaxis_opts, title_opts=pyecharts.options.TitleOpts(title=f"{name}-通过率"))
-        pie.add(series_name=name, data_pair=[("通过", i[1]), ("不通过", 1 - i[1])], color=random_color())
+        pie.add(series_name=name, data_pair=[("通过", i[1]), ("不通过", 1 - i[1])])
         page.add(pie, f"{name}-通过率")
         rate_global += i[1]
 
     rate_global = rate_global / 4
     pie = pyecharts.charts.Pie(init_opts=init_opts)
     pie.set_global_opts(xaxis_opts=xaxis_opts, title_opts=pyecharts.options.TitleOpts(title="平均-通过率"))
-    pie.add(series_name="平均", data_pair=[("通过", rate_global), ("不通过", 1 - rate_global)], color=random_color())
+    pie.add(series_name="平均", data_pair=[("通过", rate_global), ("不通过", 1 - rate_global)])
     page.add(pie, "平均-通过率")
 
     return Markup(page.render_embed())

@@ -255,7 +255,7 @@ class DelUserFromWhereEvent(AdminEventBase):
         if res != -1:
             self.station.show_msg("扫描结果", f"成功删除{res}个用户")
         else:
-            self.station.show_warning("扫描结果", f"获取扫描结果失败")
+            self.station.show_warning("扫描结果", f"删除用户失败")
 
 
 class DelGarbageEvent(AdminEventBase):
@@ -424,14 +424,18 @@ class SearchUserAdvancedEvent(AdminEventBase):
             self.program.view.insert('', 'end', values=i)
 
 
-def set_garbage_search_result(i):
-    i = list(i)
-    if i[-1] is not None:
-        i[-1] = "投放正确" if i[-1] == DBBit.BIT_1 else "投放错误"
-    if i[-2] is not None:
-        tmp: bytes = i[-2]
-        i[-2] = GarbageType.GarbageTypeStrList_ch[int(tmp.decode('utf-8'))]
-    return i
+def set_garbage_search_result(data):
+    data = list(data)
+    if data[6] is not None:
+        tmp: bytes = data[6]
+        data[6] = GarbageType.GarbageTypeStrList_ch[int(tmp.decode('utf-8'))]
+    if data[7] is not None:
+        data[7] = "投放正确" if data[7] == DBBit.BIT_1 else "投放错误"
+
+    for index, i in enumerate(data):
+        if i is None:
+            data[index] = "无"
+    return data
 
 
 class SearchGarbageEvent(AdminEventBase):
@@ -484,6 +488,22 @@ class SearchGarbageAdvancedEvent(AdminEventBase):
             self.program.view.insert('', 'end', values=i)
 
 
+def set_advanced_search_result(data):
+    data = list(data)
+    if data[-2] is not None:
+        tmp: bytes = data[-2]
+        data[-2] = GarbageType.GarbageTypeStrList_ch[int(tmp.decode('utf-8'))]
+
+    if data[-1] is not None:
+        data[-1] = "投放正确" if data[-1] == DBBit.BIT_1 else "投放错误"
+
+    data = list(data)
+    for index, i in enumerate(data):
+        if i is None:
+            data[index] = "无"
+    return data
+
+
 class SearchAdvancedEvent(AdminEventBase):
     def func(self, columns, sql):
         return self.station.search_advanced(columns, sql)
@@ -505,7 +525,7 @@ class SearchAdvancedEvent(AdminEventBase):
         for i in self.program.view.get_children():
             self.program.view.delete(i)
         for i in res:
-            i = set_garbage_search_result(i)
+            i = set_advanced_search_result(i)
             self.program.view.insert('', 'end', values=i)
 
 

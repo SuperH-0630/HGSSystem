@@ -44,6 +44,7 @@ class WebsiteBase:
 
 
 class AuthWebsite(WebsiteBase):
+    """ 用户界面 """
     def load_user_by_name(self, name: uname_t, passwd: passwd_t) -> Optional["web_user.WebUser"]:
         user = find_user_by_name(name, passwd, self._db)
         if user is None:
@@ -89,6 +90,7 @@ class AuthWebsite(WebsiteBase):
 
 
 class StoreWebsite(WebsiteBase):
+    """ 积分商城 """
     def get_store_list(self) -> Optional[List]:
         return get_store_item_list(self._db)
 
@@ -122,6 +124,7 @@ class StoreWebsite(WebsiteBase):
 
 
 class RankWebsite(WebsiteBase):
+    """ 排行榜 """
     def get_rank(self, page: int, order_by: str = "DESC", url: str = "rank_up"):
         count = math.ceil(count_all_user(self._db) / 20)
         offset = 20 * (page - 1)
@@ -129,6 +132,7 @@ class RankWebsite(WebsiteBase):
 
 
 class NewsWebsite(WebsiteBase):
+    """ 博客 """
     def write_news(self, context: str, uid: uid_t):
         return write_news(context, uid, self.db)
 
@@ -146,6 +150,10 @@ class NewsWebsite(WebsiteBase):
 
 
 class DataWebsite(WebsiteBase):
+    """
+    数据分析
+    """
+
     def count_by_days(self):
         cur = self._db.search(columns=["GarbageType", "DATE_FORMAT(UseTime,'%H') AS days", "count(GarbageID) AS count"],
                               table="garbage",

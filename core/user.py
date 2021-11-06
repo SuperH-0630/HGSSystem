@@ -22,7 +22,7 @@ class User(metaclass=abc.ABCMeta):
         self._name: uname_t = uname_t(name)
         self._uid: uid_t = uid_t(uid)
         self._type: enum = enum(user_type)
-        self._lock = threading.RLock()
+        self._lock = threading.RLock()  # 用户 互斥锁
 
     def is_manager(self):
         try:
@@ -211,14 +211,21 @@ class NormalUser(User):
         return score
 
     def throw_rubbish(self, garbage: GarbageBag, garbage_type: enum, loc: location_t = Config.base_location) -> bool:
+        """
+        垃圾投放
+        :param garbage: 垃圾袋
+        :param garbage_type: 垃圾类别
+        :param loc: 地区
+        :return:
+        """
         try:
             self._lock.acquire()
-            if self._rubbish > Config.max_rubbish_week:
+            if self._rubbish > Config.max_rubbish_week:  # 大于上限, 扣分
                 self.add_score(-3)
-            elif self._rubbish > Config.limit_rubbish_week:
+            elif self._rubbish > Config.limit_rubbish_week:  # 大于最大上限, 不再允许扔垃圾
                 return False
 
-            if garbage.is_use() or garbage.is_check()[0]:
+            if garbage.is_use() or garbage.is_check()[0]:  # 垃圾袋被使用
                 return False
             garbage.config_use(garbage_type, HGSTime(), self._uid, loc)
 
@@ -235,16 +242,23 @@ class ManagerUser(User):
     def __init__(self, name: uname_t, uid: uid_t):
         super(ManagerUser, self).__init__(name, uid, UserType.manager)
 
-    def check_rubbish(self, garbage: GarbageBag, right: bool, user: User) -> bool:
+    def check_rubbish(self, garbage: GarbageBag, result: bool, user: User) -> bool:
+        """
+        检查垃圾
+        :param garbage: 垃圾袋
+        :param result: 结果
+        :param user: 垃圾袋投放者
+        :return:
+        """
         if (not garbage.is_use()) or garbage.is_check()[0] or user.get_uid() != garbage.get_user():  # 调用时已经有锁
             return False
 
         try:
             self._lock.acquire()
-            garbage.config_check(right, self._uid)
-            user.evaluate(right)
+            garbage.config_check(result, self._uid)
+            user.evaluate(result)
 
-            if right:
+            if result:
                 if garbage.get_type() == GarbageType.recyclable:
                     user.add_score(3)
                 elif garbage.get_type() == GarbageType.kitchen or garbage.get_type() == GarbageType.hazardous:

@@ -11,6 +11,7 @@ from . import views
 
 
 class WebAnonymous(AnonymousUserMixin):
+    """ 网页匿名用户 """
     def __init__(self):
         self.group = "匿名用户"
         self.score = "0"
@@ -52,6 +53,7 @@ class WebAnonymous(AnonymousUserMixin):
 
 
 class WebUser(UserMixin):
+    """ 网页用户 """
     def __init__(self, name: uname_t, passwd: passwd_t = None, uid: uid_t = None):
         super(WebUser, self).__init__()
         self._name = name
@@ -118,7 +120,7 @@ class WebUser(UserMixin):
         return self.group == "管理员"
 
     def get_qr_code(self):
-        s = Serializer(Config.passwd_salt, expires_in=3600)  # 3h有效
+        s = Serializer(Config.passwd_salt, expires_in=3600)  # 1h有效
         token = s.dumps({"order": f"{self.order}", "uid": f"{self._uid}"})
         return self.order, self._uid, token
 

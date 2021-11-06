@@ -17,11 +17,17 @@ app: Optional[Flask] = None
 
 
 class BuySetForm(FlaskForm):
+    """
+    兑换/库存设定/积分设定表单
+    """
     quantity = TextField(validators=[DataRequired(message="请输入数量")])
     submit = SubmitField()
 
 
 class AddNewGoodsForm(FlaskForm):
+    """
+    新增商品表单
+    """
     name = TextField(validators=[DataRequired(message="请输入名字")])
     quantity = TextField(validators=[DataRequired(message="请输入库存")])
     score = TextField(validators=[DataRequired(message="请输入库存")])
@@ -77,6 +83,11 @@ def buy(goods_id: int):
 
 
 def manager_required(f):
+    """
+    管理员权限
+    :return:
+    """
+
     @functools.wraps(f)
     def func(*args, **kwargs):
         if not current_user.is_manager():
@@ -151,7 +162,7 @@ def confirm(token):
     确认取件
     """
     try:
-        s = Serializer(Config.passwd_salt, expires_in=3600)  # 3h有效
+        s = Serializer(Config.passwd_salt)
         data = s.loads(token)
         order = data["order"]
         user = data["uid"]
@@ -168,6 +179,9 @@ def confirm(token):
 @login_required
 @manager_required
 def add_new_goods():
+    """
+    新增新商品
+    """
     form = AddNewGoodsForm()
     if form.validate_on_submit():
         name = form.name.data

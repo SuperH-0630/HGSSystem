@@ -20,6 +20,7 @@ class AliyunServerException(ServerException):
 
 
 class Aliyun:
+    """ Aliyun SDK """
     def __init__(self,
                  key: Optional[str] = Config.aliyun_key,
                  secret: Optional[str] = Config.aliyun_secret,

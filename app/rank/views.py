@@ -8,6 +8,9 @@ app: Optional[Flask] = None
 
 @rank.route('/up')
 def rank_up():
+    """
+    高分榜 正向排行
+    """
     try:
         page = int(request.args.get("page", 1))
     except (ValueError, TypeError):
@@ -20,6 +23,9 @@ def rank_up():
 
 @rank.route('/down')
 def rank_down():
+    """
+    警示榜 反向排行
+    """
     try:
         page = int(request.args.get("page", 1))
     except (ValueError, TypeError):

@@ -6,8 +6,10 @@ from tool.location import HGSLocation, hgs_location_t
 
 
 class GarbageType:
+    # 类别从 1 开始计数
     GarbageTypeStrList: List = ["", "recyclable", "kitchen", "hazardous", "other"]
     GarbageTypeStrList_ch: List = ["", "可回收", "厨余", "有害", "其他"]
+
     recyclable: enum = 1
     kitchen: enum = 2
     hazardous: enum = 3
@@ -15,6 +17,7 @@ class GarbageType:
 
 
 class GarbageBag:
+    """垃圾袋"""
     def __init__(self, gid: gid_t):
         self._gid: gid_t = gid_t(gid)
         self._have_use: bool = False

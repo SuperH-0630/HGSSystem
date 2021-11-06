@@ -86,17 +86,17 @@ class ScanGarbageEvent(StationEventBase):
         return self.thread is not None and not self.thread.is_alive()
 
     def done_after_event(self):
-        self.thread.join()
-        if self.thread.result is not None:
+        res = self.thread.wait_event()
+        if res is not None:
             if self._user is None:
-                self.station.show_warning("操作失败", "垃圾袋已经被使用")
+                self.station.show_warning("操作失败", "用户未登录")
             elif self._user.is_manager():
-                self.station.to_get_garbage_check(self.thread.result)
+                self.station.to_get_garbage_check(res)
                 self.station.show_garbage_info()  # 显示信息
                 self.station.update_control()
             else:
-                self.station.to_get_garbage_type(self.thread.result)
-                self.station.hide_msg_rank()  # 如果有msg也马上隐藏
+                self.station.to_get_garbage_type(res)
+                self.station.show_msg("扫码垃圾袋", "垃圾袋扫描成功", show_time=3)
                 self.station.update_control()
 
 

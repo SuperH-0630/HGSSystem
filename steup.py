@@ -151,7 +151,7 @@ def write_bat():
 if "%1" == "h" goto begin
 mshta vbscript:createobject("wscript.shell").run("""%~nx0"" h",0)(window.close)&&exit
 :begin\n''')  # 隐藏 cmd 的命令
-            f.write(f"{python} {main} --program {i}")
+            f.write(f"{python} {main} --program {i} --run release")
 
 
 def write_shell():
@@ -160,7 +160,7 @@ def write_shell():
         bat = os.path.join(install_prefix, f"{i}_HGSSystem.sh")
         print(f"创建shell脚本 {bat}")
         with open(bat, "w") as f:
-            f.write(f"{python} {main} -- program {i}")
+            f.write(f"{python} {main} --program {i} --run release")
 
 
 install_base()

@@ -1,4 +1,5 @@
 class ConfigMatplotlibRelease:
+    """ Matplotlib 相关配置 """
     matplotlib_font = "SimHei"
     matplotlib_font_dict = dict(family=matplotlib_font)
 

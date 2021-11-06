@@ -103,8 +103,6 @@ HGSSystem 管理者界面:
 
 系统登录:
   1) 仅Manager用户可以登录
-
-关于彩蛋: 存在
                 '''.strip())
 
         self.title.place(relx=0.1, rely=0.0, relwidth=0.8, relheight=0.2)
@@ -523,12 +521,20 @@ class ExportGarbageProgram(ExportProgramBase):
     def export_id(self):
         gid = self.gid_var[0].get()
         path = self.gid_var[1].get()
+        if len(path) == 0:
+            self.station.show_warning("导出失败", "请指定导出的位置")
+            return
+
         event = tk_event.ExportGarbageByIDEvent(self.station).start(path, gid)
         self.station.push_event(event)
 
     def export_where(self):
         where = self.where_var[0].get()
         path = self.where_var[1].get()
+        if len(path) == 0:
+            self.station.show_warning("导出失败", "请指定导出的位置")
+            return
+
         event = tk_event.ExportGarbageAdvancedEvent(self.station).start(path, where)
         self.station.push_event(event)
 
@@ -542,12 +548,20 @@ class ExportUserProgram(ExportProgramBase):
     def export_id(self):
         uid = self.gid_var[0].get()
         path = self.gid_var[1].get()
+        if len(path) == 0:
+            self.station.show_warning("导出失败", "请指定导出的位置")
+            return
+
         event = tk_event.ExportUserByIDEvent(self.station).start(path, uid)
         self.station.push_event(event)
 
     def export_where(self):
         where = self.where_var[0].get()
         path = self.where_var[1].get()
+        if len(path) == 0:
+            self.station.show_warning("导出失败", "请指定导出的位置")
+            return
+
         event = tk_event.ExportUserAdvancedEvent(self.station).start(path, where)
         self.station.push_event(event)
 
@@ -1884,7 +1898,7 @@ class StatisticsTimeProgramBase(AdminProgram):
         self.hide_list_tk['activestyle'] = tk.NONE
 
         for btn, text, func, x in zip([self.btn_show, self.btn_hide],
-                                      ["Show", "Hide"],
+                                      ["显示", "隐藏"],
                                       [self.show, self.hide],
                                       [0.00, 0.50]):
             btn['font'] = little_btn_font

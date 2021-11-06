@@ -167,9 +167,9 @@ def get_user_phone(uid: uid_t, db: DB) -> Optional[str]:
 
 def del_user(uid: uid_t, db: DB) -> bool:
     cur = db.search(columns=["GarbageID"], table="garbage_time", where=f"UserID = '{uid}'")  # 确保没有引用
-
-    if cur is None or cur.rowcount != 0:
+    if cur is None or cur.rowcount == 0:
         return False
+
     cur = db.delete(table="user", where=f"UserID = '{uid}'")
     if cur is None or cur.rowcount == 0:
         return False
@@ -185,9 +185,9 @@ def del_user_from_where_scan(where: str, db: DB) -> int:
 
 
 def del_user_from_where(where: str, db: DB) -> int:
-    cur = db.search(columns=["GarbageID"], table="garbage_time", where=where)  # 确保没有引用
-    if cur is None or cur.rowcount != 0:
-        return False
+    cur = db.search(columns=["UserID"], table="user", where=where)  # 确保没有引用
+    if cur is None or cur.rowcount == 0:
+        return 0
     cur = db.delete(table="user", where=where)
     if cur is None:
         return -1

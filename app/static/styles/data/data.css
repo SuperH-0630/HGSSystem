@@ -1,9 +1,17 @@
-.pyecharts-frame {
+.pyecharts-frame-l, .pyecharts-frame {
     width: 1100px;
-    height: 550px;
     border: 0;
     margin: 10px auto;
 }
+
+.pyecharts-frame {
+    height: 550px;
+}
+
+.pyecharts-frame-l {
+    height: 600px;
+}
+
 
 .title {
     margin-top: 20px;

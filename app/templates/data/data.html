@@ -16,11 +16,10 @@
     <br>
     <h2 class="title"> 按日期统计垃圾量 </h2>
     <p class="info"> 将数据库中的所有数据按日期进行分类，然后获取统计值。 </p>
-    <iframe class="pyecharts-frame" src="{{ url_for("data.count_by_date", days=7) }}"></iframe>
-    <iframe class="pyecharts-frame" src="{{ url_for("data.count_by_date", days=30) }}"></iframe>
+    <iframe class="pyecharts-frame-l" src="{{ url_for("data.count_by_date", days=307) }}"></iframe>
 
     <br>
     <h2 class="title"> 垃圾分类通过率 </h2>
     <p class="info"> 计算用户投放垃圾反馈结果为投放正确的概率。 </p>
-    <iframe class="pyecharts-frame" src="{{ url_for("data.count_passing_rate") }}"></iframe>
+    <iframe class="pyecharts-frame-l" src="{{ url_for("data.count_passing_rate") }}"></iframe>
 {% endblock %}

@@ -52,8 +52,7 @@ def count_by_days():
     return Markup(bar.render_embed())
 
 
-@data.route('/pyecharts/count_by_date/<int:days>')
-def count_by_date(days):
+def count_by_date__(days):
     if days != 7 and days != 30:
         abort(404)
 
@@ -89,24 +88,47 @@ def count_by_date(days):
         y_data = res[i][::-1]  # 反转数据
         line.add_yaxis(series_name=i, y_axis=y_data, color=random_color())
     line.add_yaxis(series_name="合计", y_axis=count_data[::-1], color=random_color())
+    return line
 
-    return Markup(line.render_embed())
+
+@data.route('/pyecharts/count_by_date/<int:days>')
+def count_by_date(days):
+    if days == 307:
+        line7 = count_by_date__(7)
+        line30 = count_by_date__(30)
+        chart = pyecharts.charts.Tab("时间统计")
+        chart.add(line7, "7日统计")
+        chart.add(line30, "30日统计")
+    else:
+        chart = count_by_date__(days)
+    return Markup(chart.render_embed())
 
 
 @data.route('/pyecharts/count_passing_rate')
 def count_passing_rate():
-    rate = views.website.count_passing_rate()
-    if rate is None:
+    rate_list = views.website.count_passing_rate()
+    if rate_list is None:
         abort(500)
 
+    page = pyecharts.charts.Tab("通过率")
+    xaxis_opts = pyecharts.options.AxisOpts(type_="category")
+
+    rate_global = 0
+    for i in rate_list:
+        name = GarbageType.GarbageTypeStrList_ch[int(i[0].decode("utf-8"))]
+        pie = pyecharts.charts.Pie(init_opts=init_opts)
+        pie.set_global_opts(xaxis_opts=xaxis_opts, title_opts=pyecharts.options.TitleOpts(title=f"{name}-通过率"))
+        pie.add(series_name=name, data_pair=[("通过", i[1]), ("不通过", 1 - i[1])], color=random_color())
+        page.add(pie, f"{name}-通过率")
+        rate_global += i[1]
+
+    rate_global = rate_global / 4
     pie = pyecharts.charts.Pie(init_opts=init_opts)
+    pie.set_global_opts(xaxis_opts=xaxis_opts, title_opts=pyecharts.options.TitleOpts(title="平均-通过率"))
+    pie.add(series_name="平均", data_pair=[("通过", rate_global), ("不通过", 1 - rate_global)], color=random_color())
+    page.add(pie, "平均-通过率")
 
-    (pie.set_global_opts(xaxis_opts=pyecharts.options.AxisOpts(type_="category"),
-                         title_opts=pyecharts.options.TitleOpts(title="通过率")))
-
-    pie.add(series_name="合计", data_pair=[("通过", rate), ("不通过", 1 - rate)], color=random_color())
-
-    return Markup(pie.render_embed())
+    return Markup(page.render_embed())
 
 
 def creat_data_website(app_: Flask):

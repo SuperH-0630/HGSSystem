@@ -167,16 +167,17 @@ class DataWebsite(WebsiteBase):
         return cur.fetchall()
 
     def count_passing_rate(self):
-        cur = self._db.search(columns=[f"get_avg(count(GarbageID), "
+        cur = self._db.search(columns=["GarbageType",
+                                       f"get_avg(count(GarbageID), "
                                        f"(SELECT count(g.GarbageID) "
                                        f"FROM garbage AS g WHERE g.CheckResult is not null)) AS count"],
                               table="garbage",
                               where=["CheckResult is not null", "CheckResult=1"],
-                              order_by=[("count", "DESC")])
+                              group_by=["GarbageType"],
+                              order_by=[("GarbageType", "ASC")])
         if cur is None or cur.rowcount == 0:
             return None
-        assert cur.rowcount == 1
-        return cur.fetchone()[0]
+        return cur.fetchall()
 
 
 class Website(AuthWebsite, StoreWebsite, RankWebsite, NewsWebsite, DataWebsite, WebsiteBase):

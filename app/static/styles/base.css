@@ -31,7 +31,6 @@ nav.nav-top {
     #start-p {
         height: 0;
     }
-
 }
 
 @media not all and (max-width: 1200px) {
@@ -71,6 +70,20 @@ ul.nav-top {
 
 li.nav-top-item {
     display: inline-block;
+}
+
+@media all and (max-width: 1200px) {
+    /*覆盖上面的设定*/
+    /* 小屏幕不显示 */
+    .nav-top-phone-display {
+        display: none;
+    }
+}
+
+@media all and (min-width: 1200px) {
+    .nav-top-phone-display {
+        display: inline-block;
+    }
 }
 
 a.nav-top-item {

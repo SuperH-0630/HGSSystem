@@ -23,7 +23,10 @@ class ConfigSystemRelease:
 
     base_location = "KZ"
     search_reset_time = 10  # 搜索间隔的时间
+
     show_uid_len = 12  # 展示uid的长度
+    show_gid_len = 12  # 展示uid的长度
+
     about_info = f'''
 HGSSystem is Garbage Sorting System
 

@@ -1,6 +1,7 @@
 import time
 import threading
 import cv2.cv2 as cv2
+import PIL
 
 from conf import Config
 import qrcode
@@ -54,19 +55,31 @@ class QRCode:
     def get_time(self):
         return self._time
 
-    def make_img(self, image: str) -> bool:
+    def save_img(self, image: str) -> bool:
         try:
             with open(image, "wb") as f:
-                img = qrcode.make(self._data)
+                img = self.make_img()
                 img.save(f)
         except (IOError, FileExistsError, FileNotFoundError):
             return False
         else:
             return True
 
+    def make_img(self) -> PIL.Image:
+        qr = qrcode.QRCode(
+            version=None,
+            error_correction=qrcode.constants.ERROR_CORRECT_H,
+            box_size=10,
+            border=4
+        )
+        qr.add_data(self._data)
+        qr.make(fit=True)
+        return qr.make_image()
+
 
 class HGSQRCoder:
     """ 二维码扫描仪 """
+
     def __init__(self, cap: HGSCapture):
         self._cap = cap
         self._last_qr: Optional[QRCode] = None

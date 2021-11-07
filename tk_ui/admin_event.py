@@ -151,7 +151,8 @@ class ExportUserByIDEvent(AdminEventBase):
 
 class ExportUserAdvancedEvent(AdminEventBase):
     def func(self, path, where):
-        return self.station.export_user(path, where)
+        res = self.station.export_user(path, where)
+        return res
 
     def __init__(self, station):
         super(ExportUserAdvancedEvent, self).__init__(station)

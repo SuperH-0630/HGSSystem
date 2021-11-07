@@ -14,17 +14,11 @@ qr_user_pattern = re.compile(r'HGSSystem-QR-USER:([a-z0-9]{32})-END', re.I)
 def scan_uid(code: QRCode) -> uid_t:
     data = code.get_data()
     res = re.match(qr_user_pattern, data)
+    print(data, res)
     if res is None:
         return ""
     else:
         return res.group(1)
-
-
-def scan_user(code: QRCode, db: DB) -> Optional[User]:
-    uid = scan_uid(code)
-    if len(uid) == 0:
-        return None
-    return find_user_by_id(uid, db)
 
 
 def __get_uid_qr_file_name(uid: uid_t, name: str, path: str, name_type="nu"):

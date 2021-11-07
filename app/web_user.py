@@ -3,15 +3,19 @@ from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 
 from conf import Config
 
-from tool.login import create_uid
 from tool.typing import *
 
-from core.user import User
+from sql import DBBit
+from sql.user import search_from_user_view
+from sql.garbage import count_garbage_by_uid
+
+from core.user import User, UserType
 from . import views
 
 
 class WebAnonymous(AnonymousUserMixin):
     """ 网页匿名用户 """
+
     def __init__(self):
         self.group = "匿名用户"
         self.score = "0"
@@ -53,45 +57,65 @@ class WebAnonymous(AnonymousUserMixin):
 
 
 class WebUser(UserMixin):
-    """ 网页用户 """
-    def __init__(self, name: uname_t, passwd: passwd_t = None, uid: uid_t = None):
-        super(WebUser, self).__init__()
+    """
+    网页用户
+    代表一个网页端的登录
+    网页端只有在积分商城兑换礼品时会对数据加锁
+    """
+
+    def __init__(self, name: uname_t, uid: uid_t):
+        self._uid = uid
         self._name = name
-        if uid is None:
-            self._uid = create_uid(name, passwd)
-        else:
-            self._uid = uid
-        self.score = "0"
-        self.reputation = "0"
-        self.rubbish = "0"
-        self.group = "普通成员"
+        self._score = 0
+        self._reputation = 0
+        self._type = UserType.normal
+        self._rubbish = 0
+
+        super(WebUser, self).__init__()
         self.update_info()
 
-    def update_info(self):
-        user = views.website.get_user_by_id(self._uid)
-        if user is None:
-            return
+    def update_info(self) -> bool:
+        info = search_from_user_view(columns=["Score", "Reputation", "IsManager"],
+                                     where=f"UserID='{self._uid}'",
+                                     db=views.website.db)
+        if info is None:
+            return False
+        info = info[0]
+        self._score = int(info[0])
+        self._reputation = int(info[1])
+        self._type = UserType.manager if info[2] == DBBit.BIT_1 else UserType.normal
+        self._rubbish = count_garbage_by_uid(self.uid, views.website.db)
+        if self._rubbish == -1:
+            return False
+        return True
 
-        if user.is_manager():
-            self.group = "管理员"
-            self.score = "0"
-            self.reputation = "0"
-            self.rubbish = "0"
-        else:
-            self.group = "普通成员"
-            res = user.get_info()
-            self.score = res.get('score', '0')
-            self.reputation = res.get('reputation', '0')
-            self.rubbish = res.get('rubbish', '0')
+    @property
+    def score(self):
+        return f"{self._score}"
+
+    @property
+    def reputation(self):
+        return f"{self._reputation}"
+
+    @property
+    def rubbish(self):
+        return f"{self._rubbish}"
+
+    @property
+    def group(self):
+        return "管理员" if self._type == UserType.manager else "普通成员"
+
+    def is_manager(self):
+        return self._type == UserType.manager
 
     @property
     def is_active(self):
-        """Flask要求的属性"""
-        return views.website.load_user_by_id(self._uid) is not None
+        """Flask要求的属性, 表示用户是否激活(可登录), HGSSystem没有封禁用户系统, 所有用户都是被激活的"""
+        return True
 
     @property
     def is_authenticated(self):
-        """Flask要求的属性"""
+        """Flask要求的属性, 表示登录的凭据是否正确, 这里检查是否能 load_user_by_id"""
         return views.website.load_user_by_id(self._uid) is not None
 
     def get_id(self):
@@ -116,10 +140,7 @@ class WebUser(UserMixin):
         assert cur.rowcount == 1
         return str(cur.fetchone()[0])
 
-    def is_manager(self):
-        return self.group == "管理员"
-
-    def get_qr_code(self):
+    def get_order_qr_code(self):
         s = Serializer(Config.passwd_salt, expires_in=3600)  # 1h有效
         token = s.dumps({"order": f"{self.order}", "uid": f"{self._uid}"})
         return self.order, self._uid, token
@@ -147,8 +168,7 @@ class WebUser(UserMixin):
         return views.website.get_user_garbage_list(self._uid, limit=limit, offset=offset)
 
     def get_user(self) -> User:
-        res = views.website.get_user_by_id(self._uid)
-        return res
+        return views.website.get_user_by_id(self._uid)
 
     def write_news(self, text: str):
         return views.website.write_news(text, self._uid)

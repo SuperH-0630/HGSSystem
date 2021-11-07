@@ -18,11 +18,23 @@ class UserType:
 
 
 class User(metaclass=abc.ABCMeta):
-    def __init__(self, name: uname_t, uid: uid_t, user_type: enum):
+    def __init__(self, name: uname_t, uid: uid_t, user_type: enum, destruct_call: Optional[Callable]):
         self._name: uname_t = uname_t(name)
         self._uid: uid_t = uid_t(uid)
         self._type: enum = enum(user_type)
         self._lock = threading.RLock()  # 用户 互斥锁
+        self._destruct_call = destruct_call
+
+    def __del__(self):
+        if self._destruct_call is None:
+            return
+
+        _destruct_call = self._destruct_call
+        self._destruct_call = None
+        _destruct_call(self)
+
+    def destruct(self):
+        self.__del__()
 
     def is_manager(self):
         try:
@@ -79,6 +91,12 @@ class User(metaclass=abc.ABCMeta):
     def get_score(self):
         raise UserNotSupportError
 
+    def get_reputation(self):
+        raise UserNotSupportError
+
+    def get_rubbish(self):
+        raise UserNotSupportError
+
     def add_score(self, score: score_t) -> score_t:
         raise UserNotSupportError
 
@@ -90,8 +108,13 @@ class User(metaclass=abc.ABCMeta):
 
 
 class NormalUser(User):
-    def __init__(self, name: uname_t, uid: uid_t, reputation: score_t, rubbish: count_t, score: score_t):
-        super(NormalUser, self).__init__(name, uid, UserType.normal)
+    def __init__(self, name: uname_t,
+                 uid: uid_t,
+                 reputation: score_t,
+                 rubbish: count_t,
+                 score: score_t,
+                 destruct_call: Optional[Callable]):
+        super(NormalUser, self).__init__(name, uid, UserType.normal, destruct_call)
         self._reputation = score_t(reputation)
         self._rubbish = count_t(rubbish)
         self._score = score_t(score)
@@ -190,6 +213,12 @@ class NormalUser(User):
 
         return reputation
 
+    def get_reputation(self):
+        raise self._reputation
+
+    def get_rubbish(self):
+        raise self._reputation
+
     def get_score(self):
         return self._score
 
@@ -239,8 +268,10 @@ class NormalUser(User):
 
 
 class ManagerUser(User):
-    def __init__(self, name: uname_t, uid: uid_t):
-        super(ManagerUser, self).__init__(name, uid, UserType.manager)
+    def __init__(self, name: uname_t,
+                 uid: uid_t,
+                 destruct_call: Optional[Callable]):
+        super(ManagerUser, self).__init__(name, uid, UserType.manager, destruct_call)
 
     def check_rubbish(self, garbage: GarbageBag, result: bool, user: User) -> bool:
         """
@@ -283,3 +314,12 @@ class ManagerUser(User):
         finally:
             self._lock.release()
         return info
+
+    def get_reputation(self):
+        raise 0
+
+    def get_rubbish(self):
+        raise 0
+
+    def get_score(self):
+        return 0

@@ -51,7 +51,8 @@ class MysqlDB(HGSDatabase):
                limit: Optional[int] = None,
                offset: Optional[int] = None,
                order_by: Optional[List[Tuple[str, str]]] = None,
-               group_by: Optional[List[str]] = None):
+               group_by: Optional[List[str]] = None,
+               for_update: bool = False):
         if type(where) is list and len(where) > 0:
             where: str = " WHERE " + " AND ".join(f"({w})" for w in where)
         elif type(where) is str and len(where) > 0:
@@ -81,7 +82,13 @@ class MysqlDB(HGSDatabase):
             group_by = "GROUP BY " + ", ".join(group_by)
 
         columns: str = ", ".join(columns)
-        return self.__search(f"SELECT {columns} FROM {table} {where} {group_by} {order_by} {limit} {offset};")
+        if for_update:
+            for_update = "FOR UPDATE"
+        else:
+            for_update = ""
+        return self.__search(f"SELECT {columns} "
+                             f"FROM {table} "
+                             f"{where} {group_by} {order_by} {limit} {offset} {for_update};")
 
     def insert(self, table: str, columns: list, values: Union[str, List[str]], not_commit: bool = False):
         columns: str = ", ".join(columns)

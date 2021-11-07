@@ -11,7 +11,8 @@ CREATE TABLE IF NOT EXISTS user -- 创建用户表
     Phone      CHAR(11)    NOT NULL CHECK (Phone REGEXP '[0-9]{11}'),
     Score      INT         NOT NULL CHECK (Score <= 500 and Score >= 0),
     Reputation INT         NOT NULL CHECK (Reputation <= 1000 and Reputation >= 1),
-    CreateTime DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP
+    CreateTime DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UserLock   BIT         NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS garbage -- 创建普通垃圾表

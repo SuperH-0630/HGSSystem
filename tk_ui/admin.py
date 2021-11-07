@@ -639,6 +639,8 @@ class AdminStation(AdminStationBase):
             self._login_passwd[2].set('')
 
     def logout(self):
+        if self._admin is not None:
+            self._admin.destruct()
         super(AdminStation, self).logout()
         self.__show_login_window()
 

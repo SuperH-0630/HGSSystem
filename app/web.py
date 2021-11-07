@@ -6,6 +6,7 @@ from sql.store import get_store_item_list, get_store_item, confirm_order
 
 from tool.typing import *
 from tool.page import get_page
+from tool.login import create_uid
 
 from core.garbage import GarbageType
 
@@ -49,14 +50,15 @@ class AuthWebsite(WebsiteBase):
         user = find_user_by_name(name, passwd, self._db)
         if user is None:
             return None
-        return web_user.WebUser(name, uid=user.get_uid())
+        user.destruct()  # 提前释放, 后续操作与数据库无关
+        return web_user.WebUser(name, create_uid(name, passwd))
 
     def load_user_by_id(self, uid: uid_t) -> Optional["web_user.WebUser"]:
         user = find_user_by_id(uid, self._db)
         if user is None:
             return None
-        name = user.get_name()
-        return web_user.WebUser(name, uid=uid)
+        user.destruct()  # 提前释放, 后续操作与数据库无关
+        return web_user.WebUser(user.get_name(), uid)
 
     def get_user_garbage_count(self, uid: uid_t):
         return count_garbage_by_uid(uid, self._db, time_limit=False)

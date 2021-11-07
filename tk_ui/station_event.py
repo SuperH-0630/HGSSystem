@@ -1,7 +1,7 @@
 import tempfile
 
 from equipment.scan import QRCode
-from equipment.scan_user import scan_user
+from equipment.scan_user import scan_uid
 from equipment.scan_garbage import scan_garbage
 
 from tool.typing import *
@@ -10,6 +10,7 @@ from core.user import User
 from core.garbage import GarbageBag
 
 from sql.db import DB
+from sql.user import find_user_by_id
 
 from .event import TkThreading, TkEventBase
 from . import station as tk_station
@@ -32,9 +33,21 @@ class ScanUserEvent(StationEventBase):
     若QR-CODE不是User码则调用ScanGarbage任务
     """
 
-    @staticmethod
-    def func(qr: QRCode, db: DB):
-        return scan_user(qr, db)
+    def func(self, qr: QRCode):
+        """
+        扫描用户
+        :param qr: 二维码
+        :return:
+            若是已登录用户再次扫码, 则返回 False, None
+            若是新登录用户扫码, 则返回 True, User
+            错误返回 None, None
+        """
+        uid = scan_uid(qr)
+        if len(uid) == 0:
+            return None, None
+        if uid == self.station.get_uid_no_update():
+            return False, None
+        return True, find_user_by_id(uid, self._db)
 
     def __init__(self, gb_station):
         super().__init__(gb_station, "扫码用户")
@@ -45,20 +58,23 @@ class ScanUserEvent(StationEventBase):
 
     def start(self, qr_code: QRCode):
         self._qr_code = qr_code
-        self.thread = TkThreading(self.func, qr_code, self._db)
+        self.thread = TkThreading(self.func, qr_code)
         return self
 
     def is_end(self) -> bool:
         return self.thread is not None and not self.thread.is_alive()
 
     def done_after_event(self):
-        self.thread.join()
-        if self.thread.result is not None:
-            self.station.switch_user(self.thread.result)
-            self.station.update_control()
-        else:
+        res, user = self.thread.wait_event()
+        if res is None:
             event = ScanGarbageEvent(self.station).start(self._qr_code)
             self.station.push_event(event)
+        if res:
+            self.station.switch_user(user)
+            self.station.update_control()
+        else:
+            self.station.logout_user()
+            self.station.update_control()
 
 
 class ScanGarbageEvent(StationEventBase):

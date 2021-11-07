@@ -92,6 +92,7 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
             return False
         if not self._user.is_manager() and time.time() - self._user_last_time > 20:
             self.show_msg("退出登录", "用户自动退出", show_time=3.0)
+            self._user.destruct()
             self._user = None
             raise Exception
         return True
@@ -123,17 +124,23 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
     def get_cap_img(self):
         return self._cap.get_frame()
 
+    def logout_user(self):
+        self._user.destruct()
+        self._user = None  # 退出登录
+        self._user_last_time = 0
+        self.show_msg("退出登录", "退出登录成功", show_time=3.0)
+        return False
+
     def switch_user(self, user: User) -> bool:
         """
         切换用户: 退出/登录
         :param user: 新用户
         :return: 登录-True, 退出-False
         """
-        if self._user is not None and self._user.get_uid() == user.get_uid() and self.check_user():  # 正在登陆期
-            self._user = None  # 退出登录
-            self._user_last_time = 0
-            self.show_msg("退出登录", "退出登录成功", show_time=3.0)
-            return False
+        if self._user is not None:
+            print(f"{self._user.get_uid()=} {user.get_uid()=}")
+        if self._user != user and self._user is not None:
+            self._user.destruct()
         self._user = user
         self._user_last_time = time.time()
         self.show_msg("登录", "登录成功", show_time=3.0)
@@ -485,9 +492,9 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
     def mainloop(self):
         ...
 
-    @abc.abstractmethod
     def exit_win(self):
-        ...
+        if self._user is not None:
+            self._user.destruct()
 
 
 from . import station_event as tk_event
@@ -1337,4 +1344,5 @@ class GarbageStation(GarbageStationBase):
         self._window.mainloop()
 
     def exit_win(self):
+        super(GarbageStation, self).exit_win()
         self._window.destroy()

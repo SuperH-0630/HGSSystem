@@ -1,5 +1,5 @@
 import math
-
+import functools
 from flask import render_template, Blueprint, Flask, request, url_for, redirect, flash, abort
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired
@@ -34,6 +34,40 @@ class LoginForm(FlaskForm):
     submit = SubmitField("登录")
 
 
+def web_user_required(f):
+    @login_required
+    @functools.wraps(f)
+    def func(*args, **kwargs):
+        if not current_user.update_info():
+            logout()
+            flash("用户错误")
+            abort(403)
+        return f(*args, **kwargs)
+
+    return func
+
+
+def manager_required(f):
+    """
+    管理员权限
+    :return:
+    """
+
+    @login_required
+    @functools.wraps(f)
+    def func(*args, **kwargs):
+        if not current_user.update_info():
+            logout()
+            flash("用户错误")
+            abort(403)
+
+        if not current_user.is_manager():
+            abort(403)
+        return f(*args, **kwargs)
+
+    return func
+
+
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -55,7 +89,7 @@ def login():
 
 
 @auth.route("/logout")
-@login_required
+@web_user_required
 def logout():
     logout_user()
     flash("用户退出成功")
@@ -63,10 +97,9 @@ def logout():
 
 
 @auth.route("/about")
-@login_required
+@web_user_required
 def about():
     user: web_user.WebUser = current_user
-    user.update_info()
 
     try:
         page = int(request.args.get("page", 1))  # page 指垃圾袋的分页信息
@@ -82,17 +115,16 @@ def about():
 
 
 @auth.route("/order")
-@login_required
+@web_user_required
 def order_qr():
     """
     生成取件码和确认码
     图像临时保存在 BytesIO 中
     然后转换为Base64显示
     """
-    user: web_user.WebUser = current_user
-    user.update_info()
 
-    order, user, token = user.get_qr_code()  # 订单号, 用户ID, 确认码
+    user: web_user.WebUser = current_user
+    order, user, token = user.get_order_qr_code()  # 订单号, 用户ID, 确认码
 
     check_image = qrcode.make(data=url_for("store.check", user=user, order=order, _external=True))
     check_img_buffer = BytesIO()

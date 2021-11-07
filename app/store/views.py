@@ -3,14 +3,13 @@ from wtforms import TextField, SubmitField
 from flask_login import current_user
 from wtforms.validators import DataRequired
 from flask_wtf import FlaskForm
-from flask_login import login_required
-import functools
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 
 from conf import Config
 from tool.typing import Optional
 from app import views
-from app import web_user
+
+from app.auth import views as auth_views
 
 store = Blueprint("store", __name__)
 app: Optional[Flask] = None
@@ -35,7 +34,7 @@ class AddNewGoodsForm(FlaskForm):
 
 
 @store.route('/', methods=['GET', 'POST'])
-@login_required
+@auth_views.web_user_required
 def index():
     """
     显示购买的表单
@@ -44,13 +43,11 @@ def index():
     """
     form = BuySetForm()
     store_list = views.website.get_store_list()
-    user: web_user.WebUser = current_user
-    user.update_info()
     return render_template("store/store.html", store_list=store_list, store_form=form)
 
 
 @store.route('/buy/<int:goods_id>', methods=['POST'])
-@login_required
+@auth_views.web_user_required
 def buy(goods_id: int):
     """
     处理购买的表单
@@ -74,6 +71,8 @@ def buy(goods_id: int):
                 flash("兑换数目超出库存")
             elif res == -3:
                 flash("积分不足")
+            elif res == -5:
+                flash("用户登录冲突")
             elif res == 0:
                 flash(f"商品兑换成功, 订单: {order_id}")
             else:
@@ -82,24 +81,8 @@ def buy(goods_id: int):
     abort(404)
 
 
-def manager_required(f):
-    """
-    管理员权限
-    :return:
-    """
-
-    @functools.wraps(f)
-    def func(*args, **kwargs):
-        if not current_user.is_manager():
-            abort(403)
-        return f(*args, **kwargs)
-
-    return func
-
-
 @store.route('/set/<int:goods_id>', methods=['POST'])
-@login_required
-@manager_required
+@auth_views.manager_required
 def set_goods(goods_id: int):
     """
     设置库存
@@ -120,8 +103,7 @@ def set_goods(goods_id: int):
 
 
 @store.route('/set_score/<int:goods_id>', methods=['POST'])
-@login_required
-@manager_required
+@auth_views.manager_required
 def set_goods_score(goods_id: int):
     """
     设置兑换积分
@@ -142,8 +124,7 @@ def set_goods_score(goods_id: int):
 
 
 @store.route('/check/<string:user>/<string:order>')
-@login_required
-@manager_required
+@auth_views.manager_required
 def check(user, order):
     """
     显示取件码的获取内容
@@ -155,8 +136,7 @@ def check(user, order):
 
 
 @store.route('/confirm/<string:token>')
-@login_required
-@manager_required
+@auth_views.manager_required
 def confirm(token):
     """
     确认取件
@@ -176,8 +156,7 @@ def confirm(token):
 
 
 @store.route('/add', methods=["GET", "POST"])
-@login_required
-@manager_required
+@auth_views.manager_required
 def add_new_goods():
     """
     新增新商品

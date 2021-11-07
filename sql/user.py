@@ -80,26 +80,43 @@ def search_from_user_view(columns, where: str, db: DB):
 
 
 def find_user_by_id(uid: uid_t, db: DB) -> Optional[User]:
-    cur = db.search(columns=["UserID", "Name", "IsManager", "Score", "Reputation"],
+    cur = db.search(columns=["UserID", "Name", "IsManager", "Score", "Reputation", "UserLock"],
                     table="user",
                     where=f"UserID = '{uid}'")
     if cur is None or cur.rowcount == 0:
         return None
     assert cur.rowcount == 1
     res = cur.fetchone()
-    assert len(res) == 5
+    assert len(res) == 6
 
     uid: uid_t = res[0]
     name: uname_t = str(res[1])
     manager: bool = res[2] == DBBit.BIT_1
+    lock: bool = res[5] == DBBit.BIT_1
+
+    if lock:
+        db.commit()
+        return None
+    else:
+        cur = db.update(table="user",
+                        kw={"UserLock": "1"},
+                        where=f"UserID = '{uid}'")
+        if cur is None or cur.rowcount == 0:
+            db.commit()
+            return None
+
+    def user_destruct(*args, **kwargs):
+        db.update(table="user",
+                  kw={"UserLock": "0"},
+                  where=f"UserID = '{uid}'")
 
     if manager:
-        return ManagerUser(name, uid)
+        return ManagerUser(name, uid, user_destruct)
     else:
         score: score_t = res[3]
         reputation: score_t = res[4]
         rubbish: count_t = garbage.count_garbage_by_uid(uid, db)
-        return NormalUser(name, uid, reputation, rubbish, score)  # rubbish 实际计算
+        return NormalUser(name, uid, reputation, rubbish, score, user_destruct)  # rubbish 实际计算
 
 
 def find_user_by_name(name: uname_t, passwd: passwd_t, db: DB) -> Optional[User]:
@@ -155,14 +172,20 @@ def create_new_user(name: Optional[uname_t], passwd: Optional[passwd_t], phone: 
         return None
     is_manager = '1' if manager else '0'
     cur = db.insert(table="user",
-                    columns=["UserID", "Name", "IsManager", "Phone", "Score", "Reputation", "CreateTime"],
+                    columns=["UserID", "Name", "IsManager", "Phone", "Score", "Reputation", "CreateTime", "UserLock"],
                     values=f"'{uid}', '{name}', {is_manager}, '{phone}', {Config.default_score}, "
-                           f"{Config.default_reputation}, {mysql_time()}")
+                           f"{Config.default_reputation}, {mysql_time()}, 1")
     if cur is None:
         return None
+
+    def user_destruct(*args, **kwargs):
+        db.update(table="user",
+                  kw={"UserLock": "0"},
+                  where=f"UserID = '{uid}'")
+
     if is_manager:
-        return ManagerUser(name, uid)
-    return NormalUser(name, uid, Config.default_reputation, 0, Config.default_score)
+        return ManagerUser(name, uid, user_destruct)
+    return NormalUser(name, uid, Config.default_reputation, 0, Config.default_score, user_destruct)
 
 
 def get_user_phone(uid: uid_t, db: DB) -> Optional[str]:

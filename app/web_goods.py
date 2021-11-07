@@ -23,7 +23,7 @@ class Goods:
 
         user: User = user_.get_user()
         if user is None:
-            return -4, 0  # 系统错误
+            return -5, 0  # 系统错误
 
         try:
             score = user.get_score()
@@ -35,6 +35,7 @@ class Goods:
 
         user.add_score(-score_)
         update_user(user, views.website.db)
+        user.destruct()  # 提前释放, 后续动作与数据库无关
 
         self._quantity -= quantity
         update_goods(self._id, self._quantity, views.website.db)

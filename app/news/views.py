@@ -9,6 +9,7 @@ from tool.typing import Optional
 
 from app import views
 from app.web_user import WebUser
+from app.auth import views as auth_views
 
 news = Blueprint("news", __name__)
 app: Optional[Flask] = None
@@ -30,7 +31,7 @@ class NewDelete(FlaskForm):
 
 
 @news.route('/', methods=['GET', 'POST'])
-@login_required
+@auth_views.web_user_required
 def index():
     """
     Get请求时: 显示(获取)新闻消息
@@ -56,23 +57,8 @@ def index():
                            page_list=page_list, page=f"{page}", news_delete=delete_form)
 
 
-def manager_required(f):
-    """
-    检查是否有管理员权限
-    """
-
-    @functools.wraps(f)
-    def func(*args, **kwargs):
-        if not current_user.is_manager():
-            abort(403)
-        return f(*args, **kwargs)
-
-    return func
-
-
 @news.route('/delete', methods=['POST'])
-@login_required
-@manager_required
+@auth_views.manager_required
 def delete():
     """
     管理员: 删除内容

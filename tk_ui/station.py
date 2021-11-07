@@ -410,7 +410,7 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
             if len(name_) == 0:
                 name = "未知物品"
             else:
-                name = f"{name_} [可信度: {name_score * 100}%]"
+                name = f"{name_} [可信度: {int(name_score * 100)}%]"
             if name_score < 0.001:
                 name_score = 0.01
             category_ = element.get("Category")
@@ -425,17 +425,17 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
                 category_score = category_score / name_score
                 if category_score > 1:
                     category_score = 1
-                category = f"垃圾类型为{category_} [可信度: {category_score * 100}%]"
+                category = f"垃圾类型为{category_} [可信度: {int(category_score * 100)}%]"
             res_str += f"  NO.{i + 1} {name}\n  {category}\n"
         self.show_msg("搜索垃圾", res_str, show_time=30, big=True)
 
     def search_pic(self, img: Image.Image) -> bool:
         sep = time.time() - self.search_time
-        if sep < 3:
+        if 0 < Config.search_reset_time - sep < 3:
             self.show_warning("搜索垃圾", f"搜索太频繁了\n请稍后再尝试")
             return False
         elif sep <= Config.search_reset_time:
-            self.show_warning("搜索垃圾", f"搜索太频繁了\n请{int(sep)}s后再尝试")
+            self.show_warning("搜索垃圾", f"搜索太频繁了\n请{int(Config.search_reset_time - sep)}s后再尝试")
             return False
 
         temp_dir = tempfile.TemporaryDirectory()

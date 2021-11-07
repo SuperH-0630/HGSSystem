@@ -1,7 +1,7 @@
 import time
 import threading
 import cv2.cv2 as cv2
-import PIL
+from PIL.Image import Image
 
 from conf import Config
 import qrcode
@@ -65,7 +65,7 @@ class QRCode:
         else:
             return True
 
-    def make_img(self) -> PIL.Image:
+    def make_img(self) -> Image:
         qr = qrcode.QRCode(
             version=None,
             error_correction=qrcode.constants.ERROR_CORRECT_H,

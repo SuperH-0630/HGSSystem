@@ -1,5 +1,6 @@
 import math
 import functools
+
 from flask import render_template, Blueprint, Flask, request, url_for, redirect, flash, abort
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired
@@ -7,9 +8,11 @@ from flask_wtf import FlaskForm
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
 
 import base64
-import qrcode
+from PIL import Image, ImageFont, ImageDraw
 from io import BytesIO
 
+from conf import Config
+from equipment.scan import QRCode
 from tool.typing import *
 from tool.page import get_page
 
@@ -114,6 +117,22 @@ def about():
                                garbage_list=garbage_list, page_list=page_list, page=page)
 
 
+qr_img_title_font = ImageFont.truetype(font=Config.font_d["noto-bold"], size=35, encoding="unic")
+
+
+def make_qrcode_(qr_img: Image.Image, title):
+    title_width, title_height = qr_img_title_font.getsize(title)
+    img = Image.new('RGB', (510, 500 + title_height + 10), (255, 255, 255))
+    logo_image = Image.open(Config.picture_d['logo']).resize((64, 64))
+
+    draw = ImageDraw.Draw(img)
+    draw.text((((510 - title_width) / 2), 5), title, (0, 0, 0), font=qr_img_title_font)
+
+    qr_img.paste(logo_image, (int((500 - 64) / 2), int((500 - 64) / 2)))
+    img.paste(qr_img, (5, title_height + 10))
+    return img
+
+
 @auth.route("/order")
 @web_user_required
 def order_qr():
@@ -126,13 +145,19 @@ def order_qr():
     user: web_user.WebUser = current_user
     order, user, token = user.get_order_qr_code()  # 订单号, 用户ID, 确认码
 
-    check_image = qrcode.make(data=url_for("store.check", user=user, order=order, _external=True))
+    qr_check_image = QRCode(url_for("store.check", user=user, order=order, _external=True)).make_img()
+    qr_check_image = qr_check_image.convert("RGB").resize((500, 500))
+
+    check_image = make_qrcode_(qr_check_image, "订单码")
     check_img_buffer = BytesIO()
     check_image.save(check_img_buffer, format='JPEG')
     check_qr_data = check_img_buffer.getvalue()
     check_qr_base64 = base64.b64encode(check_qr_data).decode("utf-8")
 
-    confirm_image = qrcode.make(data=url_for("store.confirm", token=token, _external=True))
+    qr_confirm_image = QRCode(data=url_for("store.confirm", token=token, _external=True)).make_img()
+    qr_confirm_image = qr_confirm_image.convert("RGB").resize((500, 500))
+
+    confirm_image = make_qrcode_(qr_confirm_image, "确认收货码")
     confirm_img_buffer = BytesIO()
     confirm_image.save(confirm_img_buffer, format='JPEG')
     confirm_qr_data = confirm_img_buffer.getvalue()

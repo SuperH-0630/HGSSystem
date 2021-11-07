@@ -164,6 +164,13 @@ class AdminStationBase(TkEventMain, metaclass=abc.ABCMeta):
             return False
 
     def logout(self):
+        if self._admin is not None:
+            self._admin.destruct()
+        self._admin = None
+
+    def exit_(self):
+        if self._admin is not None:
+            self._admin.destruct()
         self._admin = None
 
     @abc.abstractmethod
@@ -248,7 +255,7 @@ class AdminStation(AdminStationBase):
         self.__conf_create_program()
         self.__conf_windows(before_load=False)
         self.__conf_tk()  # 在所有的Creat完成后才conf_tk
-        # self.__show_login_window()  # 显示登录窗口, Debug期间暂时注释该代码
+        self.__show_login_window()  # 显示登录窗口, Debug期间暂时注释该代码
 
         self.__conf_set_after_run()
 
@@ -260,6 +267,7 @@ class AdminStation(AdminStationBase):
             self._window.resizable(False, False)
             self._window.protocol("WM_DELETE_WINDOW", lambda: self.main_exit())
             self._window.title('HGSSystem: Manage Station 加载中')
+            self._window.iconbitmap(Config.picture_d["logo-ico"])
         else:
             self._window.title('HGSSystem: Manage Station')
 
@@ -565,6 +573,7 @@ class AdminStation(AdminStationBase):
     def __show_login_window(self):
         self.login_window: Optional[tk.Toplevel] = tk.Toplevel()
         self.login_window.title("HGSSystem Login")
+        self.login_window.iconbitmap(Config.picture_d["logo-ico"])
 
         height = int(self._sys_height * (1 / 5))
         width = int(height * 2)
@@ -639,8 +648,6 @@ class AdminStation(AdminStationBase):
             self._login_passwd[2].set('')
 
     def logout(self):
-        if self._admin is not None:
-            self._admin.destruct()
         super(AdminStation, self).logout()
         self.__show_login_window()
 
@@ -667,4 +674,5 @@ class AdminStation(AdminStationBase):
         self._window.mainloop()
 
     def exit_win(self):
+        self.exit_()
         self._window.destroy()

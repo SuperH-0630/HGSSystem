@@ -241,6 +241,8 @@ class RankingStation(RankingStationBase):
         self.window.geometry(f'{self.width}x{self.height}')
         self.window['bg'] = Config.tk_win_bg
         self.window.resizable(False, False)
+        self.window.iconbitmap(Config.picture_d["logo-ico"])
+
         self.bg_img = None
         self.bg_lb = tk.Label(self.window)
         self.bg_lb['bg'] = Config.tk_win_bg

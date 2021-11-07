@@ -28,14 +28,14 @@ if install_prefix.endswith(os.sep) or install_prefix.endswith('/'):
 
 if len(sys.argv) == 2:
     install_prefix = sys.argv[1]
-    install = ["Garbage", "Manager", "Rank", "Website"]
+    install = ["garbage", "manager", "rank", "website"]
 else:
     install = []
     for i in sys.argv[2:]:
-        if i in ["Garbage", "Manager", "Rank", "Website"] and i not in install:
-            install.append(i)
+        if i.lower() in ["garbage", "manager", "rank", "website"] and i not in install:
+            install.append(i.lower())
     if len(install) == 0:
-        print("请指定安装的内容", file=sys.stderr)
+        install = ["garbage", "manager", "rank", "website"]
 
 
 def check_make_dir(path):
@@ -142,7 +142,7 @@ def run_init():
 
 def write_bat():
     main = os.path.join(install_prefix, "main.py")
-    for i in ['setup', 'garbage', 'ranking', 'manager', 'website']:
+    for i in ['setup'] + install:
         bat = os.path.join(install_prefix, f"{i}_HGSSystem.bat")
         print(f"创建批处理文件 {bat}")
         with open(bat, "w") as f:
@@ -156,7 +156,7 @@ mshta vbscript:createobject("wscript.shell").run("""%~nx0"" h",0)(window.close)&
 
 def write_shell():
     main = os.path.join(install_prefix, "main.py")
-    for i in ['setup', 'garbage', 'ranking', 'manager', 'website']:
+    for i in ['setup'] + install:
         bat = os.path.join(install_prefix, f"{i}_HGSSystem.sh")
         print(f"创建shell脚本 {bat}")
         with open(bat, "w") as f:
@@ -166,13 +166,13 @@ def write_shell():
 install_base()
 for i in install:
     print(f"安装 {i} 系统 - 开始")
-    if i == "Garbage":
+    if i == "garbage":
         install_garbage()
-    elif i == "Manager":
+    elif i == "manager":
         install_admin()
-    elif i == "Rank":
+    elif i == "rank":
         install_rank()
-    else:
+    elif i == 'website':
         install_website()
     print(f"安装 {i} 系统 - 完成")
 python = install_venv()

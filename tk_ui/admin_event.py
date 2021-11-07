@@ -664,7 +664,8 @@ class CountScoreReputationTinyEvent(AdminEventBase):
                                        "count(UserID) AS count"],
                               table="user",
                               group_by=["ScoreGB", "ReputationGB"],
-                              order_by=[("ScoreGB", "DESC"), ("ReputationGB", "DESC")])
+                              order_by=[("ScoreGB", "DESC"), ("ReputationGB", "DESC")],
+                              where="IsManager=0")
         if cur is None:
             return None
         lst = np.zeros((100, 100))
@@ -711,7 +712,8 @@ class CountScoreReputationLargeEvent(AdminEventBase):
                                        "count(UserID) AS count"],
                               table="user",
                               group_by=["ScoreGB", "ReputationGB"],
-                              order_by=[("ScoreGB", "DESC"), ("ReputationGB", "DESC")])
+                              order_by=[("ScoreGB", "DESC"), ("ReputationGB", "DESC")],
+                              where="IsManager=0")
         if cur is None:
             return None
         lst = np.zeros((10, 10))
@@ -755,7 +757,8 @@ class ScoreReputationDistributedEvent(AdminEventBase):
     def func(self, which):
         cur = self._db.search(columns=[which],
                               table="user",
-                              order_by=[(which, "DESC")])
+                              order_by=[(which, "DESC")],
+                              where="IsManager=0")
         if cur is None:
             return None
         return cur.fetchall()

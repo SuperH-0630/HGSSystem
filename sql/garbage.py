@@ -94,26 +94,47 @@ def __search_fields_time(time_: str, time_name: str) -> str:
         return f"({time_name}={mysql_time(t)} AND"
 
 
+def set_where_(ex: Optional[str], column: str):
+    if ex is None:
+        return ""
+
+    if ex.strip() == "IS NULL":
+        where = f"{column} IS NULL AND "
+    elif ex.startswith("LIKE ") or ex.startswith("REGEXP "):
+        where = f"{column} {ex} AND "
+    else:
+        where = f"{column}='{ex}' AND "
+    return where
+
+
 def search_garbage_by_fields(columns, gid, uid, cuid, create_time, use_time, loc, type_, check, db: DB):
     where = ""
-    if gid is not None:
-        where += f"GarbageID={gid} AND "
-    if uid is not None:
-        where += f"UserID=‘{uid}’ AND "
-    if cuid is not None:
-        where += f"CheckerID='{cuid}' AND "
-    if loc is not None:
-        where += f"Location='{loc}' AND "
+    where += set_where_(gid, "GarbageID")
+    where += set_where_(uid, "UserID")
+    where += set_where_(cuid, "CheckerID")
+    where += set_where_(loc, "Location")
+
     if check is not None:
-        if check == "False":
+        if check == 'IS NULL':
+            where += f"CheckResult IS NULL AND "
+        elif check == "不通过" or check == "False" or check == "Fail":
             where += f"CheckResult=0 AND "
-        else:
+        elif check == "通过" or check == "True" or check == "Pass":
             where += f"CheckResult=1 AND "
-    if type_ is not None and type_ in GarbageType.GarbageTypeStrList:
-        res = GarbageType.GarbageTypeStrList.index(type_)
-        where += f"Phone={res} AND "
+
+    if type_ is not None:
+        if type_ == 'IS NULL':
+            where += f"GarbageType IS NULL AND "
+        elif type_ in GarbageType.GarbageTypeStrList:
+            res = GarbageType.GarbageTypeStrList.index(type_)
+            where += f"GarbageType={res} AND "
+        elif type_ in GarbageType.GarbageTypeStrList_ch:
+            res = GarbageType.GarbageTypeStrList_ch.index(type_)
+            where += f"GarbageType={res} AND "
+
     if create_time is not None:
         where += __search_fields_time(create_time, "CreateTime")
+
     if use_time is not None:
         where += __search_fields_time(use_time, "UseTime")
 

@@ -47,14 +47,22 @@ def update_user_reputation(where: str, reputation: score_t, db: DB) -> int:
     return cur.rowcount
 
 
+def set_where_(ex: Optional[str], column: str):
+    if ex is None:
+        return ""
+
+    if ex.startswith("LIKE ") or ex.startswith("REGEXP "):
+        where = f"{column} {ex} AND "
+    else:
+        where = f"{column}='{ex}' AND "
+    return where
+
+
 def search_user_by_fields(columns, uid: uid_t, name: uname_t, phone: phone_t, db: DB):
     where = ""
-    if uid is not None:
-        where += f"UserID=‘{uid}’ AND "
-    if name is not None:
-        where += f"Name='{name}' AND "
-    if phone is not None:
-        where += f"Phone='{phone}' AND "
+    where += set_where_(uid, "UserID")
+    where += set_where_(name, "Name")
+    where += set_where_(phone, "Phone")
 
     if len(where) != 0:
         where = where[0:-4]  # 去除末尾的AND

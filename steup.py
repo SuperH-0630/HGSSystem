@@ -25,6 +25,9 @@ if len(sys.argv) == 1:
 install_prefix = sys.argv[1]
 if install_prefix.endswith(os.sep) or install_prefix.endswith('/'):
     install_prefix = os.path.join(install_prefix[:-1], "HGSSystem")
+print(f"安装位置: {install_prefix}")
+if input("[Y/n] ") != "Y":
+    exit(1)
 
 if len(sys.argv) == 2:
     install_prefix = sys.argv[1]
@@ -37,6 +40,10 @@ else:
     if len(install) == 0:
         install = ["garbage", "manager", "rank", "website"]
 
+print(f"安装内容: {', '.join(install)}")
+if input("[Y/n] ") != "Y":
+    exit(1)
+
 
 def check_make_dir(path):
     if not os.path.exists(path):
@@ -45,8 +52,10 @@ def check_make_dir(path):
 
 def delete(path):
     if os.path.isdir(path):
+        print(f"删除目录: {path}")
         shutil.rmtree(path)
     elif os.path.isfile(path):
+        print(f"删除文件: {path}")
         os.remove(path)
 
 
@@ -126,10 +135,11 @@ def install_admin():
 def install_venv():
     venv = os.path.join(install_prefix, 'venv')
     if not os.path.exists(venv):
+        print(f"执行: {sys.executable} -m venv {venv}")
         os.system(f"{sys.executable} -m venv {venv}")
     suffix = os.path.splitext(sys.executable)[-1]
     for path, dirs, files in os.walk(venv):
-        if "python.exe" in files:
+        if f"python{suffix}" in files:
             return os.path.join(path, f"python{suffix}")
     return None
 

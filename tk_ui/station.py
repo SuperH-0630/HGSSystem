@@ -7,6 +7,7 @@ import traceback
 import abc
 import tkinter as tk
 from tkinter import ttk
+from _tkinter import TclError
 import datetime
 from PIL import Image, ImageTk
 
@@ -681,7 +682,11 @@ class GarbageStation(GarbageStationBase):
         self._window.resizable(False, False)  # 禁止缩放
         self._window.protocol("WM_DELETE_WINDOW", lambda: self.show_exit())  # 设置标题栏[x]按钮
         self._window.overrideredirect(False)  # 显示标题栏
-        self._window.iconbitmap(Config.picture_d["logo-ico"])
+
+        try:
+            self._window.iconbitmap(Config.picture_d["logo-ico"])
+        except TclError:
+            pass
 
         # 快捷键相关配置
         def lock_windows(_):

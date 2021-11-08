@@ -127,7 +127,7 @@ class MysqlDB(HGSDatabase):
             self._lock.acquire()  # 上锁
             self._cursor.execute(sql)
         except pymysql.MySQLError:
-            print(f"{sql}")
+            print(f"sql='{sql}'")
             traceback.print_exc()
             return None
         finally:

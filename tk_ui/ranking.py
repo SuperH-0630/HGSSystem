@@ -1,5 +1,6 @@
 import abc
 import tkinter as tk
+from _tkinter import TclError
 from PIL import Image, ImageTk
 from math import ceil
 
@@ -241,7 +242,10 @@ class RankingStation(RankingStationBase):
         self.window.geometry(f'{self.width}x{self.height}')
         self.window['bg'] = Config.tk_win_bg
         self.window.resizable(False, False)
-        self.window.iconbitmap(Config.picture_d["logo-ico"])
+        try:
+            self.window.iconbitmap(Config.picture_d["logo-ico"])
+        except TclError:
+            pass
 
         self.bg_img = None
         self.bg_lb = tk.Label(self.window)

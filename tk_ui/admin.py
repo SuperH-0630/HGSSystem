@@ -2,6 +2,7 @@ import abc
 import tkinter as tk
 from tkinter import messagebox as msg
 from tkinter import ttk
+from _tkinter import TclError
 
 from conf import Config
 from core.garbage import GarbageBag
@@ -267,7 +268,10 @@ class AdminStation(AdminStationBase):
             self._window.resizable(False, False)
             self._window.protocol("WM_DELETE_WINDOW", lambda: self.main_exit())
             self._window.title('HGSSystem: Manage Station 加载中')
-            self._window.iconbitmap(Config.picture_d["logo-ico"])
+            try:
+                self._window.iconbitmap(Config.picture_d["logo-ico"])
+            except TclError:
+                pass
         else:
             self._window.title('HGSSystem: Manage Station')
 
@@ -573,7 +577,10 @@ class AdminStation(AdminStationBase):
     def __show_login_window(self):
         self.login_window: Optional[tk.Toplevel] = tk.Toplevel()
         self.login_window.title("HGSSystem Login")
-        self.login_window.iconbitmap(Config.picture_d["logo-ico"])
+        try:
+            self.login_window.iconbitmap(Config.picture_d["logo-ico"])
+        except TclError:
+            pass
 
         height = int(self._sys_height * (1 / 5))
         width = int(height * 2)

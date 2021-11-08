@@ -48,7 +48,7 @@ def check_import(packages: Union[str, List[str]], pips: Union[str, List[str]]):
                 print(f"依赖 {packages}:{pip} 安装成功")
 
 
-check_import("cv2", "opencv-python")  # 图像处理
+check_import("cv2", "opencv-python==4.5.3.56")  # 图像处理
 check_import("qrcode", "qrcode")  # 二维码生成
 check_import("pymysql", "PyMySQL")  # 连接 MySQL服务器
 check_import("cryptography", "cryptography")  # 链接 MySQL 服务器时加密

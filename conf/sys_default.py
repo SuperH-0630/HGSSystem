@@ -57,11 +57,11 @@ class ConfigTkinterRelease:
     """ tkinter 相关配置 """
     tk_refresh_delay = int(conf_args.get("tk_refresh_delay", 50))  # 延时任务的时间
 
-    tk_zoom = int(conf_args.get("tk_zoom", 1))  # 文字缩放
-    tk_garbage_zoom = int(conf_args.get("tk_garbage_zoom", 1))  # 文字缩放
-    tk_manager_zoom = int(conf_args.get("tk_manager_zoom", 1))  # 文字缩放
-    tk_manager_login_zoom = int(conf_args.get("tk_manager_login_zoom", 1))  # 文字缩放
-    tk_ranking_zoom = int(conf_args.get("tk_ranking_zoom", 1))  # 文字缩放
+    tk_zoom = float(conf_args.get("tk_zoom", 1))  # 文字缩放
+    tk_garbage_zoom = float(conf_args.get("tk_garbage_zoom", 1))  # 文字缩放
+    tk_manager_zoom = float(conf_args.get("tk_manager_zoom", 1))  # 文字缩放
+    tk_manager_login_zoom = float(conf_args.get("tk_manager_login_zoom", 1))  # 文字缩放
+    tk_ranking_zoom = float(conf_args.get("tk_ranking_zoom", 1))  # 文字缩放
 
     tk_second_win_bg = "#fffffb"  # tkinter 第二窗口 标准颜色
     tk_win_bg = "#F0FFF0"  # tkinter 一般窗口 标准颜色 蜜瓜绿

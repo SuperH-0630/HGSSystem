@@ -204,8 +204,8 @@ class RankingStation(RankingStationBase):
         self._sys_height = self.window.winfo_screenheight()
         self._sys_width = self.window.winfo_screenwidth()
 
-        self.height = int(self._sys_height * (2 / 3)) * Config.tk_ranking_zoom
-        self.width = int(self._sys_width * (1 / 3)) * Config.tk_ranking_zoom
+        self.height = int(self._sys_height * (2 / 3) * Config.tk_ranking_zoom)
+        self.width = int(self._sys_width * (1 / 3) * Config.tk_ranking_zoom)
         self._full_screen = False
         self.__conf_windows()
 

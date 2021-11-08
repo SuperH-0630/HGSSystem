@@ -531,8 +531,8 @@ class GarbageStation(GarbageStationBase):
         self._sys_height = self._window.winfo_screenheight()
         self._sys_width = self._window.winfo_screenwidth()
 
-        self._win_height = int(self._sys_height * (2 / 3)) * Config.tk_garbage_zoom  # 窗口高度
-        self._win_width = int(self._sys_width * (2 / 3)) * Config.tk_garbage_zoom  # 窗口宽度
+        self._win_height = int(self._sys_height * (2 / 3) * Config.tk_garbage_zoom)  # 窗口高度
+        self._win_width = int(self._sys_width * (2 / 3) * Config.tk_garbage_zoom)  # 窗口宽度
         self._full_screen = False  # 是否全屏模式
 
         self.__conf_windows()

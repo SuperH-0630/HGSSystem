@@ -34,10 +34,16 @@ def main():
     program_name = Config.program
     if program_name == "setup":  # setup程序不需要数据库链接等操作
         __main = os.path.dirname(os.path.abspath(__file__))
+
+        port = ""
+        if Config.mysql_port is not None:
+            port = f"--mysql_port= {Config.mysql_port}"
+
         res = os.system(f"{sys.executable} {os.path.join(__main, 'init.py')} "
                         f"--mysql_url={Config.mysql_url} "
                         f"--mysql_name={Config.mysql_name} "
                         f"--mysql_passwd={Config.mysql_passwd} "
+                        f"{port} "
                         f"--program=setup")
         if res != 0:
             print("初始化程序加载失败, 请检查配置是否正确而", file=sys.stderr)

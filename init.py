@@ -67,6 +67,7 @@ check_import(["oss2", "viapi", "aliyunsdkcore", "aliyunsdkimagerecog"],
 
 import pymysql
 from conf import Config
+from conf import p_args
 
 mysql_url = Config.mysql_url
 mysql_name = Config.mysql_name
@@ -75,6 +76,10 @@ mysql_port = Config.mysql_port
 
 try:
     print(f"MySQL -h {mysql_url} -u {mysql_name} -P {mysql_port} -p{mysql_passwd}")
+    if mysql_port is None:
+        mysql_port = 0
+    else:
+        mysql_port = int(mysql_port)
     sql = pymysql.connect(user=mysql_name, password=mysql_passwd, host=mysql_url, port=mysql_port)
     cursor = sql.cursor()
 except pymysql.err.Error:

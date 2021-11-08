@@ -137,7 +137,10 @@ def install_venv():
     if not os.path.exists(venv):
         print(f"执行: {sys.executable} -m venv {venv}")
         os.system(f"{sys.executable} -m venv {venv}")
-    suffix = os.path.splitext(sys.executable)[-1]
+    if os.name == 'nt':
+        suffix = os.path.splitext(sys.executable)[-1]
+    else:
+        suffix = ""
     for path, dirs, files in os.walk(venv):
         if f"python{suffix}" in files:
             return os.path.join(path, f"python{suffix}")

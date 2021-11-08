@@ -71,11 +71,13 @@ from conf import Config
 mysql_url = Config.mysql_url
 mysql_name = Config.mysql_name
 mysql_passwd = Config.mysql_passwd
+mysql_port = Config.mysql_port
 
 try:
-    sql = pymysql.connect(user=mysql_name, password=mysql_passwd, host=mysql_url)
+    print(f"MySQL -h {mysql_url} -u {mysql_name} -P {mysql_port} -p{mysql_passwd}")
+    sql = pymysql.connect(user=mysql_name, password=mysql_passwd, host=mysql_url, port=mysql_port)
     cursor = sql.cursor()
-except pymysql.err:
+except pymysql.err.Error:
     print("请提供正确的MySQL信息", file=sys.stderr)
     sys.exit(1)
 

@@ -34,14 +34,14 @@ if input("[Y/n] ") != "Y":
     exit(1)
 
 if len(sys.argv) == 2:
-    install = ["garbage", "manager", "rank", "website"]
+    install = ["garbage", "manager", "ranking", "website"]
 else:
     install = []
     for i in sys.argv[2:]:
-        if i.lower() in ["garbage", "manager", "rank", "website"] and i not in install:
+        if i.lower() in ["garbage", "manager", "ranking", "website"] and i not in install:
             install.append(i.lower())
     if len(install) == 0:
-        install = ["garbage", "manager", "rank", "website"]
+        install = ["garbage", "manager", "ranking", "website"]
 
 print(f"安装内容: {', '.join(install)}")
 if input("[Y/n] ") != "Y":
@@ -188,7 +188,7 @@ for i in install:
         install_garbage()
     elif i == "manager":
         install_admin()
-    elif i == "rank":
+    elif i == "ranking":
         install_rank()
     elif i == 'website':
         install_website()

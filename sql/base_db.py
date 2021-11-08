@@ -28,7 +28,7 @@ class HGSDatabase(metaclass=abc.ABCMeta):
         if port is None:
             self._port = 0
         else:
-            self._port = port
+            self._port = int(port)
 
     @abc.abstractmethod
     def close(self):

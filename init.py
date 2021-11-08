@@ -67,7 +67,6 @@ check_import(["oss2", "viapi", "aliyunsdkcore", "aliyunsdkimagerecog"],
 
 import pymysql
 from conf import Config
-from conf import p_args
 
 mysql_url = Config.mysql_url
 mysql_name = Config.mysql_name

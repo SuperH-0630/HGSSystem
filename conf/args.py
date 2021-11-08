@@ -7,7 +7,7 @@ res = os.environ.get('HGSSystem_NA')
 p_args: dict[str: Optional[str]] = {"mysql_url": None,
                                     "mysql_name": None,
                                     "mysql_passwd": None,
-                                    "mysql_port": None,
+                                    "mysql_port": "3306",  # 默认值是 0
                                     "aliyun_key": None,
                                     "aliyun_secret": None,
                                     "program": None,
@@ -82,7 +82,7 @@ if p_args.get('mysql_url') is None or p_args.get('mysql_name') is None or p_args
             p_args['mysql_url'] = res[0]
             p_args['mysql_name'] = res[1]
             p_args['mysql_passwd'] = res[2]
-            p_args['mysql_port'] = ""
+            p_args['mysql_port'] = "3306"
         else:
             print("MYSQL地址错误", file=sys.stderr)
             exit(1)

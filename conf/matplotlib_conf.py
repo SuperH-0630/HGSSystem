@@ -12,7 +12,6 @@ except ImportError:
     pass
 else:
     if ConfigMatplotlib.matplotlib_font not in [f.name for f in fm.fontManager.ttflist]:
-        print(f"请安装 {ConfigMatplotlib.matplotlib_font} 字体, 字体列表: {fm.fontManager.ttflist}")
-        exit(1)
+        print(f"请安装 {ConfigMatplotlib.matplotlib_font} 字体")
     fm.rcParams["font.sans-serif"] = [ConfigMatplotlib.matplotlib_font]  # 配置中文字体
     fm.rcParams["axes.unicode_minus"] = False  # 解决负号变豆腐块

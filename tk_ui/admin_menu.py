@@ -1,6 +1,7 @@
 import abc
 import tkinter as tk
 
+from conf import Config
 from tool.typing import *
 from tool.tk import make_font, set_tk_disable_from_list
 
@@ -20,7 +21,7 @@ class AdminMenu(metaclass=abc.ABCMeta):
         self.btn_name: List[str] = []
         self.__conf_font()
 
-    def __conf_font(self, n: int = 1):
+    def __conf_font(self, n: int = Config.tk_zoom):
         self.btn_font_size = int(16 * n)
 
     def set_disable(self):
@@ -30,7 +31,7 @@ class AdminMenu(metaclass=abc.ABCMeta):
         set_tk_disable_from_list(self.btn, flat='normal')
 
     def conf_gui(self, color: str, n: int = 1):
-        self.__conf_font(n)
+        self.__conf_font(n * Config.tk_zoom)
 
         btn_font = make_font(size=self.btn_font_size, weight="bold")
         height = 0.02

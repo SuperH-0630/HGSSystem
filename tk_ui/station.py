@@ -638,7 +638,7 @@ class GarbageStation(GarbageStationBase):
         self._loading_title: Tuple[tk.Label, tk.Variable] = (tk.Label(self._loading_frame), tk.StringVar())
         self._loading_pro = ttk.Progressbar(self._loading_frame)
 
-    def __conf_font_size(self, n: Union[int, float] = 1):
+    def __conf_font_size(self, n: Union[int, float] = Config.tk_zoom):
         """
         设置字体大小
         :param n: 缩放因子, 1为不缩放
@@ -737,7 +737,7 @@ class GarbageStation(GarbageStationBase):
         self._win_height = self._window.winfo_height()
 
         n = ((self._win_height / height) + (self._win_width / width)) / 2  # 平均放大倍数
-        self.__conf_font_size(n)
+        self.__conf_font_size(n * Config.tk_zoom)
         self.__conf_tk()
 
     def __set_windows_overrideredirect(self, show: bool = False):

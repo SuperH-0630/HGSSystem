@@ -67,12 +67,12 @@ class WelcomeProgram(AdminProgram):
         self.info = tk.Label(self.frame)
         self.__conf_font()
 
-    def __conf_font(self, n: int = 1):
+    def __conf_font(self, n: int = Config.tk_zoom):
         self.title_font_size = int(25 * n)
         self.info_font_size = int(14 * n)
 
     def conf_gui(self, n: int = 1):
-        self.__conf_font(n)
+        self.__conf_font(n * Config.tk_zoom)
 
         title_font = make_font(size=self.title_font_size, weight="bold")
         info_font = make_font(size=self.info_font_size)
@@ -123,12 +123,12 @@ class AboutProgram(AdminProgram):
         self.info = tk.Label(self.frame)
         self.__conf_font()
 
-    def __conf_font(self, n: int = 1):
+    def __conf_font(self, n: int = Config.tk_zoom):
         self.title_font_size = int(25 * n)
         self.info_font_size = int(14 * n)
 
     def conf_gui(self, n: int = 1):
-        self.__conf_font(n)
+        self.__conf_font(n * Config.tk_zoom)
 
         title_font = make_font(size=self.title_font_size, weight="bold")
         info_font = make_font(size=self.info_font_size)
@@ -171,12 +171,12 @@ class CreateUserProgramBase(AdminProgram):
         self.is_manager = is_manager
         return self
 
-    def __conf_font(self, n: int = 1):
+    def __conf_font(self, n: int = Config.tk_zoom):
         self.title_font_size = int(16 * n)
         self.btn_font_size = int(14 * n)
 
     def conf_gui(self, n: int = 1):
-        self.__conf_font(n)
+        self.__conf_font(n * Config.tk_zoom)
 
         title_font = make_font(size=self.title_font_size)
         btn_font = make_font(size=self.btn_font_size)
@@ -269,12 +269,12 @@ class CreateAutoNormalUserProgram(AdminProgram):
 
         self.__conf_font()
 
-    def __conf_font(self, n: int = 1):
+    def __conf_font(self, n: int = Config.tk_zoom):
         self.title_font_size = int(16 * n)
         self.btn_font_size = int(14 * n)
 
     def conf_gui(self, n: int = 1):
-        self.__conf_font(n)
+        self.__conf_font(n * Config.tk_zoom)
 
         title_font = make_font(size=self.title_font_size)
         btn_font = make_font(size=self.btn_font_size)
@@ -330,12 +330,12 @@ class CreateGarbageProgram(AdminProgram):
 
         self.__conf_font()
 
-    def __conf_font(self, n: int = 1):
+    def __conf_font(self, n: int = Config.tk_zoom):
         self.title_font_size = int(16 * n)
         self.btn_font_size = int(14 * n)
 
     def conf_gui(self, n: int = 1):
-        self.__conf_font(n)
+        self.__conf_font(n * Config.tk_zoom)
 
         title_font = make_font(size=self.title_font_size)
         btn_font = make_font(size=self.btn_font_size)
@@ -424,12 +424,12 @@ class ExportProgramBase(AdminProgram):
         self.title_where = title_where
         self.title_command = title_command
 
-    def __conf_font(self, n: int = 1):
+    def __conf_font(self, n: int = Config.tk_zoom):
         self.title_font_size = int(16 * n)
         self.btn_font_size = int(14 * n)
 
     def conf_gui(self, n: int = 1):
-        self.__conf_font(n)
+        self.__conf_font(n * Config.tk_zoom)
 
         title_font = make_font(size=self.title_font_size)
         btn_font = make_font(size=self.btn_font_size)
@@ -585,12 +585,12 @@ class CreateUserFromCSVProgram(AdminProgram):
 
         self.__conf_font()
 
-    def __conf_font(self, n: int = 1):
+    def __conf_font(self, n: int = Config.tk_zoom):
         self.title_font_size = int(16 * n)
         self.btn_font_size = int(14 * n)
 
     def conf_gui(self, n: int = 1):
-        self.__conf_font(n)
+        self.__conf_font(n * Config.tk_zoom)
 
         title_font = make_font(size=self.title_font_size)
         btn_font = make_font(size=self.btn_font_size)
@@ -692,12 +692,12 @@ class DeleteUserProgram(AdminProgram):
 
         self.__conf_font()
 
-    def __conf_font(self, n: int = 1):
+    def __conf_font(self, n: int = Config.tk_zoom):
         self.title_font_size = int(16 * n)
         self.btn_font_size = int(14 * n)
 
     def conf_gui(self, n: int = 1):
-        self.__conf_font(n)
+        self.__conf_font(n * Config.tk_zoom)
 
         title_font = make_font(size=self.title_font_size)
         btn_font = make_font(size=self.btn_font_size)
@@ -790,12 +790,12 @@ class DeleteUsersProgram(AdminProgram):
 
         self.__conf_font()
 
-    def __conf_font(self, n: int = 1):
+    def __conf_font(self, n: int = Config.tk_zoom):
         self.title_font_size = int(16 * n)
         self.btn_font_size = int(14 * n)
 
     def conf_gui(self, n: int = 1):
-        self.__conf_font(n)
+        self.__conf_font(n * Config.tk_zoom)
 
         title_font = make_font(size=self.title_font_size)
         btn_font = make_font(size=self.btn_font_size)
@@ -873,12 +873,12 @@ class DeleteGarbageProgramBase(AdminProgram):
         self.frame_color = color
         self.support_del_all = support_del_all
 
-    def __conf_font(self, n: int = 1):
+    def __conf_font(self, n: int = Config.tk_zoom):
         self.title_font_size = int(16 * n)
         self.btn_font_size = int(14 * n)
 
     def conf_gui(self, n: int = 1):
-        self.__conf_font(n)
+        self.__conf_font(n * Config.tk_zoom)
 
         title_font = make_font(size=self.title_font_size)
         btn_font = make_font(size=self.btn_font_size)
@@ -1017,13 +1017,13 @@ class DeleteAllGarbageProgram(AdminProgram):
 
         self.__conf_font()
 
-    def __conf_font(self, n: int = 1):
+    def __conf_font(self, n: int = Config.tk_zoom):
         self.danger_font_size = int(20 * n)
         self.title_font_size = int(16 * n)
         self.btn_font_size = int(14 * n)
 
     def conf_gui(self, n: int = 1):
-        self.__conf_font(n)
+        self.__conf_font(n * Config.tk_zoom)
 
         danger_font = make_font(size=self.danger_font_size, weight="bold", underline=1)
         title_font = make_font(size=self.title_font_size)
@@ -1150,12 +1150,12 @@ class SearchUserProgram(SearchProgramBase):
                             "积分[Score]", "垃圾分类信用[Reputation]", "是否管理员[IsManager]"]
         self.__conf_font()
 
-    def __conf_font(self, n: int = 1):
+    def __conf_font(self, n: int = Config.tk_zoom):
         self.title_font_size = int(16 * n)
         self.btn_font_size = int(14 * n)
 
     def conf_gui(self, n: int = 1):
-        self.__conf_font(n)
+        self.__conf_font(n * Config.tk_zoom)
 
         title_font = make_font(size=self.title_font_size)
         btn_font = make_font(size=self.btn_font_size)
@@ -1249,12 +1249,12 @@ class SearchAdvancedProgramBase(SearchProgramBase, metaclass=abc.ABCMeta):
         self._columns_ch = columns_ch
         return self
 
-    def __conf_font(self, n: int = 1):
+    def __conf_font(self, n: int = Config.tk_zoom):
         self.title_font_size = int(16 * n)
         self.btn_font_size = int(14 * n)
 
     def conf_gui(self, n: int = 1):
-        self.__conf_font(n)
+        self.__conf_font(n * Config.tk_zoom)
 
         title_font = make_font(size=self.title_font_size)
         btn_font = make_font(size=self.btn_font_size)
@@ -1326,12 +1326,12 @@ class SearchGarbageProgram(SearchProgramBase):
         self.btn: tk.Button = tk.Button(self.frame)
         self.__conf_font()
 
-    def __conf_font(self, n: int = 1):
+    def __conf_font(self, n: int = Config.tk_zoom):
         self.title_font_size = int(16 * n)
         self.btn_font_size = int(14 * n)
 
     def conf_gui(self, n: int = 1):
-        self.__conf_font(n)
+        self.__conf_font(n * Config.tk_zoom)
 
         title_font = make_font(size=self.title_font_size)
         btn_font = make_font(size=self.btn_font_size)
@@ -1453,12 +1453,12 @@ class UpdateUserProgramBase(AdminProgram):
         self.bg_color_where = bg_color
         self.enter_title = title
 
-    def __conf_font(self, n: int = 1):
+    def __conf_font(self, n: int = Config.tk_zoom):
         self.title_font_size = int(16 * n)
         self.btn_font_size = int(14 * n)
 
     def conf_gui(self, n: int = 1):
-        self.__conf_font(n)
+        self.__conf_font(n * Config.tk_zoom)
 
         title_font = make_font(size=self.title_font_size)
         btn_font = make_font(size=self.btn_font_size)
@@ -1581,12 +1581,12 @@ class UpdateGarbageTypeProgram(AdminProgram):
         self.btn: List[tk.Button] = [tk.Button(self.frame), tk.Button(self.frame)]
         self.__conf_font()
 
-    def __conf_font(self, n: int = 1):
+    def __conf_font(self, n: int = Config.tk_zoom):
         self.title_font_size = int(16 * n)
         self.btn_font_size = int(14 * n)
 
     def conf_gui(self, n: int = 1):
-        self.__conf_font(n)
+        self.__conf_font(n * Config.tk_zoom)
 
         title_font = make_font(size=self.title_font_size)
         btn_font = make_font(size=self.btn_font_size)
@@ -1685,12 +1685,12 @@ class UpdateGarbageCheckResultProgram(AdminProgram):
         self.btn: List[tk.Button] = [tk.Button(self.frame), tk.Button(self.frame)]
         self.__conf_font()
 
-    def __conf_font(self, n: int = 1):
+    def __conf_font(self, n: int = Config.tk_zoom):
         self.title_font_size = int(16 * n)
         self.btn_font_size = int(14 * n)
 
     def conf_gui(self, n: int = 1):
-        self.__conf_font(n)
+        self.__conf_font(n * Config.tk_zoom)
 
         title_font = make_font(size=self.title_font_size)
         btn_font = make_font(size=self.btn_font_size)
@@ -1807,7 +1807,7 @@ class StatisticsTimeProgramBase(AdminProgram):
     def _conf(self, bg_color):
         self.bg_color = bg_color
 
-    def __conf_font(self, n: int = 1):
+    def __conf_font(self, n: int = Config.tk_zoom):
         self.btn_font_size = int(14 * n)
         self.little_btn_font_size = int(12 * n)
 
@@ -1873,7 +1873,7 @@ class StatisticsTimeProgramBase(AdminProgram):
             self.color_show_dict[res] = color
 
     def conf_gui(self, n: int = 1):
-        self.__conf_font(n)
+        self.__conf_font(n * Config.tk_zoom)
         btn_font = make_font(size=self.btn_font_size)
         little_btn_font = make_font(size=self.little_btn_font_size)
 
@@ -2238,11 +2238,11 @@ class StatisticsUserBaseProgram(AdminProgram):
     def _conf(self, bg_color):
         self.bg_color = bg_color
 
-    def __conf_font(self, n: int = 1):
+    def __conf_font(self, n: int = Config.tk_zoom):
         self.btn_font_size = int(14 * n)
 
     def conf_gui(self, n: int = 1):
-        self.__conf_font(n)
+        self.__conf_font(n * Config.tk_zoom)
         btn_font = make_font(size=self.btn_font_size)
 
         self.figure_frame['bg'] = self.bg_color

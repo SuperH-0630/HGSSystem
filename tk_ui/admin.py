@@ -299,7 +299,7 @@ class AdminStation(AdminStationBase):
 
         self._loading_pro = ttk.Progressbar(self._window)
 
-    def __conf_font_size(self, n: int = 1):
+    def __conf_font_size(self, n: int = Config.tk_zoom):
         self._login_title_font_size = int(12 * n)
         self._login_btn_font_size = int(12 * n)
         self._win_ctrl_font_size = int(15 * n)

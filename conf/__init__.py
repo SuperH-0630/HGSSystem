@@ -3,6 +3,7 @@
 配置文件
 """
 
+from .conf import conf_args
 from .font.noto import noto_font, noto_bold_font, noto_medium_font, noto_thin_font, noto_black_font, noto_regular_font
 from .picture import head_pic, rank_bg_pic, logo_pic, logo_ico
 from .args import p_args

@@ -228,7 +228,7 @@ class RankingStation(RankingStationBase):
         self.rank_var = [tk.StringVar() for _ in range(self.rank_count)]
         self.rank_btn = [tk.Button(self.rank_frame) for _ in range(3)]  # prev, auto, next
 
-    def __conf_font_size(self, n: Union[int, float] = 1):
+    def __conf_font_size(self, n: Union[int, float] = Config.tk_zoom):
         self._rank_font_title_size = int(24 * n)
         self._rank_font_size = int(16 * n)
         self._rank_font_btn_size = int(16 * n)
@@ -270,7 +270,7 @@ class RankingStation(RankingStationBase):
         self.height = self.window.winfo_height()
 
         n = min((self.height / height), (self.width / width))  # 因为横和纵不是平均放大, 因此取倍数小的
-        self.__conf_font_size(n)
+        self.__conf_font_size(n * Config.tk_zoom)
         self.__conf_tk()
         self.show_rank_first(self.rank_count)
 

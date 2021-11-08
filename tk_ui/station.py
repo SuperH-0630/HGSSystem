@@ -1267,7 +1267,11 @@ class GarbageStation(GarbageStationBase):
             self._garbage_id[2].set(gid)
 
     def update_scan(self):
-        self.scan()
+        try:
+            self.scan()
+        except cv2.error:
+            self.show_warning("摄像头异常", "摄像头获取图像失败")
+            return
 
         # 需要存储一些数据 谨防被gc释放
         _cap_img_info = (Image.fromarray(cv2.cvtColor(self.get_cap_img(), cv2.COLOR_BGR2RGB)).

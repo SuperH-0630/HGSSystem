@@ -93,7 +93,8 @@ def install_base():
     copy_file(os.path.join(src, "main.py"), os.path.join(install_prefix, "main.py"))
     copy_file(os.path.join(src, "init.py"), os.path.join(install_prefix, "init.py"))
     copy_file(os.path.join(src, "init.sql"), os.path.join(install_prefix, "init.sql"))
-    copy_file(os.path.join(src, "HGSSystem.conf.py"), os.path.join(install_prefix, "HGSSystem.conf.py"))
+    if not os.path.exists(os.path.join(install_prefix, "HGSSystem.conf.py")):
+        copy_file(os.path.join(src, "HGSSystem.conf.py"), os.path.join(install_prefix, "HGSSystem.conf.py"))
 
     copy_directory(os.path.join(src, "conf"), os.path.join(install_prefix, "conf"))
     copy_directory(os.path.join(src, "tool"), os.path.join(install_prefix, "tool"))

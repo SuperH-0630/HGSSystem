@@ -15,8 +15,8 @@ if sys.version_info.major != 3:
     warnings.warn("请使用 Python3 运行程序")  # 使用 warning 确保 python2 可以输出提示
     exit(1)
 
-if sys.version_info.minor < 8:
-    warnings.warn("请使用python3.8以上版本")
+if sys.version_info.minor < 7:
+    warnings.warn("请使用python3.7以上版本")
 
 if sys.version_info.minor < 9:
     warnings.warn("建议使用python3.9以上版本")

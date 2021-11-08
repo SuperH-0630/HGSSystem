@@ -59,7 +59,7 @@ class GarbageBag:
             self._lock.release()
         return info
 
-    def get_info(self) -> dict[str: str]:
+    def get_info(self) -> "Dict[str: str]":
         try:
             self._lock.acquire()
             info = {

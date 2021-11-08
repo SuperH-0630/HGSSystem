@@ -1,5 +1,5 @@
 import abc
-from tool.typing import List, Union, Optional, Tuple
+from tool.typing import List, Union, Optional, Tuple, Dict
 
 
 class DBException(Exception):
@@ -92,7 +92,7 @@ class HGSDatabase(metaclass=abc.ABCMeta):
         ...
 
     @abc.abstractmethod
-    def update(self, table: str, kw: dict[str:str], where: Union[str, List[str]] = None):
+    def update(self, table: str, kw: "Dict[str:str]", where: Union[str, List[str]] = None):
         """
         执行 更新 SQL语句, 并提交
         :param table: 表

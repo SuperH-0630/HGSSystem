@@ -106,7 +106,7 @@ class MysqlDB(HGSDatabase):
 
         return self.__done(f"DELETE FROM {table} WHERE {where};", not_commit=not_commit)
 
-    def update(self, table: str, kw: dict[str:str], where: Union[str, List[str]] = None, not_commit: bool = False):
+    def update(self, table: str, kw: "Dict[str:str]", where: Union[str, List[str]] = None, not_commit: bool = False):
         if len(kw) == 0:
             return None
 

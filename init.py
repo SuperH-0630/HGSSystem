@@ -218,13 +218,17 @@ def random_goods(cur):
 def make_fake():
     print("步骤1, 注册管理账户[输入q结束]:")
     while True:
-        if (name := input("输入用户名:")) == 'q':  # 这里使用了海象表达式, 把赋值运算变成一种表达式
+        name = input("输入用户名:")
+        if name == 'q':  # 这里使用了海象表达式, 把赋值运算变成一种表达式
             break
-        if (passwd := input("输入密码:")) == 'q':
+        passwd = input("输入密码:")
+        if passwd == 'q':
             break
-        if (phone := input("输入手机号码[输入x表示随机]:")) == 'q':
+        phone = input("输入手机号码[输入x表示随机]:")
+        if phone == 'q':
             break
-        if (creat_time := input("是否随机时间[n=不随机 y=随机]:")) == 'q':
+        creat_time = input("是否随机时间[n=不随机 y=随机]:")
+        if creat_time == 'q':
             break
 
         if phone == 'x':
@@ -237,17 +241,23 @@ def make_fake():
 
     print("步骤2, 注册普通账户[输入q结束]:")
     while True:
-        if (name := input("输入用户名:")) == 'q':  # 这里使用了海象表达式, 把赋值运算变成一种表达式
+        name = input("输入用户名:")
+        if name == 'q':  # 这里使用了海象表达式, 把赋值运算变成一种表达式
             break
-        if (passwd := input("输入密码:")) == 'q':
+        passwd = input("输入密码:")
+        if passwd == 'q':
             break
-        if (phone := input("输入手机号码[输入x表示随机]:")) == 'q':
+        phone = input("输入手机号码[输入x表示随机]:")
+        if phone == 'q':
             break
-        if (creat_time := input("是否随机时间[n=不随机 y=随机]:")) == 'q':
+        creat_time = input("是否随机时间[n=不随机 y=随机]:")
+        if creat_time == 'q':
             break
-        if (w_garbage := input("待检测垃圾个数:")) == 'q':
+        w_garbage = input("待检测垃圾个数:")
+        if w_garbage == 'q':
             break
-        if (c_garbage := input("已检测垃圾个数:")) == 'q':
+        c_garbage = input("已检测垃圾个数:")
+        if c_garbage == 'q':
             break
 
         if creat_time == 'n':

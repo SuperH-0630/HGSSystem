@@ -1,17 +1,17 @@
 import argparse
 import os
 import sys
-from typing import Optional
+from typing import Optional, Dict
 
 res = os.environ.get('HGSSystem_NA')
-p_args: dict[str: Optional[str]] = {"mysql_url": None,
-                                    "mysql_name": None,
-                                    "mysql_passwd": None,
-                                    "mysql_port": "3306",  # 默认值是 0
-                                    "aliyun_key": None,
-                                    "aliyun_secret": None,
-                                    "program": None,
-                                    "run": None}
+p_args: "Dict[str: Optional[str]]" = {"mysql_url": None,
+                                      "mysql_name": None,
+                                      "mysql_passwd": None,
+                                      "mysql_port": "3306",  # 默认值是 0
+                                      "aliyun_key": None,
+                                      "aliyun_secret": None,
+                                      "program": None,
+                                      "run": None}
 
 if res is None or res == "False":
     parser = argparse.ArgumentParser()

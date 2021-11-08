@@ -41,7 +41,7 @@ class AdminStationBase(TkEventMain, metaclass=abc.ABCMeta):
     def get_db(self):
         return self._db
 
-    def create_garbage(self, path: Optional[str], num: int = 1) -> List[tuple[str, Optional[GarbageBag]]]:
+    def create_garbage(self, path: Optional[str], num: int = 1) -> "List[tuple[str, Optional[GarbageBag]]]":
         re = []
         for _ in range(num):
             gar = create_new_garbage(self._db)
@@ -274,12 +274,12 @@ class AdminStation(AdminStationBase):
     def __conf_create_tk(self):
         self._menu_back = tk.Frame(self._window)
         self._menu_line = tk.Label(self._menu_back)  # 下划线
-        self._menu_title: Tuple[tk.Label, tk.Variable] = tk.Label(self._menu_back), tk.StringVar()
+        self._menu_title: Tuple[tk.Label, tk.Variable] = (tk.Label(self._menu_back), tk.StringVar())
         self._menu_dict: Dict[str, tk_menu.AdminMenu] = {}
         self._menu_list: List[str] = []  # 菜单回溯
 
         self._program_back = tk.Frame(self._window)
-        self._program_title: Tuple[tk.Label, tk.Variable] = tk.Label(self._program_back), tk.StringVar()
+        self._program_title: Tuple[tk.Label, tk.Variable] = (tk.Label(self._program_back), tk.StringVar())
         self._program_dict: Dict[str, tk_program.AdminProgram] = {}
 
         self._win_ctrl_button: List[tk.Button, tk.Button, tk.Button] = [tk.Button(self._menu_back),

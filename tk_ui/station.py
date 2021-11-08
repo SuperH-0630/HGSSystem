@@ -137,8 +137,6 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
         :param user: 新用户
         :return: 登录-True, 退出-False
         """
-        if self._user is not None:
-            print(f"{self._user.get_uid()=} {user.get_uid()=}")
         if self._user != user and self._user is not None:
             self._user.destruct()
         self._user = user
@@ -173,7 +171,7 @@ class GarbageStationBase(TkEventMain, metaclass=abc.ABCMeta):
             return -4
         return 0
 
-    def ranking(self, limit: int = 0, order_by: str = 'DESC') -> list[Tuple[uid_t, uname_t, score_t, score_t]]:
+    def ranking(self, limit: int = 0, order_by: str = 'DESC') -> "List[Tuple[uid_t, uname_t, score_t, score_t]]":
         """
         获取排行榜的功能
         :return:
@@ -636,7 +634,7 @@ class GarbageStation(GarbageStationBase):
         # 进度条
         self._loading_frame = tk.Frame(self._window)
         self._loading_line = tk.Label(self._loading_frame)
-        self._loading_title: Tuple[tk.Label, tk.Variable] = tk.Label(self._loading_frame), tk.StringVar()
+        self._loading_title: Tuple[tk.Label, tk.Variable] = (tk.Label(self._loading_frame), tk.StringVar())
         self._loading_pro = ttk.Progressbar(self._loading_frame)
 
     def __conf_font_size(self, n: Union[int, float] = 1):

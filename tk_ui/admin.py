@@ -240,8 +240,8 @@ class AdminStation(AdminStationBase):
         self._sys_height = self._window.winfo_screenheight()
         self._sys_width = self._window.winfo_screenwidth()
 
-        self._win_height = int(self._sys_height * (2 / 3))
-        self._win_width = int(self._sys_width * (2 / 3))
+        self._win_height = int(self._sys_height * (2 / 3)) * Config.tk_manager_zoom
+        self._win_width = int(self._sys_width * (2 / 3)) * Config.tk_manager_zoom
         self.__conf_windows(before_load=True)
 
         self._full_screen = False
@@ -582,11 +582,11 @@ class AdminStation(AdminStationBase):
         except TclError:
             pass
 
-        height = int(self._sys_height * (1 / 5))
+        height = int(self._sys_height * (1 / 5)) * Config.tk_manager_login_zoom
         width = int(height * 2)
 
         if width > self._sys_width:
-            width = int(self._sys_width * (2 / 3))
+            width = int(self._sys_width * (2 / 3)) * Config.tk_manager_login_zoom
             height = int(width / 2)
 
         self.login_window.geometry(f'{width}x{height}')

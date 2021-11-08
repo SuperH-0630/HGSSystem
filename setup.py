@@ -177,6 +177,7 @@ def write_shell():
         print(f"创建shell脚本 {bat}")
         with open(bat, "w") as f:
             f.write(f"{python} {main} --program {i} --run release")
+        os.system(f"chmod a+x {bat}")
 
 
 install_base()

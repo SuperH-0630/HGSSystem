@@ -25,12 +25,12 @@ if len(sys.argv) == 1:
 install_prefix = sys.argv[1]
 if install_prefix.endswith(os.sep) or install_prefix.endswith('/'):
     install_prefix = os.path.join(install_prefix[:-1], "HGSSystem")
+
 print(f"安装位置: {install_prefix}")
 if input("[Y/n] ") != "Y":
     exit(1)
 
 if len(sys.argv) == 2:
-    install_prefix = sys.argv[1]
     install = ["garbage", "manager", "rank", "website"]
 else:
     install = []
@@ -59,13 +59,13 @@ def delete(path):
         os.remove(path)
 
 
+check_make_dir(install_prefix)
+src = os.path.dirname(os.path.abspath(__file__))
+
 for i in os.listdir(install_prefix):
     if i in ['app', 'conf', 'core', 'equipment',
              'init.py', 'init.sql', 'LICENSE', 'main.py', 'README.md', 'sql', 'tk_ui', 'tool']:
         delete(os.path.join(install_prefix, i))
-
-check_make_dir(install_prefix)
-src = os.path.dirname(os.path.abspath(__file__))
 
 
 def copy_file(src_path, dest_path):

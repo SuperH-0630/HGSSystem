@@ -53,7 +53,6 @@ check_import("qrcode", "qrcode")  # 二维码生成
 check_import("pymysql", "PyMySQL")  # 连接 MySQL服务器
 check_import("cryptography", "cryptography")  # 链接 MySQL 服务器时加密
 check_import("flask", "Flask")  # 网页服务
-check_import("flask", "Flask")  # 网页服务
 check_import("flask_wtf", "Flask-WTF")  # 网页服务
 check_import("flask_login", "Flask-Login")  # 网页服务
 check_import("pyecharts", "pyecharts")  # 网页服务

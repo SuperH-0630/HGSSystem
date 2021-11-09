@@ -1,5 +1,5 @@
 from flask import render_template, Blueprint, Flask, redirect, url_for, abort, flash
-from wtforms import TextField, SubmitField
+from wtforms import StringField, SubmitField
 from flask_login import current_user
 from wtforms.validators import DataRequired
 from flask_wtf import FlaskForm
@@ -19,7 +19,7 @@ class BuySetForm(FlaskForm):
     """
     兑换/库存设定/积分设定表单
     """
-    quantity = TextField(validators=[DataRequired(message="请输入数量")])
+    quantity = StringField(validators=[DataRequired(message="请输入数量")])
     submit = SubmitField()
 
 
@@ -27,9 +27,9 @@ class AddNewGoodsForm(FlaskForm):
     """
     新增商品表单
     """
-    name = TextField(validators=[DataRequired(message="请输入名字")])
-    quantity = TextField(validators=[DataRequired(message="请输入库存")])
-    score = TextField(validators=[DataRequired(message="请输入库存")])
+    name = StringField(validators=[DataRequired(message="请输入名字")])
+    quantity = StringField(validators=[DataRequired(message="请输入库存")])
+    score = StringField(validators=[DataRequired(message="请输入库存")])
     submit = SubmitField()
 
 

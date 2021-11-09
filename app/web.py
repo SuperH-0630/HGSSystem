@@ -140,12 +140,14 @@ class NewsWebsite(WebsiteBase):
 
     def get_news(self, page: int = 1):
         count = math.ceil(get_news_count(self.db) / 10)
-        if page > count:
-            return False, None, None
+        if count == 0:
+            return -1, [], []
+        elif page > count:
+            return 0, None, None
         res, news_list = get_news(limit=20, offset=((page - 1) * 10), db=self.db)
         if not res:
-            return False, None, None
-        return True, news_list, get_page("news.index", page, count)
+            return 0, None, None
+        return 1, news_list, get_page("news.index", page, count)
 
     def delete_news(self, context_id: str):
         return delete_news(context_id, self._db)

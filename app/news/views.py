@@ -2,8 +2,7 @@ from flask import render_template, Blueprint, Flask, redirect, url_for, flash, a
 from flask_wtf import FlaskForm
 from wtforms import TextAreaField, SubmitField
 from wtforms.validators import DataRequired
-from flask_login import login_required, current_user
-import functools
+from flask_login import current_user
 
 from tool.typing import Optional
 
@@ -50,7 +49,7 @@ def index():
         return redirect(url_for("news.index", page=1))
     page = int(request.args.get("page", 1))
     res, context_list, page_list = views.website.get_news(page)
-    if not res:
+    if res == 0:
         abort(404)
     delete_form = NewDelete()
     return render_template("news/news.html", form=write_form, context_list=context_list,

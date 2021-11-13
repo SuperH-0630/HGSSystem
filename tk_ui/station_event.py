@@ -69,7 +69,7 @@ class ScanUserEvent(StationEventBase):
         if res is None:
             event = ScanGarbageEvent(self.station).start(self._qr_code)
             self.station.push_event(event)
-        if res:
+        elif res:
             self.station.switch_user(user)
             self.station.update_control()
         else:

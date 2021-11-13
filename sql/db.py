@@ -5,12 +5,12 @@ if Config.database.upper() == 'MYSQL':
     try:
         from .mysql_db import MysqlDB
     except ImportError:
-        print("Can not import mysqlDB")
+        print("无法导入MysqlDB程序")
         raise
     else:
         DB = MysqlDB
 else:
-    print(f"Not support database: {Config.database}")
+    print(f"不支持的数据库类型: {Config.database}")
     raise Exception
 
 

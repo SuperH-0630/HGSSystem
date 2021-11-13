@@ -19,7 +19,6 @@ qr_img_info_font = ImageFont.truetype(font=Config.font_d["noto"], size=30, encod
 def scan_uid(code: QRCode) -> uid_t:
     data = code.get_data()
     res = re.match(qr_user_pattern, data)
-    print(data, res)
     if res is None:
         return ""
     else:

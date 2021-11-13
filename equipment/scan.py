@@ -1,42 +1,82 @@
 import time
 import threading
 import cv2.cv2 as cv2
-from PIL.Image import Image
+from PIL.Image import Image, FLIP_LEFT_RIGHT, fromarray
+import io
+import numpy as np
 
 from conf import Config
 import qrcode
 from tool.typing import *
 
+if Config.use_opencv:
+    class HGSCapture:
+        """ 摄像头扫描 """
 
-class HGSCapture:
-    """ 摄像头扫描 """
-    def __init__(self, capnum: int = Config.capture_num, *args, **kwargs):
-        args = *args, *Config.capture_arg
-        if cv2.CAP_DSHOW not in args:
-            args = *args, cv2.CAP_DSHOW
-        self._capture = cv2.VideoCapture(int(capnum), *args, **kwargs)
-        self._frame = None
-        self._lock = threading.RLock()
+        def __init__(self, capnum: int = Config.capture_num, *args, **kwargs):
+            args = *args, *Config.capture_arg
+            if cv2.CAP_DSHOW not in args:
+                args = *args, cv2.CAP_DSHOW
+            self._capture = cv2.VideoCapture(int(capnum), *args, **kwargs)
+            self._frame = None
+            self._lock = threading.RLock()
 
-    def get_image(self):
-        """ 获取摄像头图像 """
-        try:
-            self._lock.acquire()
-            ret, frame = self._capture.read()
-            if ret:
-                self._frame = frame
-        finally:
-            self._lock.release()
-        return ret
+        def get_image(self) -> bool:
+            """ 获取摄像头图像 """
+            try:
+                self._lock.acquire()
+                ret, frame = self._capture.read()
+                if ret:
+                    self._frame = frame
+            finally:
+                self._lock.release()
+            return ret
 
-    def get_frame(self):
-        """ 获取 frame """
-        try:
-            self._lock.acquire()
-            frame = self._frame
-        finally:
-            self._lock.release()
-        return frame
+        def get_frame(self) -> Image:
+            """ 获取 frame """
+            try:
+                self._lock.acquire()
+                frame = fromarray(cv2.cvtColor(self._frame, cv2.COLOR_BGR2RGB)).transpose(FLIP_LEFT_RIGHT)
+            finally:
+                self._lock.release()
+            return frame
+else:
+    import picamera
+
+
+    class HGSCapture:
+        """ 摄像头扫描 """
+
+        def __init__(self):
+            self._frame = None
+            self._lock = threading.RLock()
+
+        def get_image(self) -> bool:
+            """ 获取摄像头图像 """
+            try:
+                self._lock.acquire()
+                stream = io.BytesIO()
+                with picamera.PiCamera() as camera:
+                    camera.start_preview()
+                    time.sleep(2)
+                    camera.capture(stream, format='jpeg')
+                # 将指针指向流的开始
+                stream.seek(0)
+                self._frame = Image.open(stream)
+            except:
+                return False
+            finally:
+                self._lock.release()
+            return True
+
+        def get_frame(self) -> Image:
+            """ 获取 frame """
+            try:
+                self._lock.acquire()
+                frame = self._frame
+            finally:
+                self._lock.release()
+            return frame
 
 
 class QRCode:
@@ -68,7 +108,6 @@ class QRCode:
     def make_img(self) -> Image:
         qr = qrcode.QRCode(
             version=None,
-            error_correction=qrcode.constants.ERROR_CORRECT_H,
             box_size=10,
             border=4
         )
@@ -101,8 +140,8 @@ class HGSQRCoder:
         try:
             self._lock.acquire()
 
-            frame = self._cap.get_frame()
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            frame: Image = self._cap.get_frame().transpose(FLIP_LEFT_RIGHT)
+            gray = cv2.cvtColor(cv2.cvtColor(np.asarray(frame), cv2.COLOR_RGB2BGR), cv2.COLOR_BGR2GRAY)
             coder = cv2.QRCodeDetector()
 
             try:

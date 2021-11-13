@@ -1274,8 +1274,7 @@ class GarbageStation(GarbageStationBase):
             return
 
         # 需要存储一些数据 谨防被gc释放
-        _cap_img_info = (Image.fromarray(cv2.cvtColor(self.get_cap_img(), cv2.COLOR_BGR2RGB)).
-                         transpose(Image.FLIP_LEFT_RIGHT))
+        _cap_img_info: Image.Image = self.get_cap_img()
         self._cap_img = _cap_img_info
 
         img_width, img_height = _cap_img_info.size

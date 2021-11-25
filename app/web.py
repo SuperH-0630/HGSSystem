@@ -187,7 +187,7 @@ class DataWebsite(WebsiteBase):
                               where=["CheckResult is not null", "CheckResult=1"],
                               group_by=["GarbageType"],
                               order_by=[("GarbageType", "ASC")])
-        if cur is None or cur.rowcount == 0:
+        if cur is None:
             return None
         return cur.fetchall()
 

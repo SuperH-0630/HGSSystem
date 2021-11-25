@@ -49,7 +49,7 @@ def count_by_days():
                       title_opts=pyecharts.options.TitleOpts(title="时段统计")))
 
     for i in res:
-        bar.add_yaxis(series_name=i, y_axis=res[i], color=random_color())
+        bar.add_yaxis(series_name=i, y_axis=res[i], color=random_color(), stack="count")
     bar.add_yaxis(series_name="合计", y_axis=count_data, color=random_color())
 
     return Markup(bar.render_embed())

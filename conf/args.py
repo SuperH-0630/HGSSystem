@@ -2,6 +2,7 @@ import argparse
 import os
 import sys
 from typing import Optional, Dict
+import conf
 
 res = os.environ.get('HGSSystem_NA')
 p_args: "Dict[str: Optional[str]]" = {"mysql_url": None,
@@ -74,15 +75,15 @@ if p_args.get('mysql_url') is None or p_args.get('mysql_name') is None or p_args
     if res is not None:
         res = res.split(';')
         if len(res) == 4:
-            p_args['mysql_url'] = res[0]
-            p_args['mysql_name'] = res[1]
-            p_args['mysql_passwd'] = res[2]
-            p_args['mysql_port'] = res[3]
+            p_args['mysql_url'] = str(conf.conf_args.get("mysql_url", res[0]))
+            p_args['mysql_name'] = str(conf.conf_args.get("mysql_name", res[1]))
+            p_args['mysql_passwd'] = str(conf.conf_args.get("mysql_passwd", res[2]))
+            p_args['mysql_port'] = str(conf.conf_args.get("mysql_port", res[3]))
         elif len(res) == 3:
-            p_args['mysql_url'] = res[0]
-            p_args['mysql_name'] = res[1]
-            p_args['mysql_passwd'] = res[2]
-            p_args['mysql_port'] = "3306"
+            p_args['mysql_url'] = str(conf.conf_args.get("mysql_url", res[0]))
+            p_args['mysql_name'] = str(conf.conf_args.get("mysql_name", res[1]))
+            p_args['mysql_passwd'] = str(conf.conf_args.get("mysql_passwd", res[2]))
+            p_args['mysql_port'] = str(conf.conf_args.get("mysql_port", 3306))
         else:
             print("MYSQL地址错误", file=sys.stderr)
             exit(1)
@@ -92,14 +93,14 @@ if p_args.get('aliyun_key') is None or p_args.get('aliyun_secret') is None:
     if res is not None:
         res = res.split(';')
         if len(res) == 2:
-            p_args["aliyun_key"] = res[0]
-            p_args["aliyun_secret"] = res[1]
+            p_args['aliyun_key'] = str(conf.conf_args.get("aliyun_key", res[0]))
+            p_args['aliyun_secret'] = str(conf.conf_args.get("aliyun_secret", res[1]))
         else:
             print("阿里云认证错误", file=sys.stderr)
             exit(1)
 
 if p_args.get('app_secret') is None:
-    res = os.environ.get('HGSSystem_AppSecret')
+    res = conf.conf_args.get("AppSecret", os.environ.get('HGSSystem_AppSecret'))
     if res is not None:
         p_args['app_secret'] = res
     else:

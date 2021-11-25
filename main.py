@@ -8,6 +8,8 @@
 import sys
 import os
 
+import pymysql
+
 from conf import Config
 
 app = None
@@ -35,7 +37,10 @@ def main():
     if program_name == "setup":  # setup程序不需要数据库链接等操作
         __main = os.path.dirname(os.path.abspath(__file__))
 
-        res = os.system(f"{sys.executable} {os.path.join(__main, 'init.py')} "
+        exe = list(os.path.split(sys.executable))
+        exe[-1] = exe[-1].replace("pythonw", "python")
+        exe = os.path.join(*exe)
+        res = os.system(f"{exe} {os.path.join(__main, 'init.py')} "
                         f"--mysql_url={Config.mysql_url} "
                         f"--mysql_name={Config.mysql_name} "
                         f"--mysql_passwd={Config.mysql_passwd} "
@@ -46,8 +51,12 @@ def main():
             sys.exit(1)
         sys.exit(0)
 
-    from sql.db import DB
-    mysql = DB()
+    try:
+        from sql.db import DB
+        mysql = DB()
+    except pymysql.Error:
+        print("无法连接到 MySQL")
+        sys.exit(1)
 
     if program_name == "garbage":
         from equipment.aliyun import Aliyun

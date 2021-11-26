@@ -1,7 +1,7 @@
 import os
 import sys
 import time
-from typing import Union, List
+from typing import Union, List, Tuple
 
 print("初始化程序开始执行")
 print("开始检查依赖")
@@ -43,7 +43,7 @@ def check_import(packages: Union[str, List[str]], pips: Union[str, List[str]]):
             print(f"依赖 {pip} 安装: {command}")
             if os.system(command) != 0:
                 print(f"依赖 {pip} 安装失败", file=sys.stderr)
-                sys.exit(1)
+                raise ImportError
             else:
                 print(f"依赖 {packages}:{pip} 安装成功")
 
@@ -51,23 +51,36 @@ def check_import(packages: Union[str, List[str]], pips: Union[str, List[str]]):
 print("是否安装可选的`picamera`支持？")
 res = input("[Y/n]")
 if res == "Y" or res == "y":
-    check_import("picamera", "opencv-python==4.5.3.56")
+    check_import("picamera", "picamera")
 
-check_import("cv2", "opencv-python==4.5.3.56")  # 图像处理
-check_import("qrcode", "qrcode")  # 二维码生成
-check_import("pymysql", "PyMySQL")  # 连接 MySQL服务器
-check_import("cryptography", "cryptography")  # 链接 MySQL 服务器时加密
-check_import("flask", "Flask")  # 网页服务
-check_import("flask_wtf", "Flask-WTF")  # 网页服务
-check_import("flask_login", "Flask-Login")  # 网页服务
-check_import("pyecharts", "pyecharts")  # 网页服务
-check_import("waitress", "waitress")  # waitress 网页服务
-check_import("PIL", "Pillow")  # 图片处理
-check_import("numpy", "numpy")  # matplotlib依赖
-check_import("matplotlib", "matplotlib")  # matplotlib依赖
+try:
+    check_import("cv2", "opencv-python==4.5.3.56")  # 图像处理
+    check_import("qrcode", "qrcode")  # 二维码生成
+    check_import("pymysql", "PyMySQL")  # 连接 MySQL服务器
+    check_import("PIL", "Pillow")  # 图片处理
+except ImportError:
+    sys.exit(1)
 
-check_import(["oss2", "viapi", "aliyunsdkcore", "aliyunsdkimagerecog"],
-             ["oss2", "aliyun-python-sdk-viapiutils", "viapi-utils", "aliyun-python-sdk-imagerecog"])  # 阿里云依赖
+try:
+    check_import("flask", "Flask")  # 网页服务
+    check_import("flask_wtf", "Flask-WTF")  # 网页服务
+    check_import("flask_login", "Flask-Login")  # 网页服务
+    check_import("pyecharts", "pyecharts")  # 网页服务
+    check_import("waitress", "waitress")  # waitress 网页服务
+except ImportError:
+    print(f"网络服务不可用", file=sys.stderr)
+
+try:
+    check_import("numpy", "numpy")  # matplotlib依赖
+    check_import("matplotlib", "matplotlib")  # matplotlib依赖
+except ImportError:
+    print(f"数据分析服务不可用", file=sys.stderr)
+
+try:
+    check_import(["oss2", "viapi", "aliyunsdkcore", "aliyunsdkimagerecog"],
+                 ["oss2", "aliyun-python-sdk-viapiutils", "viapi-utils", "aliyun-python-sdk-imagerecog"])  # 阿里云依赖
+except ImportError:
+    print("垃圾站服务不可用")
 
 import pymysql
 from conf import Config
@@ -129,204 +142,209 @@ if input("[Y/n]") != "Y":
 import random
 from tool.login import randomPassword
 
-check_import("faker", "Faker")  # matplotlib依赖
-from faker import Faker
+try:
+    check_import("faker", "Faker")  # matplotlib依赖
+except ImportError:
+    print("伪造数据服务不可用")
+else:
+    from faker import Faker
 
-fake = Faker(locale='zh_CN')
+    fake = Faker(locale='zh_CN')
 
-random_manager = []
-random_normal = []
-loc = [fake.street_name() for _ in range(4)]
-
-
-def random_time() -> str:
-    r_time = int(time.time())
-    r_start = int(r_time - 35 * 24 * 60 * 60)
-    return mysql_time(random.randint(r_start, r_time))
+    random_manager = []
+    random_normal = []
+    loc = [fake.street_name() for _ in range(4)]
 
 
-def random_time_double() -> tuple[str, str]:
-    r_time = int(time.time())
-    r_start = int(r_time - 35 * 24 * 60 * 60)
-    r_h1 = random.randint(r_start, r_time)
-    r_h2 = random.randint(r_start, r_time)
-    return mysql_time(min(r_h1, r_h2)), mysql_time(max(r_h1, r_h2))
+    def random_time() -> str:
+        r_time = int(time.time())
+        r_start = int(r_time - 35 * 24 * 60 * 60)
+        return mysql_time(random.randint(r_start, r_time))
 
 
-def random_user(r_name, r_passwd, r_phone, r_time, is_manager: int, cur, c_g=0, u_g=0):
-    r_score = random.randint(0, 50000) / 100
-    r_reputation = random.randint(5, 995)
-    r_uid = create_uid(r_name, r_passwd)
-    cur.execute(f"INSERT INTO user(UserID, Name, IsManager, Phone, Score, Reputation, CreateTime) "
-                f"VALUES ('{r_uid}', '{r_name}', {is_manager}, '{r_phone}', {r_score}, {r_reputation}, {r_time});")
-    if is_manager:
-        random_manager.append(r_uid)
-        print(f"管理员: {r_name} {r_passwd} {r_phone} {r_reputation} {r_score} {r_uid}")
-    else:
-        random_normal.append(r_uid)
-        print(f"普通用户: {r_name} {r_passwd} {r_phone} {r_reputation} {r_score} {r_uid}")
-    while c_g > 0:
-        c_g -= 1
-        t2, t1 = random_time_double()
-        random_garbage_c_to_user(r_uid, t1, t2, cur)
-
-    while u_g > 0:
-        u_g -= 1
-        t2, t1 = random_time_double()
-        random_garbage_u_to_user(r_uid, t1, t2, cur)
+    def random_time_double() -> Tuple[str, str]:
+        r_time = int(time.time())
+        r_start = int(r_time - 35 * 24 * 60 * 60)
+        r_h1 = random.randint(r_start, r_time)
+        r_h2 = random.randint(r_start, r_time)
+        return mysql_time(min(r_h1, r_h2)), mysql_time(max(r_h1, r_h2))
 
 
-def random_garbage_n(r_time, cur):
-    cur.execute(f"INSERT INTO garbage(CreateTime, Flat) VALUES ({r_time}, 0);")
-
-
-def random_garbage_c_to_user(user, r_time, r_time2, cur):
-    r_loc = random.choice(loc)
-    cur.execute(f"INSERT INTO garbage(CreateTime, Flat, UserID, UseTime, GarbageType, Location) "
-                f"VALUES ({r_time}, 1, '{user}', {r_time2}, {random.randint(1, 4)}, '{r_loc}');")
-
-
-def random_garbage_u_to_user(user, r_time, r_time2, cur):
-    checker = random.choice(random_manager)
-    r_loc = random.choice(loc)
-    cur.execute(f"INSERT INTO garbage(CreateTime, Flat, UserID, UseTime, GarbageType, Location, "
-                f"CheckerID, CheckResult) "
-                f"VALUES ({r_time}, 1, '{user}', {r_time2}, {random.randint(1, 4)}, '{r_loc}', "
-                f"'{checker}', {random.randint(0, 1)});")
-
-
-def random_garbage_c(r_time, r_time2, cur):
-    user = random.choice(random_normal)
-    random_garbage_c_to_user(user, r_time, r_time2, cur)
-
-
-def random_garbage_u(r_time, r_time2, cur):
-    user = random.choice(random_normal)
-    random_garbage_u_to_user(user, r_time, r_time2, cur)
-
-
-def random_news(c_time, cur):
-    user = random.choice(random_normal)
-    text = f"大家好，我是 {fake.name()}, 我居住在 {fake.street_name()}{fake.street_address()}, 谢谢"
-    cur.execute(f"INSERT INTO context(Context, Author, Time) "
-                f"VALUES ('{text}', '{user}', {c_time});")
-
-
-def random_goods(cur):
-    car = fake.license_plate()
-    quantity = random.randint(0, 20)
-    score = random.randint(10, 200)
-    cur.execute(f"INSERT INTO goods(Name, Quantity, Score) "
-                f"VALUES ('{car}', '{quantity}', {score});")
-
-
-def make_fake():
-    print("步骤1, 注册管理账户[输入q结束]:")
-    while True:
-        name = input("输入用户名:")
-        if name == 'q':  # 这里使用了海象表达式, 把赋值运算变成一种表达式
-            break
-        passwd = input("输入密码:")
-        if passwd == 'q':
-            break
-        phone = input("输入手机号码[输入x表示随机]:")
-        if phone == 'q':
-            break
-        creat_time = input("是否随机时间[n=不随机 y=随机]:")
-        if creat_time == 'q':
-            break
-
-        if phone == 'x':
-            phone = fake.phone_number()
-        if creat_time == 'n':
-            c_time = mysql_time()
+    def random_user(r_name, r_passwd, r_phone, r_time, is_manager: int, cur, c_g=0, u_g=0):
+        r_score = random.randint(0, 50000) / 100
+        r_reputation = random.randint(5, 995)
+        r_uid = create_uid(r_name, r_passwd)
+        cur.execute(f"INSERT INTO user(UserID, Name, IsManager, Phone, Score, Reputation, CreateTime) "
+                    f"VALUES ('{r_uid}', '{r_name}', {is_manager}, '{r_phone}', {r_score}, {r_reputation}, {r_time});")
+        if is_manager:
+            random_manager.append(r_uid)
+            print(f"管理员: {r_name} {r_passwd} {r_phone} {r_reputation} {r_score} {r_uid}")
         else:
-            c_time = random_time()
-        random_user(name, passwd, phone, c_time, 1, cursor)
+            random_normal.append(r_uid)
+            print(f"普通用户: {r_name} {r_passwd} {r_phone} {r_reputation} {r_score} {r_uid}")
+        while c_g > 0:
+            c_g -= 1
+            t2, t1 = random_time_double()
+            random_garbage_c_to_user(r_uid, t1, t2, cur)
 
-    print("步骤2, 注册普通账户[输入q结束]:")
-    while True:
-        name = input("输入用户名:")
-        if name == 'q':  # 这里使用了海象表达式, 把赋值运算变成一种表达式
-            break
-        passwd = input("输入密码:")
-        if passwd == 'q':
-            break
-        phone = input("输入手机号码[输入x表示随机]:")
-        if phone == 'q':
-            break
-        creat_time = input("是否随机时间[n=不随机 y=随机]:")
-        if creat_time == 'q':
-            break
-        w_garbage = input("待检测垃圾个数:")
-        if w_garbage == 'q':
-            break
-        c_garbage = input("已检测垃圾个数:")
-        if c_garbage == 'q':
-            break
+        while u_g > 0:
+            u_g -= 1
+            t2, t1 = random_time_double()
+            random_garbage_u_to_user(r_uid, t1, t2, cur)
 
-        if creat_time == 'n':
-            c_time = mysql_time()
-        else:
-            c_time = random_time()
 
-        if phone == 'x':
+    def random_garbage_n(r_time, cur):
+        cur.execute(f"INSERT INTO garbage(CreateTime, Flat) VALUES ({r_time}, 0);")
+
+
+    def random_garbage_c_to_user(user, r_time, r_time2, cur):
+        r_loc = random.choice(loc)
+        cur.execute(f"INSERT INTO garbage(CreateTime, Flat, UserID, UseTime, GarbageType, Location) "
+                    f"VALUES ({r_time}, 1, '{user}', {r_time2}, {random.randint(1, 4)}, '{r_loc}');")
+
+
+    def random_garbage_u_to_user(user, r_time, r_time2, cur):
+        checker = random.choice(random_manager)
+        r_loc = random.choice(loc)
+        cur.execute(f"INSERT INTO garbage(CreateTime, Flat, UserID, UseTime, GarbageType, Location, "
+                    f"CheckerID, CheckResult) "
+                    f"VALUES ({r_time}, 1, '{user}', {r_time2}, {random.randint(1, 4)}, '{r_loc}', "
+                    f"'{checker}', {random.randint(0, 1)});")
+
+
+    def random_garbage_c(r_time, r_time2, cur):
+        user = random.choice(random_normal)
+        random_garbage_c_to_user(user, r_time, r_time2, cur)
+
+
+    def random_garbage_u(r_time, r_time2, cur):
+        user = random.choice(random_normal)
+        random_garbage_u_to_user(user, r_time, r_time2, cur)
+
+
+    def random_news(c_time, cur):
+        user = random.choice(random_normal)
+        text = f"大家好，我是 {fake.name()}, 我居住在 {fake.street_name()}{fake.street_address()}, 谢谢"
+        cur.execute(f"INSERT INTO context(Context, Author, Time) "
+                    f"VALUES ('{text}', '{user}', {c_time});")
+
+
+    def random_goods(cur):
+        car = fake.license_plate()
+        quantity = random.randint(0, 20)
+        score = random.randint(10, 200)
+        cur.execute(f"INSERT INTO goods(Name, Quantity, Score) "
+                    f"VALUES ('{car}', '{quantity}', {score});")
+
+
+    def make_fake():
+        print("步骤1, 注册管理账户[输入q结束]:")
+        while True:
+            name = input("输入用户名:")
+            if name == 'q':  # 这里使用了海象表达式, 把赋值运算变成一种表达式
+                break
+            passwd = input("输入密码:")
+            if passwd == 'q':
+                break
+            phone = input("输入手机号码[输入x表示随机]:")
+            if phone == 'q':
+                break
+            creat_time = input("是否随机时间[n=不随机 y=随机]:")
+            if creat_time == 'q':
+                break
+
+            if phone == 'x':
+                phone = fake.phone_number()
+            if creat_time == 'n':
+                c_time = mysql_time()
+            else:
+                c_time = random_time()
+            random_user(name, passwd, phone, c_time, 1, cursor)
+
+        print("步骤2, 注册普通账户[输入q结束]:")
+        while True:
+            name = input("输入用户名:")
+            if name == 'q':  # 这里使用了海象表达式, 把赋值运算变成一种表达式
+                break
+            passwd = input("输入密码:")
+            if passwd == 'q':
+                break
+            phone = input("输入手机号码[输入x表示随机]:")
+            if phone == 'q':
+                break
+            creat_time = input("是否随机时间[n=不随机 y=随机]:")
+            if creat_time == 'q':
+                break
+            w_garbage = input("待检测垃圾个数:")
+            if w_garbage == 'q':
+                break
+            c_garbage = input("已检测垃圾个数:")
+            if c_garbage == 'q':
+                break
+
+            if creat_time == 'n':
+                c_time = mysql_time()
+            else:
+                c_time = random_time()
+
+            if phone == 'x':
+                phone = fake.phone_number()
+            w_garbage = int(w_garbage)
+            c_garbage = int(c_garbage)
+            random_user(name, passwd, phone, c_time, 0, cursor, w_garbage, c_garbage)
+
+        count = int(input("步骤3, 注册随机管理员账户[输入个数]:"))
+        while count > 0:
+            name = fake.name()
+            passwd = randomPassword()
             phone = fake.phone_number()
-        w_garbage = int(w_garbage)
-        c_garbage = int(c_garbage)
-        random_user(name, passwd, phone, c_time, 0, cursor, w_garbage, c_garbage)
+            c_time = random_time()
+            random_user(name, passwd, phone, c_time, 1, cursor)
+            count -= 1
 
-    count = int(input("步骤3, 注册随机管理员账户[输入个数]:"))
-    while count > 0:
-        name = fake.name()
-        passwd = randomPassword()
-        phone = fake.phone_number()
-        c_time = random_time()
-        random_user(name, passwd, phone, c_time, 1, cursor)
-        count -= 1
+        count = int(input("步骤3, 注册随机普通账户[输入个数]:"))
+        while count > 0:
+            name = fake.name()
+            passwd = randomPassword()
+            phone = fake.phone_number()
+            c_time = random_time()
+            random_user(name, passwd, phone, c_time, 0, cursor)
+            count -= 1
 
-    count = int(input("步骤3, 注册随机普通账户[输入个数]:"))
-    while count > 0:
-        name = fake.name()
-        passwd = randomPassword()
-        phone = fake.phone_number()
-        c_time = random_time()
-        random_user(name, passwd, phone, c_time, 0, cursor)
-        count -= 1
-
-    count = int(input("步骤4, 注册随机未使用垃圾袋[输入个数]:"))
-    while count > 0:
-        count -= 1
-        c_time = random_time()
-        random_garbage_n(c_time, cursor)
-
-    if len(random_normal) > 0:
-        count = int(input("步骤5, 注册随机待检查垃圾袋[输入个数]:"))
+        count = int(input("步骤4, 注册随机未使用垃圾袋[输入个数]:"))
         while count > 0:
             count -= 1
-            c_time2, c_time1 = random_time_double()
-            random_garbage_c(c_time1, c_time2, cursor)
+            c_time = random_time()
+            random_garbage_n(c_time, cursor)
 
-        if len(random_manager) > 0:
-            count = int(input("步骤6, 注册随机已检查垃圾袋[输入个数]:"))
+        if len(random_normal) > 0:
+            count = int(input("步骤5, 注册随机待检查垃圾袋[输入个数]:"))
             while count > 0:
                 count -= 1
                 c_time2, c_time1 = random_time_double()
-                random_garbage_u(c_time1, c_time2, cursor)
+                random_garbage_c(c_time1, c_time2, cursor)
 
-        count = int(input("步骤7, 注册随机新闻内容:"))
+            if len(random_manager) > 0:
+                count = int(input("步骤6, 注册随机已检查垃圾袋[输入个数]:"))
+                while count > 0:
+                    count -= 1
+                    c_time2, c_time1 = random_time_double()
+                    random_garbage_u(c_time1, c_time2, cursor)
+
+            count = int(input("步骤7, 注册随机新闻内容:"))
+            while count > 0:
+                count -= 1
+                c_time = random_time()
+                random_news(c_time, cursor)
+
+        count = int(input("步骤8, 注册随机商城内容:"))
         while count > 0:
             count -= 1
-            c_time = random_time()
-            random_news(c_time, cursor)
-
-    count = int(input("步骤8, 注册随机商城内容:"))
-    while count > 0:
-        count -= 1
-        random_goods(cursor)
+            random_goods(cursor)
 
 
-make_fake()
-sql.commit()
+    make_fake()
+    sql.commit()
+
 cursor.close()
 sql.close()

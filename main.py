@@ -8,8 +8,6 @@
 import sys
 import os
 
-import pymysql
-
 from conf import Config
 
 app = None
@@ -51,6 +49,7 @@ def main():
             sys.exit(1)
         sys.exit(0)
 
+    import pymysql  # 下面才需要使用 pymysql
     try:
         from sql.db import DB
         mysql = DB()
